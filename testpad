@@ -68,3 +68,10 @@ pr_info("[F2FS_GC_ALLOC] "
         curseg->segno,
         curseg->alloc_type,
         from_gc);
+
+pr_info("[F2FS_GC_PAGE] "
+        "victim_seg=%u off=%d ino=%lu bidx=%lu\n",
+        segno,
+        off,
+        inode->i_ino,
+        bidx);
