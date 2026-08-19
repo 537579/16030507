@@ -75,3 +75,19 @@ pr_info("[F2FS_GC_PAGE] "
         off,
         inode->i_ino,
         bidx);
+
+if (fio->io_type == FS_GC_DATA_IO) {
+    pr_info("[F2FS_GC_WRITE] "
+            "ino=%u old_blkaddr=%u new_blkaddr=%u "
+            "old_seg=%u new_seg=%u "
+            "old_off=%u new_off=%u "
+            "type=%d\n",
+            fio->ino,
+            fio->old_blkaddr,
+            fio->new_blkaddr,
+            GET_SEGNO(fio->sbi, fio->old_blkaddr),
+            GET_SEGNO(fio->sbi, fio->new_blkaddr),
+            GET_BLKOFF_FROM_SEG0(fio->sbi, fio->old_blkaddr),
+            GET_BLKOFF_FROM_SEG0(fio->sbi, fio->new_blkaddr),
+            type);
+}
