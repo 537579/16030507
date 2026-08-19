@@ -1,0 +1,12 @@
+if (!is_alive(sbi, entry, &dni, start_addr + off, &nofs))
+    continue;
+
+pr_info("[F2FS_GC_SRC] victim_seg=%u off=%d src_blkaddr=%u "
+        "nid=%u ino=%u ofs_in_node=%u nofs=%u\n",
+        segno,
+        off,
+        start_addr + off,
+        dni.nid,
+        dni.ino,
+        le16_to_cpu(entry->ofs_in_node),
+        nofs);
