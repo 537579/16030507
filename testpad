@@ -91,3 +91,14 @@ if (fio->io_type == FS_GC_DATA_IO) {
             GET_BLKOFF_FROM_SEG0(fio->sbi, fio->new_blkaddr),
             type);
 }
+
+pr_info("[F2FS_GC_DATA] "
+        "ino=%lu folio_index=%lu old_blkaddr=%u "
+        "dn_nid=%u ofs_in_node=%u meta_gc=%d io_type=%d\n",
+        inode->i_ino,
+        folio->index,
+        fio->old_blkaddr,
+        dn.nid,
+        dn.ofs_in_node,
+        fio->meta_gc,
+        fio->io_type);
