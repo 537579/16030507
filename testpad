@@ -10,3 +10,47 @@ pr_info("[F2FS_GC_SRC] victim_seg=%u off=%d src_blkaddr=%u "
         dni.ino,
         le16_to_cpu(entry->ofs_in_node),
         nofs);
+
+" ==========================================
+" 1. Essential General Settings
+" ==========================================
+set nocompatible            " Disable compatibility with old vi
+filetype plugin indent on   " Enable file type detection and auto-indent
+syntax on                   " Enable syntax highlighting
+set encoding=utf-8          " Use standard UTF-8 encoding
+set backspace=indent,eol,start " Fix broken backspace behavior
+set undofile                " Save undo history across sessions
+
+" ==========================================
+" 2. User Interface Options
+" ==========================================
+set number                  " Show absolute line numbers
+set relativenumber          " Show relative numbers for quick jumps
+set cursorline              " Highlight the current line
+set wildmenu                " Visual autocomplete menu for command line
+set showcmd                 " Show incomplete commands at the bottom
+set mouse=a                 " Enable mouse scrolling/clicking in all modes
+
+" ==========================================
+" 3. Search Configuration
+" ==========================================
+set hlsearch                " Highlight all matching search results
+set incsearch               " Show search results instantly as you type
+set ignorecase              " Make searches case-insensitive...
+set smartcase               " ...unless the query contains a capital letter
+
+" ==========================================
+" 4. Indentation & Tabs (4 Spaces)
+" ==========================================
+set tabstop=4               " Insert 4 spaces for a tab
+set shiftwidth=4            " Width for auto-indents and shift commands (<< and >>)
+set expandtab               " Convert tab presses into spaces
+set autoindent              " Copy indent from current line when starting a new one
+set smartindent             " Smart automated indentation based on language
+
+" ==========================================
+" 5. Layout & Window Rules
+" ==========================================
+set splitbelow              " Force horizontal splits to open below current
+set splitright              " Force vertical splits to open to the right
+set scrolloff=8             " Keep 8 lines visible above/below the cursor
