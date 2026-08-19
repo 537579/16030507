@@ -22,3 +22,16 @@ pr_info("[F2FS_GC_MAP] victim_seg=%u off=%d "
         nofs,
         ofs_in_node,
         start_bidx);
+
+pr_info("[F2FS_GC_COPY] "
+        "SRC victim_seg=%u off=%d "
+        "src_blkaddr=%u "
+        "ino=%lu bidx=%lu "
+        "nid=%u ofs_in_node=%u\n",
+        segno,
+        off,
+        dn.data_blkaddr,
+        inode->i_ino,
+        bidx,
+        dn.nid,
+        dn.ofs_in_node);
