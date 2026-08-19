@@ -35,3 +35,19 @@ pr_info("[F2FS_GC_COPY] "
         bidx,
         dn.nid,
         dn.ofs_in_node);
+
+pr_info("[F2FS_GC_DST] "
+        "src_blkaddr=%u "
+        "dst_blkaddr=%u "
+        "src_seg=%u src_off=%u "
+        "dst_seg=%u dst_off=%u "
+        "type=%d alloc_type=%d curseg=%u\n",
+        old_blkaddr,
+        *new_blkaddr,
+        GET_SEGNO(sbi, old_blkaddr),
+        GET_BLKOFF_FROM_SEG0(sbi, old_blkaddr),
+        GET_SEGNO(sbi, *new_blkaddr),
+        GET_BLKOFF_FROM_SEG0(sbi, *new_blkaddr),
+        type,
+        curseg->alloc_type,
+        curseg->segno);
