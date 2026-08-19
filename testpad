@@ -51,3 +51,20 @@ pr_info("[F2FS_GC_DST] "
         type,
         curseg->alloc_type,
         curseg->segno);
+
+pr_info("[F2FS_GC_ALLOC] "
+        "old=%u new=%u "
+        "old_seg=%u old_off=%u "
+        "new_seg=%u new_off=%u "
+        "type=%d curseg=%u alloc_type=%u "
+        "from_gc=%d\n",
+        old_blkaddr,
+        *new_blkaddr,
+        GET_SEGNO(sbi, old_blkaddr),
+        GET_BLKOFF_FROM_SEG0(sbi, old_blkaddr),
+        GET_SEGNO(sbi, *new_blkaddr),
+        GET_BLKOFF_FROM_SEG0(sbi, *new_blkaddr),
+        type,
+        curseg->segno,
+        curseg->alloc_type,
+        from_gc);
