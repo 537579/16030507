@@ -102,3 +102,13 @@ pr_info("[F2FS_GC_DATA] "
         dn.ofs_in_node,
         fio->meta_gc,
         fio->io_type);
+
+pr_info("[F2FS_GC_DATA_DECISION] "
+        "ino=%lu index=%lu old=%u "
+        "need_ipu=%d ipu_force=%d meta_gc=%d\n",
+        inode->i_ino,
+        folio->index,
+        fio->old_blkaddr,
+        need_inplace_update(fio),
+        ipu_force,
+        fio->meta_gc);
