@@ -112,3 +112,12 @@ pr_info("[F2FS_GC_DATA_DECISION] "
         need_inplace_update(fio),
         ipu_force,
         fio->meta_gc);
+
+pr_info("[F2FS_GC_IPU] "
+        "ino=%lu index=%lu old_blkaddr=%u "
+        "ipu_force=%d meta_gc=%d\n",
+        inode->i_ino,
+        folio->index,
+        fio->old_blkaddr,
+        ipu_force,
+        fio->meta_gc);
