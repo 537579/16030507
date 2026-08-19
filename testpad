@@ -121,3 +121,13 @@ pr_info("[F2FS_GC_IPU] "
         fio->old_blkaddr,
         ipu_force,
         fio->meta_gc);
+
+pr_info("[F2FS_GC_OPU] "
+        "ino=%lu index=%lu old_blkaddr=%u "
+        "dn_nid=%u ofs_in_node=%u meta_gc=%d\n",
+        inode->i_ino,
+        folio->index,
+        fio->old_blkaddr,
+        dn.nid,
+        dn.ofs_in_node,
+        fio->meta_gc);
