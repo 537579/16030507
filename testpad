@@ -1,110 +1,438 @@
-#
-Planned item
-Status
-Work completed / remaining
-Estimated time
-1
-Understand F2FS GC victim-segment selection
-✅ Completed
-Understood how victim segment is selected and how GC enters data-segment cleaning
-—
-2
-Trace valid/invalid blocks in victim segment
-✅ Completed
-Added validity tracing in gc_data_segment() to identify valid and invalid blocks
-—
-3
-Understand valid-block selection criteria
-✅ Completed
-Established the flow: check_valid_map() → is_alive() → inode/dnode validation → block selected for migration
-—
-4
-Trace end-to-end block migration
-✅ Completed
-Added FLOW identification to correlate source block → destination block → migration completion
-—
-5
-Identify source PBA of valid blocks
-✅ Completed
-Source physical block address is identified from victim segment/offset and existing GC migration path
-—
-6
-Identify destination-segment/block allocation
-✅ Completed
-Understood that F2FS allocates a new destination block through f2fs_allocate_data_block()
-—
-7
-Understand existing CPU-based migration
-✅ Completed
-Analyzed move_data_block() / move_data_page(): source read → memory copy → destination write → mapping update
-—
-8
-Identify copy-offload insertion point
-🟡 In progress
-Targeting DATA GC path after valid-block identification and destination allocation, while bypassing normal READ/memcpy()/WRITE on successful offload
-0.5 day
-9
-Analyze attached block-copy-offload patch
-🟡 In progress
-Need to map blk_copy_in_seg, blk_copy_out_seg, blkdev_copy_offload() and associated limits/completion semantics to F2FS
-0.5–1 day
-10
-Design source parameters
-⏳ Yet to start
-Prepare source PBA, block count/data length, device and range information for blk_copy_in_seg
-0.5 day
-11
-Design destination parameters
-⏳ Yet to start
-Prepare destination PBA, length and device information for blk_copy_out_seg
-0.5 day
-12
-Implement copy-offload path in F2FS GC
-⏳ Yet to start
-Add offload path to gc_data_segment() / migration flow
-1–1.5 days
-13
-Preserve F2FS metadata updates
-⏳ Yet to start
-Ensure destination allocation, node mapping, SIT/SSA state and source invalidation remain correct
-1 day
-14
-Implement offload failure fallback
-⏳ Yet to start
-If blkdev_copy_offload() fails, correctly return to existing move_data_block() / move_data_page() path without corrupting allocation state
-1 day
-15
-Add copy-offload debug tracing
-⏳ Yet to start
-Add COPY_OFFLOAD_ATTEMPT, SUCCESS, FAILED, FALLBACK, and final migration method using existing FLOW ID
-0.5 day
-16
-Support contiguous-block/range offload
-⏳ Yet to start
-Initially support one block; subsequently group contiguous valid blocks into larger copy ranges for efficiency
-1–2 days
-17
-Build/compile validation
-⏳ Yet to start
-Compile kernel/F2FS with the modified block-copy interfaces and resolve API/configuration issues
-0.5–1 day
-18
-Functional GC testing
-⏳ Yet to start
-Verify victim selection, valid-block selection, source/destination addresses and successful offload
-1 day
-19
-Failure/fallback testing
-⏳ Yet to start
-Force/induce copy-offload failure and verify normal GC migration is used
-0.5–1 day
-20
-Performance comparison
-⏳ Yet to start
-Compare normal GC READ+WRITE against device copy offload: latency, I/O count and CPU overhead
-1–2 days
-21
-Final documentation
-⏳ Yet to start
-Document architecture, code changes, traces, test results and performance results
-0.5–1 day
+diff --git a/fs/f2fs/gc.c b/fs/f2fs/gc.c
+index <your-traced-version>..<copy-offload-version> 100644
+--- a/fs/f2fs/gc.c
++++ b/fs/f2fs/gc.c
+@@ -12,6 +12,7 @@
+ #include <linux/sched/signal.h>
+ #include <linux/random.h>
+ #include <linux/sched/mm.h>
++#include <linux/blkdev.h>
+ 
+ #include "f2fs.h"
+ #include "node.h"
+@@ -<after-F2FS_GC_FLOW_ID>,6 +<after-F2FS_GC_FLOW_ID>,69 @@
+ #define F2FS_GC_FLOW_ID(segno, off) \
+ 	((((u64)(segno)) << 32) | (u64)(off))
+ 
++/*
++ * Copy one physical F2FS block through the block-layer copy-offload API.
++ *
++ * blk_copy_in_seg / blk_copy_out_seg terminology used in the task maps to:
++ *
++ *   in_seg  -> params.in_segs[0]
++ *   out_seg -> params.out_segs[0]
++ *
++ * The block-layer API accepts byte offsets, while f2fs_target_device()
++ * returns device-relative sectors.
++ */
++static int f2fs_gc_copy_offload(struct f2fs_sb_info *sbi,
++				block_t src_blkaddr,
++				block_t dst_blkaddr,
++				unsigned int segno,
++				int off)
++{
++	struct blk_copy_seg in_seg;
++	struct blk_copy_seg out_seg;
++	struct blk_copy_params params = { };
++	struct block_device *in_bdev;
++	struct block_device *out_bdev;
++	sector_t in_sector;
++	sector_t out_sector;
++	int ret;
++
++	in_bdev = f2fs_target_device(sbi, src_blkaddr, &in_sector);
++	out_bdev = f2fs_target_device(sbi, dst_blkaddr, &out_sector);
++
++	in_seg.pos = (loff_t)in_sector << SECTOR_SHIFT;
++	in_seg.len = F2FS_BLKSIZE;
++
++	out_seg.pos = (loff_t)out_sector << SECTOR_SHIFT;
++	out_seg.len = F2FS_BLKSIZE;
++
++	params.in_bdev = in_bdev;
++	params.in_segs = &in_seg;
++	params.in_nseg = 1;
++
++	params.out_bdev = out_bdev;
++	params.out_segs = &out_seg;
++	params.out_nseg = 1;
++
++	/*
++	 * end_io == NULL makes blkdev_copy_offload() synchronous.
++	 * The block-layer implementation waits until the copy has completed.
++	 */
++	params.end_io = NULL;
++	params.private = NULL;
++
++	f2fs_info(sbi,
++		"[F2FS_GC][FLOW=%016llx] COPY_OFFLOAD_PREPARED "
++		"SRC_PBA=0x%llx SRC_SECTOR=%llu "
++		"DST_PBA=0x%llx DST_SECTOR=%llu LEN=%u",
++		(unsigned long long)F2FS_GC_FLOW_ID(segno, off),
++		(unsigned long long)src_blkaddr,
++		(unsigned long long)in_sector,
++		(unsigned long long)dst_blkaddr,
++		(unsigned long long)out_sector,
++		F2FS_BLKSIZE);
++
++	f2fs_info(sbi,
++		"[F2FS_GC][FLOW=%016llx] COPY_OFFLOAD_ATTEMPT "
++		"SRC_PBA=0x%llx DST_PBA=0x%llx LEN=%u",
++		(unsigned long long)F2FS_GC_FLOW_ID(segno, off),
++		(unsigned long long)src_blkaddr,
++		(unsigned long long)dst_blkaddr,
++		F2FS_BLKSIZE);
++
++	ret = blkdev_copy_offload(&params);
++
++	return ret;
++}
++
+ static unsigned int count_bits(const unsigned long *addr,
+ 				unsigned int offset, unsigned int len);
+
+
+
+
+,..............................................
+
+
+
+static int move_data_block(struct inode *inode, block_t bidx,
+				int gc_type, unsigned int segno, int off)
+{
+	struct address_space *mapping = inode->i_mapping;
+	struct inode *atomic_inode = NULL;
+	struct f2fs_io_info fio = {
+		.sbi = F2FS_I_SB(inode),
+		.ino = inode->i_ino,
+		.type = DATA,
+		.temp = COLD,
+		.op = REQ_OP_READ,
+		.op_flags = 0,
+		.encrypted_page = NULL,
+		.in_list = 0,
+	};
+	struct dnode_of_data dn;
+	struct f2fs_summary sum;
+	struct node_info ni;
+	struct folio *folio;
+	struct folio *mfolio = NULL;
+	struct folio *efolio;
+	block_t newaddr;
+	int err = 0;
+	bool copy_offload_done = false;
+	bool lfs_mode = f2fs_lfs_mode(fio.sbi);
+	int type = fio.sbi->am.atgc_enabled && (gc_type == BG_GC) &&
+				(fio.sbi->gc_mode != GC_URGENT_HIGH) ?
+				CURSEG_ALL_DATA_ATGC : CURSEG_COLD_DATA;
+
+	f2fs_down_read(&F2FS_I(inode)->i_sem);
+	if (f2fs_is_cow_file(inode)) {
+		atomic_inode = igrab(F2FS_I(inode)->atomic_inode);
+		if (!atomic_inode) {
+			f2fs_up_read(&F2FS_I(inode)->i_sem);
+			return -EBUSY;
+		}
+		mapping = atomic_inode->i_mapping;
+	}
+	f2fs_up_read(&F2FS_I(inode)->i_sem);
+
+	/* Do not read out. */
+	folio = f2fs_grab_cache_folio(mapping, bidx, false);
+	if (IS_ERR(folio)) {
+		err = PTR_ERR(folio);
+		goto out_iput;
+	}
+
+	if (!check_valid_map(F2FS_I_SB(inode), segno, off)) {
+		err = -ENOENT;
+
+		f2fs_info(fio.sbi,
+			"[F2FS_GC][FLOW=%016llx] BLOCK NOT_MIGRATED "
+			"reason=invalid_at_move",
+			(unsigned long long)F2FS_GC_FLOW_ID(segno, off));
+		goto out;
+	}
+
+	err = f2fs_gc_pinned_control(inode, gc_type, segno);
+	if (err)
+		goto out;
+
+	f2fs_info(fio.sbi,
+		"[F2FS_GC][FLOW=%016llx] MIGRATION_START "
+		"victim_seg=%u off=%d ino=%lu bidx=%llu",
+		(unsigned long long)F2FS_GC_FLOW_ID(segno, off),
+		segno, off, inode->i_ino, (unsigned long long)bidx);
+
+	set_new_dnode(&dn, inode, NULL, NULL, 0);
+
+	err = f2fs_get_dnode_of_data(&dn, bidx, LOOKUP_NODE);
+	if (err)
+		goto out;
+
+	if (unlikely(dn.data_blkaddr == NULL_ADDR)) {
+		folio_clear_uptodate(folio);
+		err = -ENOENT;
+
+		f2fs_info(fio.sbi,
+			"[F2FS_GC][FLOW=%016llx] BLOCK NOT_MIGRATED "
+			"reason=null_data_blkaddr",
+			(unsigned long long)F2FS_GC_FLOW_ID(segno, off));
+
+		goto put_out;
+	}
+
+	/*
+	 * Do not cache encrypted data into meta inode until previous dirty
+	 * data were writebacked to avoid racing between GC and flush.
+	 */
+	f2fs_folio_wait_writeback(folio, DATA, true, true);
+
+	f2fs_wait_on_block_writeback(inode, dn.data_blkaddr);
+
+	err = f2fs_get_node_info(fio.sbi, dn.nid, &ni, false);
+	if (err)
+		goto put_out;
+
+	fio.folio = folio;
+	fio.new_blkaddr = fio.old_blkaddr = dn.data_blkaddr;
+
+	if (lfs_mode)
+		f2fs_down_write(&fio.sbi->io_order_lock);
+
+	set_summary(&sum, dn.nid, dn.ofs_in_node, ni.version);
+
+	/*
+	 * Allocate destination before attempting copy offload.
+	 *
+	 * If copy offload fails, the existing CPU fallback reuses this same
+	 * destination address. Do not allocate another destination block.
+	 */
+	err = f2fs_allocate_data_block(fio.sbi, NULL,
+					fio.old_blkaddr, &newaddr,
+					&sum, type, NULL);
+	if (err) {
+		/*
+		 * Filesystem should shutdown, no need to recover the block.
+		 */
+		goto up_out;
+	}
+
+	f2fs_info(fio.sbi,
+		"[F2FS_GC][FLOW=%016llx] DEST_ALLOCATED "
+		"SRC_PBA=0x%llx DST_PBA=0x%llx DST_SEG=%u",
+		(unsigned long long)F2FS_GC_FLOW_ID(segno, off),
+		(unsigned long long)fio.old_blkaddr,
+		(unsigned long long)newaddr,
+		GET_SEGNO(fio.sbi, newaddr));
+
+	/*
+	 * First try block-layer copy offload.
+	 *
+	 * This is intentionally attempted before reading the source into
+	 * META_MAPPING so that a successful device copy avoids:
+	 *
+	 *   source device -> DRAM read
+	 *   CPU memcpy()
+	 *   DRAM -> destination device write
+	 */
+	err = f2fs_gc_copy_offload(fio.sbi,
+					fio.old_blkaddr,
+					newaddr,
+					segno,
+					off);
+
+	if (!err) {
+		copy_offload_done = true;
+
+		f2fs_info(fio.sbi,
+			"[F2FS_GC][FLOW=%016llx] COPY_OFFLOAD_SUCCESS "
+			"SRC_PBA=0x%llx DST_PBA=0x%llx",
+			(unsigned long long)F2FS_GC_FLOW_ID(segno, off),
+			(unsigned long long)fio.old_blkaddr,
+			(unsigned long long)newaddr);
+
+		goto update_mapping;
+	}
+
+	/*
+	 * Copy offload failed.
+	 *
+	 * Clear the error and reuse the already allocated destination block
+	 * through the existing META_MAPPING + memcpy + write path.
+	 */
+	f2fs_info(fio.sbi,
+		"[F2FS_GC][FLOW=%016llx] COPY_OFFLOAD_FAILED "
+		"SRC_PBA=0x%llx DST_PBA=0x%llx ERR=%d "
+		"FALLBACK=CPU_COPY",
+		(unsigned long long)F2FS_GC_FLOW_ID(segno, off),
+		(unsigned long long)fio.old_blkaddr,
+		(unsigned long long)newaddr,
+		err);
+
+	err = 0;
+
+	f2fs_info(fio.sbi,
+		"[F2FS_GC][FLOW=%016llx] COPY_OFFLOAD_FALLBACK "
+		"SRC_PBA=0x%llx DST_PBA=0x%llx METHOD=CPU",
+		(unsigned long long)F2FS_GC_FLOW_ID(segno, off),
+		(unsigned long long)fio.old_blkaddr,
+		(unsigned long long)newaddr);
+
+	/*
+	 * Existing CPU fallback path.
+	 *
+	 * Read the source only after copy offload has failed.
+	 */
+	mfolio = f2fs_grab_cache_folio(META_MAPPING(fio.sbi),
+					fio.old_blkaddr, false);
+	if (IS_ERR(mfolio)) {
+		err = PTR_ERR(mfolio);
+		mfolio = NULL;
+		goto recover_block;
+	}
+
+	fio.encrypted_page = folio_file_page(mfolio, fio.old_blkaddr);
+
+	/* Read source block into META_MAPPING. */
+	if (!folio_test_uptodate(mfolio)) {
+		err = f2fs_submit_page_bio(&fio);
+		if (err) {
+			f2fs_folio_put(mfolio, true);
+			mfolio = NULL;
+			goto recover_block;
+		}
+
+		f2fs_update_iostat(fio.sbi, inode,
+					FS_DATA_READ_IO, F2FS_BLKSIZE);
+		f2fs_update_iostat(fio.sbi, NULL,
+					FS_GDATA_READ_IO, F2FS_BLKSIZE);
+
+		folio_lock(mfolio);
+
+		if (unlikely(!is_meta_folio(mfolio) ||
+			     !folio_test_uptodate(mfolio))) {
+			err = -EIO;
+			f2fs_folio_put(mfolio, true);
+			mfolio = NULL;
+			goto recover_block;
+		}
+	}
+
+	efolio = f2fs_filemap_get_folio(META_MAPPING(fio.sbi),
+					newaddr,
+					FGP_LOCK | FGP_CREAT,
+					GFP_NOFS);
+	if (IS_ERR(efolio)) {
+		err = PTR_ERR(efolio);
+
+		f2fs_folio_put(mfolio, true);
+		mfolio = NULL;
+
+		goto recover_block;
+	}
+
+	fio.encrypted_page = &efolio->page;
+
+	/* Write target block using the existing CPU copy path. */
+	f2fs_wait_on_page_writeback(fio.encrypted_page,
+					DATA, true, true);
+
+	memcpy(page_address(fio.encrypted_page),
+		folio_address(mfolio),
+		PAGE_SIZE);
+
+	f2fs_folio_put(mfolio, true);
+	mfolio = NULL;
+
+	f2fs_invalidate_internal_cache(fio.sbi,
+					fio.old_blkaddr, 1);
+
+	set_page_dirty(fio.encrypted_page);
+
+	if (clear_page_dirty_for_io(fio.encrypted_page))
+		dec_page_count(fio.sbi, F2FS_DIRTY_META);
+
+	set_page_writeback(fio.encrypted_page);
+
+	fio.op = REQ_OP_WRITE;
+	fio.op_flags = REQ_SYNC;
+	fio.new_blkaddr = newaddr;
+
+	f2fs_submit_page_write(&fio);
+
+	f2fs_update_iostat(fio.sbi, NULL,
+				FS_GC_DATA_IO,
+				F2FS_BLKSIZE);
+
+	f2fs_put_page(fio.encrypted_page, true);
+
+update_mapping:
+	/*
+	 * The destination now contains a complete copy of the source block:
+	 *
+	 *   - native block copy offload, or
+	 *   - existing CPU read/copy/write fallback.
+	 *
+	 * Only now can the F2FS logical-to-physical mapping be switched.
+	 */
+	f2fs_update_data_blkaddr(&dn, newaddr);
+
+	set_inode_flag(inode, FI_APPEND_WRITE);
+
+	f2fs_info(fio.sbi,
+		"[F2FS_GC][FLOW=%016llx] MAPPING_UPDATED "
+		"SRC_PBA=0x%llx DST_PBA=0x%llx",
+		(unsigned long long)F2FS_GC_FLOW_ID(segno, off),
+		(unsigned long long)fio.old_blkaddr,
+		(unsigned long long)newaddr);
+
+	f2fs_info(fio.sbi,
+		"[F2FS_GC][FLOW=%016llx] MIGRATION_COMPLETE "
+		"SRC_PBA=0x%llx DST_PBA=0x%llx DST_SEG=%u "
+		"ino=%lu bidx=%llu METHOD=%s",
+		(unsigned long long)F2FS_GC_FLOW_ID(segno, off),
+		(unsigned long long)fio.old_blkaddr,
+		(unsigned long long)newaddr,
+		GET_SEGNO(fio.sbi, newaddr),
+		inode->i_ino,
+		(unsigned long long)bidx,
+		copy_offload_done ? "OFFLOAD" : "CPU_FALLBACK");
+
+	goto up_out;
+
+recover_block:
+	if (mfolio)
+		f2fs_folio_put(mfolio, true);
+
+	if (err)
+		f2fs_do_replace_block(fio.sbi, &sum,
+					newaddr,
+					fio.old_blkaddr,
+					true, true, true);
+
+	f2fs_info(fio.sbi,
+		"[F2FS_GC][FLOW=%016llx] MIGRATION_FAILED "
+		"SRC_PBA=0x%llx DST_PBA=0x%llx ERR=%d",
+		(unsigned long long)F2FS_GC_FLOW_ID(segno, off),
+		(unsigned long long)fio.old_blkaddr,
+		(unsigned long long)newaddr,
+		err);
+
+up_out:
+	if (lfs_mode)
+		f2fs_up_write(&fio.sbi->io_order_lock);
+
+put_out:
+	f2fs_put_dnode(&dn);
+
+out:
+	f2fs_folio_put(folio, true);
+
+out_iput:
+	if (atomic_inode)
+		iput(atomic_inode);
+
+	return err;
+}
