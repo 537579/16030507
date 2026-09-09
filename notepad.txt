@@ -1,9 +1,5 @@
-err = f2fs_gc_try_copy_offload(fio.sbi,
-				fio.old_blkaddr,
-				newaddr,
-				flow_id);
-
-ret = f2fs_gc_try_copy_offload(sbi,
-				fio->old_blkaddr,
-				fio->new_blkaddr,
-				flow_id);
+S. NO	Patch Module	F2FS Module	Company	Patch Title - Accepted	Patch Version	Date	Patch Link
+1	F2FS-Core	Memory Management / Page-Folio	Kernel	Remove PG_private by using page/folio->private checks instead	V2 / Series	03-09-2026	Patchwork Series 1138502
+2	F2FS-Core	Node / Inode Management	Xiaomi	f2fs: wait for inode record work before clearing ino bitmaps	V3	03-09-2026	Patchwork Series 1155979
+3	F2FS-Core	Metadata Layout / Runtime Block Size	—	f2fs: prepare metadata layouts for runtime block sizes	V9	08-09-2026	Patchwork Series 1157467
+4	F2FS-Core	Device Aliasing / Discard	Google	f2fs: drop pending discard commands before reserving device alias	V4	08-09-2026	Patchwork Series 1157259
