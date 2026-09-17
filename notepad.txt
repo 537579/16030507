@@ -1,176 +1,189 @@
-S. NO
-Patch Module
-F2FS Module
-Company
-Patch Title - Accepted
-Patch Version
-Date
-Patch Link
-1
-F2FS-Core
-Node Management
-Kernel
-f2fs: parameterize node helpers and macros
-V1
-14-09-2026
-Patch / commit⁠�
-2
-F2FS-Core
-Compression
-Kernel
-f2fs: compress: fix to handle race between truncate and writeback
-V2
-14-09-2026
-Patch / commit⁠�
-3
-F2FS-Core
-Inode Management / Fsync
-Google
-f2fs: fix livelock in syncing dirty inodes
-V2
-14-09-2026
-Patch / commit⁠�
-4
-F2FS-Core
-Inode / Checkpoint
-Xiaomi
-f2fs: fix to record both APPEND and UPDATE ino entries
-V1
-14-09-2026
-Patch / commit⁠�
-5
-F2FS-Core
-Data / Inline Data
-—
-f2fs: skip node_change lock for inline data writes
-V1
-14-09-2026
-Patch / commit⁠�
-6
-F2FS-Core
-Page/Folio Management
-NVIDIA / MM
-Remove PG_private by using page/folio->private checks instead
-V4
-14-09-2026
-Patch / commit⁠�
+im using below script to trigger foreground GC in my device.
+
+#!/bin/bash
+
+JOB_DIR=./jobs
+LOG_DIR=./LOGS
+FIO=fio
+job_ops=""
+job_title=""
+#MKFS_F2FS=../f2fs_tools_bins/inline_tail/
+MKFS_F2FS=""
+
+
+CNT=$1
+loop=$CNT
+slp_time=10
+
+
+create_jobs()
+{
+        rm ${JOB_DIR}/*
+        CYC=$2 # Pass the cycle count as the second argument
+
+        if [ ${1} -eq 0 ]; then
+                echo ""
+                echo "************************************************************************"
+                echo "choose operation for job file creation"
+                echo "************************************************************************"
+                echo "  1. Sequential Write"
+                read OPS
+        else
+                OPS=$1
+        fi
+
+        case $OPS in
+                1) job_ops="write"; job_title="seq_write" ;;
+                3) job_ops="randwrite"; job_title="rand_write" ;;
+                *) job_ops="write"; job_title="seq_write" ;;
+        esac
+
+        # Notice the added filename_format utilizing the $CYC variable
+        for sz in 3_5k:35k 5k:50k 63k:630k 64k:640k 65k:650k 70k:700k 73k:730k; do
+                name=$(echo $sz | cut -d: -f1)
+                bytes=$(echo $sz | cut -d: -f2)
+                
+                cat <<EOF > ${JOB_DIR}/${name}_${job_title}.fio
+[global]
+ioengine=io_uring
+iodepth=1
+direct=0
+directory=/mnt/lun0
+openfiles=10
+nrfiles=10
+filename_format=job_${name}_\$filenum_cycle_${CYC}
+
+[${name}_${job_title}]
+rw=${job_ops}
+bs=1k
+size=${bytes}
+EOF
+        done
+}
+
+
+exec_fio()
+{
+        echo "# ------------------------------------------------------------------------"
+        for wr in 3_5k 5k 63k 64k 65k 70k 73k; do
+                ${FIO} ${JOB_DIR}/${wr}_${job_title}.fio | tee ${LOG_DIR}/${wr}_${job_title}.log
+        done
+
+        echo "# ------------------------------------------------------------------------"
+
+<<'####'
+        if [ ! -d ${LOG_DIR} ]; then
+                mkdir -p ${LOG_DIR}
+        fi
+
+        cp ${LOG_DIR}/*.log ${LOG_DIR}/${MNT_OPS}/
+        rm -rf ${LOG_DIR}/*.log
+        #rm -rf ${JOB_DIR}/*
+####
+
+}
+
+remove_files()
+{
+        rm -rf /mnt/lun0/*
+        echo "# Removed previous test"
+}
+
+init_dev()
+{
+        umount /dev/sda1
+        #mkfs.f2fs -f /dev/sda1
+	mkfs.f2fs -f -O extra_attr,compression /dev/sda1
+        #mount -t f2fs /dev/sda1 /mnt/lun0 -o mode=lfs,alloc_mode=default
+	mount -t f2fs /dev/sda1 /mnt/lun0 -o mode=lfs,alloc_mode=default,compress_extension=*
+
+}
+
+echo ""
+echo "************************************************************************"
+init_dev
+echo "************************************************************************"
+echo -n "Test loop count? : "
+read CNT
+
+loop=$CNT
+
+
+# Test loop
+# Update your main loop at the bottom of the script to pass $cycle
+while [ $loop -gt 0 ]
+do
+        cycle=$(((CNT-loop)+1))
+        echo "# ========================================================================= "
+        echo "# TEST_CYCLE: $cycle"
+        echo "# ========================================================================= "
+        create_jobs 1 $cycle  # <--- Changed this line to pass $cycle
+        exec_fio
+        loop=$((loop-1))
+done
+
+echo "# ------------------------------------------------------------------------"
+echo "# Test Completed"
 
 
 
+below is device disk info
 
-S. NO
-Patch Module
-F2FS Modules
-Company
-Patch Title Under Review
-Patch Version
-State
-Date
-Submitter
-Patch Link
-Impact on Performance
-Type of Patch
-Patch Description
-Redmi Status
-1
-F2FS-Core
-Metadata Cache
-Kernel
-f2fs: introduce metadata cache
-V7
-New
-11-09-2026
-Chao Yu
-F2FS mailing-list series⁠�
-Yes
-Feature
-V7 updates the metadata-cache series previously tracked as V6. It continues the transition from the VFS page cache/fake internal inodes to a self-managed F2FS metadata cache. The series includes cache initialization, shrinker support, writeback thread, node and compression caches, fault injection, tracepoints and debugfs usage reporting.
-Yes
-2
-F2FS-Core
-Compression
-Kernel
-f2fs: compress: fix to handle race between truncate and writeback
-V2
-Accepted
-10-09-2026
-Chao Yu
-Patch / commit⁠�
-No
-Bug Fix
-V2 fixes a race between truncate and background writeback/fsync. A compressed cluster can be converted to raw blocks between the initial compressed-cluster check and f2fs_prepare_compress_overwrite(). V2 retries the cluster-state check instead of triggering the previous BUG_ON path.
-Yes
-3
-F2FS-Core
-Mount Options / Filesystem Shrink
-Google
-f2fs: introduce reserve_shrink mount option for filesystem shrinkage
-V2
-Under Review
-11-09-2026
-Daeho Jeong
-F2FS mailing-list series⁠�
-Yes
-Support / Feature
-V2 combines BIT_ULL preparation with a dedicated reserve_shrink=<blocks> mount option. The option preserves sufficient free space for subsequent online filesystem shrinkage, particularly during partition resizing/FOTA. V2 also adds helpers for mount-option bitmask handling.
-Yes
-4
-F2FS-Core
-Page/Folio Management
-NVIDIA / MM
-Remove PG_private by using page/folio->private checks instead
-V4
-Accepted
-13-09-2026
-Zi Yan
-F2FS accepted series⁠�
-No
-Support / Refactoring
-V4 expands the PG_private removal series to 16 patches. It converts F2FS private-page handling to page/folio-private checks and converts remaining private flag helpers to folio-only operation, preparing for the removal of PG_private and future folio infrastructure.
-Yes
-
-
-
-
-S. NO
-Patch Module
-F2FS Modules
-Company
-Patch Title Under Review
-Patch Version
-State
-Date
-Submitter
-Patch Link
-Impact on Performance
-Type of Patch
-Patch Description
-Redmi Status
-1
-F2FS-Core
-Node Management / Cache
-Kernel
-f2fs: rename page_count with cache_count
-V1
-New
-11-09-2026
-Chao Yu
-F2FS mailing-list record⁠�
-No
-Support / Refactoring
-Renames the metadata-cache accounting terminology from page-based naming to cache-based naming as part of the ongoing metadata-cache implementation. This aligns the internal APIs with the fact that cached entries are no longer tied directly to VFS pages.
-Yes
-2
-F2FS-Core
-Node Management / Cache
-Kernel
-f2fs: rename nr_pages_to_skip with nr_caches_to_skip
-V1
-New
-11-09-2026
-Chao Yu
-F2FS mailing-list record⁠�
-No
-Support / Refactoring
-Renames the metadata-cache traversal/accounting variable from page-oriented terminology to cache-oriented terminology, matching the new self-managed metadata cache architecture.
-Yes
+console:/data # df -h
+Filesystem                   Size Used Avail Use% Mounted on
+/dev/block/dm-7              992M 989M  3.0M 100% /
+tmpfs                        7.3G 4.5M  7.3G   1% /dev
+tmpfs                        7.3G    0  7.3G   0% /mnt
+/dev/block/sda9               62M  43M   19M  70% /metadata
+/dev/block/dm-8              551M 549M  1.6M 100% /system_ext
+/dev/block/dm-9              282M 281M  880K 100% /product
+/dev/block/dm-10             1.0G 1.0G  3.1M 100% /vendor
+/dev/block/dm-11             107M 107M  356K 100% /vendor_dlkm
+/dev/block/dm-12              88M  87M  272K 100% /system_dlkm
+/dev/block/dm-13             313M 313M  976K 100% /odm
+tmpfs                        7.3G  16K  7.3G   1% /apex
+tmpfs                        7.3G 4.0K  7.3G   1% /bootstrap-apex
+tmpfs                        7.3G 0.9M  7.3G   1% /linkerconfig
+/dev/block/loop1             7.5M 7.5M   36K 100% /bootstrap-apex/com.android.runtime@1
+/dev/block/loop0              36M  36M   28K 100% /bootstrap-apex/com.android.i18n@1
+/dev/block/loop3              83M  83M   40K 100% /bootstrap-apex/com.android.virt@3
+/dev/block/loop2             788K 756K   32K  96% /bootstrap-apex/com.android.tzdata@360499999
+tmpfs                        7.3G    0  7.3G   0% /tmp
+tmpfs                        7.3G    0  7.3G   0% /mnt/vm
+/dev/block/sda2               27M 2.0M   25M   8% /mnt/vendor/persist
+/dev/block/sde6               80M  75M  5.1M  94% /vendor/firmware_mnt
+/dev/block/sde9               68M  60M  7.5M  89% /vendor/dsp
+/dev/block/sde20             519M 503M   16M  97% /vendor/vm-system
+/dev/block/sde7              7.9M 2.3M  5.6M  30% /vendor/bt_firmware
+/dev/block/sde25              30M    0   30M   0% /mnt/vendor/qmcs
+/dev/block/sde96              32M  32K   32M   1% /mnt/vendor/spunvm
+/dev/block/sde32             7.9M 2.3M  5.5M  30% /vendor/soccp_firmware
+/dev/block/dm-56             460G 4.3G  456G   1% /data
+tmpfs                        7.3G    0  7.3G   0% /data_mirror
+/dev/block/loop4              23M  23M   48K 100% /apex/com.android.vndk.v34@1
+/dev/block/loop7              23M  23M   28K 100% /apex/com.android.vndk.v31@1
+/dev/block/loop5              15M  15M   32K 100% /apex/com.android.healthfitness@360499999
+/dev/block/loop6              83M  83M   40K 100% /apex/com.android.virt@3
+/dev/block/loop8             6.0M 6.0M   32K 100% /apex/com.android.devicelock@1
+/dev/block/loop9             788K 756K   32K  96% /apex/com.android.tzdata@360499999
+/dev/block/loop10            3.5M 3.5M   28K 100% /apex/com.android.compos@3
+/dev/block/loop14            3.0M 3.0M   32K  99% /apex/com.android.os.statsd@360499999
+/dev/block/loop12            1.2M 1.2M   32K  98% /apex/com.android.rkpd@360499999
+/dev/block/loop18            7.5M 7.5M   36K 100% /apex/com.android.runtime@1
+/dev/block/loop20             27M  27M   28K 100% /apex/com.android.bt@360499999
+/dev/block/loop15            232K 188K   44K  82% /apex/com.android.hardware.cas@1
+/dev/block/loop11            780K 752K   28K  97% /apex/com.android.sdkext@360499999
+/dev/block/loop19             36M  36M   28K 100% /apex/com.android.i18n@1
+/dev/block/dm-16              19M  18M   28K 100% /apex/com.android.cellbroadcast@360499999
+/dev/block/dm-45              25M  25M   32K 100% /apex/com.android.permission@360499999
+/dev/block/dm-33              11M  11M   32K 100% /apex/com.android.configinfrastructure@360499999
+/dev/block/dm-22             232K 104K  128K  45% /apex/com.android.scheduling@360499999
+/dev/block/dm-19             4.4M 4.3M   28K 100% /apex/com.android.resolv@360499999
+/dev/block/dm-17              25M  25M   28K 100% /apex/com.android.mediaprovider@360499999
+/dev/block/dm-35             6.7M 6.7M   28K 100% /apex/com.android.adbd@360499999
+/dev/block/dm-15             4.4M 4.3M   28K 100% /apex/com.android.neuralnetworks@360499999
+/dev/block/dm-20             836K 808K   28K  97% /apex/com.android.ipsec@360499999
+/dev/block/dm-27             6.0M 6.0M   32K 100% /apex/com.android.uwb@360499999
+/dev/block/vold/public:179,1  15G 4.5G   10G  31% /mnt/media_rw/3435-3935
+/dev/fuse                     15G 4.5G   10G  31% /storage/3435-3935
+/dev/fuse                    460G 4.3G  456G   1% /storage/emulated
