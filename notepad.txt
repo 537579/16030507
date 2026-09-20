@@ -1,30 +1,446 @@
-while true; do
-    echo "========== $(date) =========="
+#!/system/bin/sh
 
-    echo -n "DF: "
-    df -h /mnt/pass_through/0/emulated | tail -1
+###############################################################################
+# F2FS Controlled GC Test
+#
+# Goal:
+#   1. Create 1 GiB of 256 KiB files.
+#   2. Sync them to F2FS.
+#   3. Delete every second file.
+#   4. Sync again.
+#   5. Trigger F2FS urgent GC.
+#   6. Capture filesystem/GC statistics.
+#
+# Intended investigation:
+#   Source LBA -> Destination LBA relationship during F2FS GC migration.
+###############################################################################
 
-    echo -n "free_segments: "
-    cat /sys/fs/f2fs/sda11/free_segments
+############################
+# CONFIGURATION
+############################
 
-    echo -n "dirty_segments: "
-    cat /sys/fs/f2fs/sda11/dirty_segments
+MOUNT_POINT="/mnt/pass_through/0/emulated"
 
-    echo -n "FGGC: "
-    cat /sys/fs/f2fs/sda11/gc_foreground_calls
+TEST_DIR="$MOUNT_POINT/f2fs_gc_test"
 
-    echo -n "BGGC: "
-    cat /sys/fs/f2fs/sda11/gc_background_calls
+LOG_DIR="/data/local/tmp/f2fs_gc_test_logs"
 
-    echo -n "moved FG: "
-    cat /sys/fs/f2fs/sda11/moved_blocks_foreground
+FILE_SIZE_KB=256
 
-    echo -n "moved BG: "
-    cat /sys/fs/f2fs/sda11/moved_blocks_background
+# 4096 x 256 KiB = 1 GiB
+NUM_FILES=4096
 
-    echo -n "reclaimed: "
-    cat /sys/fs/f2fs/sda11/gc_reclaimed_segments
+# Minimum free space required before starting test.
+MIN_FREE_MB=2048
 
-    echo
-    sleep 1
+############################
+# HELPER FUNCTIONS
+############################
+
+timestamp()
+{
+    date '+%Y-%m-%d_%H-%M-%S'
+}
+
+log()
+{
+    echo "[$(date '+%H:%M:%S')] $1"
+}
+
+get_free_mb()
+{
+    df -k "$MOUNT_POINT" | tail -1 | awk '{print int($4 / 1024)}'
+}
+
+get_f2fs_stat()
+{
+    echo "============================================================"
+    echo "F2FS STATUS - $(date)"
+    echo "============================================================"
+
+    echo ""
+    echo "Filesystem:"
+    df -h "$MOUNT_POINT"
+
+    echo ""
+    echo "F2FS sysfs:"
+    echo "free_segments:"
+    cat /sys/fs/f2fs/sda11/free_segments 2>/dev/null
+
+    echo "dirty_segments:"
+    cat /sys/fs/f2fs/sda11/dirty_segments 2>/dev/null
+
+    echo "gc_urgent:"
+    cat /sys/fs/f2fs/sda11/gc_urgent 2>/dev/null
+
+    echo ""
+    echo "GC counters:"
+    echo "gc_foreground_calls:"
+    cat /sys/fs/f2fs/sda11/gc_foreground_calls 2>/dev/null
+
+    echo "gc_background_calls:"
+    cat /sys/fs/f2fs/sda11/gc_background_calls 2>/dev/null
+
+    echo "moved_blocks_foreground:"
+    cat /sys/fs/f2fs/moved_blocks_foreground 2>/dev/null
+
+    echo "moved_blocks_background:"
+    cat /sys/fs/f2fs/moved_blocks_background 2>/dev/null
+
+    echo ""
+    echo "DebugFS F2FS status:"
+    cat /sys/kernel/debug/f2fs/status 2>/dev/null
+
+    echo ""
+}
+
+############################
+# INITIAL CHECKS
+############################
+
+echo ""
+echo "============================================================"
+echo "        F2FS CONTROLLED GARBAGE COLLECTION TEST"
+echo "============================================================"
+echo ""
+
+log "Mount point : $MOUNT_POINT"
+log "Test dir    : $TEST_DIR"
+log "File size   : ${FILE_SIZE_KB} KB"
+log "File count  : $NUM_FILES"
+log "Total data  : 1 GiB"
+echo ""
+
+if [ "$(id -u)" != "0" ]; then
+    log "ERROR: Run this script as root."
+    exit 1
+fi
+
+if [ ! -d "$MOUNT_POINT" ]; then
+    log "ERROR: Mount point does not exist: $MOUNT_POINT"
+    exit 1
+fi
+
+if [ ! -d /sys/fs/f2fs/sda11 ]; then
+    log "ERROR: /sys/fs/f2fs/sda11 does not exist."
+    exit 1
+fi
+
+if [ ! -e /sys/fs/f2fs/sda11/gc_urgent ]; then
+    log "ERROR: gc_urgent sysfs node does not exist."
+    exit 1
+fi
+
+############################
+# FREE SPACE CHECK
+############################
+
+FREE_MB=$(get_free_mb)
+
+log "Current free space: ${FREE_MB} MB"
+
+if [ "$FREE_MB" -lt "$MIN_FREE_MB" ]; then
+    log "ERROR: Less than ${MIN_FREE_MB} MB free."
+    log "Free some space before running the test."
+    exit 1
+fi
+
+############################
+# CREATE LOG DIRECTORY
+############################
+
+mkdir -p "$LOG_DIR"
+
+RUN_ID=$(timestamp)
+
+TEST_LOG="$LOG_DIR/test_${RUN_ID}.log"
+KERNEL_LOG="$LOG_DIR/kernel_${RUN_ID}.log"
+BEFORE_LOG="$LOG_DIR/before_gc_${RUN_ID}.log"
+AFTER_LOG="$LOG_DIR/after_gc_${RUN_ID}.log"
+
+exec > "$TEST_LOG" 2>&1
+
+echo "============================================================"
+echo "TEST START: $(date)"
+echo "============================================================"
+
+############################
+# BASELINE
+############################
+
+log "Collecting initial F2FS state..."
+
+get_f2fs_stat | tee "$BEFORE_LOG"
+
+############################
+# REMOVE OLD TEST DIRECTORY
+############################
+
+if [ -d "$TEST_DIR" ]; then
+    log "Removing previous test directory..."
+    rm -rf "$TEST_DIR"
+    sync
+fi
+
+mkdir -p "$TEST_DIR"
+
+############################
+# CREATE FILES
+############################
+
+log "Creating $NUM_FILES files..."
+log "Each file = ${FILE_SIZE_KB} KB"
+log "Expected total = approximately 1 GiB"
+
+START_TIME=$(date +%s)
+
+i=0
+
+while [ "$i" -lt "$NUM_FILES" ]; do
+
+    FILE="$TEST_DIR/file_$(printf '%05d' "$i")"
+
+    dd if=/dev/zero \
+       of="$FILE" \
+       bs=256K \
+       count=1 \
+       2>/dev/null
+
+    if [ $? -ne 0 ]; then
+        log "ERROR: Failed creating $FILE"
+        exit 1
+    fi
+
+    i=$((i + 1))
+
+    if [ $((i % 256)) -eq 0 ]; then
+        log "Created $i / $NUM_FILES files"
+    fi
+
 done
+
+END_TIME=$(date +%s)
+
+log "File creation completed."
+log "Creation time: $((END_TIME - START_TIME)) seconds"
+
+############################
+# FORCE DATA TO STORAGE
+############################
+
+log "Running sync..."
+
+sync
+
+sleep 3
+
+log "State after file creation:"
+
+get_f2fs_stat
+
+############################
+# DELETE EVERY SECOND FILE
+############################
+
+log "Deleting every second file..."
+
+i=1
+
+while [ "$i" -lt "$NUM_FILES" ]; do
+
+    FILE="$TEST_DIR/file_$(printf '%05d' "$i")"
+
+    rm -f "$FILE"
+
+    i=$((i + 2))
+
+done
+
+log "Deletion completed."
+
+############################
+# FORCE DELETIONS TO STORAGE
+############################
+
+log "Running sync after deletion..."
+
+sync
+
+sleep 5
+
+############################
+# STATE BEFORE GC
+############################
+
+log "============================================================"
+log "STATE BEFORE MANUAL GC"
+log "============================================================"
+
+get_f2fs_stat
+
+############################
+# COUNT REMAINING FILES
+############################
+
+REMAINING=$(find "$TEST_DIR" -type f | wc -l)
+
+log "Remaining files : $REMAINING"
+log "Deleted files   : $((NUM_FILES - REMAINING))"
+
+############################
+# START KERNEL LOG CAPTURE
+############################
+
+log "Starting kernel log capture..."
+
+dmesg -w > "$KERNEL_LOG" 2>&1 &
+
+DMESG_PID=$!
+
+log "Kernel log PID: $DMESG_PID"
+
+sleep 2
+
+############################
+# RECORD GC COUNTERS
+############################
+
+FG_BEFORE=$(cat /sys/fs/f2fs/sda11/gc_foreground_calls 2>/dev/null)
+BG_BEFORE=$(cat /sys/fs/f2fs/sda11/gc_background_calls 2>/dev/null)
+MFG_BEFORE=$(cat /sys/fs/f2fs/sda11/moved_blocks_foreground 2>/dev/null)
+MBG_BEFORE=$(cat /sys/fs/f2fs/sda11/moved_blocks_background 2>/dev/null)
+
+log "GC counters before trigger:"
+log "FG GC  = $FG_BEFORE"
+log "BG GC  = $BG_BEFORE"
+log "moved FG = $MFG_BEFORE"
+log "moved BG = $MBG_BEFORE"
+
+############################
+# TRIGGER URGENT GC
+############################
+
+log "============================================================"
+log "TRIGGERING F2FS URGENT GC"
+log "============================================================"
+
+TRIGGER_TIME=$(date '+%Y-%m-%d %H:%M:%S')
+
+echo 1 > /sys/fs/f2fs/sda11/gc_urgent
+
+if [ $? -ne 0 ]; then
+    log "ERROR: Failed to trigger gc_urgent."
+else
+    log "gc_urgent successfully triggered."
+fi
+
+log "Trigger time: $TRIGGER_TIME"
+
+############################
+# WAIT FOR GC
+############################
+
+log "Waiting for GC..."
+
+# Give GC enough time to migrate valid blocks.
+sleep 30
+
+############################
+# STOP KERNEL LOG CAPTURE
+############################
+
+kill "$DMESG_PID" 2>/dev/null
+
+sleep 1
+
+############################
+# FINAL STATE
+############################
+
+log "============================================================"
+log "STATE AFTER GC"
+log "============================================================"
+
+get_f2fs_stat | tee "$AFTER_LOG"
+
+############################
+# GC COUNTER DELTA
+############################
+
+FG_AFTER=$(cat /sys/fs/f2fs/sda11/gc_foreground_calls 2>/dev/null)
+BG_AFTER=$(cat /sys/fs/f2fs/sda11/gc_background_calls 2>/dev/null)
+MFG_AFTER=$(cat /sys/fs/f2fs/sda11/moved_blocks_foreground 2>/dev/null)
+MBG_AFTER=$(cat /sys/fs/f2fs/sda11/moved_blocks_background 2>/dev/null)
+
+echo ""
+echo "============================================================"
+echo "GC COUNTER DELTA"
+echo "============================================================"
+
+echo "Foreground GC:"
+echo "Before = $FG_BEFORE"
+echo "After  = $FG_AFTER"
+
+echo ""
+echo "Background GC:"
+echo "Before = $BG_BEFORE"
+echo "After  = $BG_AFTER"
+
+echo ""
+echo "Moved blocks - Foreground:"
+echo "Before = $MFG_BEFORE"
+echo "After  = $MFG_AFTER"
+
+echo ""
+echo "Moved blocks - Background:"
+echo "Before = $MBG_BEFORE"
+echo "After  = $MBG_AFTER"
+
+############################
+# FINAL DISK STATE
+############################
+
+echo ""
+echo "============================================================"
+echo "FINAL FILESYSTEM STATE"
+echo "============================================================"
+
+df -h "$MOUNT_POINT"
+
+echo ""
+echo "Remaining test files:"
+find "$TEST_DIR" -type f | wc -l
+
+echo ""
+echo "Test directory:"
+du -sh "$TEST_DIR"
+
+############################
+# FINISH
+############################
+
+echo ""
+echo "============================================================"
+echo "TEST COMPLETE"
+echo "============================================================"
+
+echo "Test log:"
+echo "$TEST_LOG"
+
+echo ""
+echo "Kernel log:"
+echo "$KERNEL_LOG"
+
+echo ""
+echo "Before-GC log:"
+echo "$BEFORE_LOG"
+
+echo ""
+echo "After-GC log:"
+echo "$AFTER_LOG"
+
+echo ""
+echo "End time:"
+date
+
+exit 0
