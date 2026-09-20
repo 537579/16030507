@@ -1,6 +1,403 @@
-S. NO	Patch Module	F2FS Modules	Company	Patch Title Under Review	Patch Version	State	Date	Submitter	Patch Link	Impact on Performance	Type of Patch	Patch Description	Redmi Status
-1	F2FS-Core	Data / Folio / Write Path / GC / Compression	Xiaomi	f2fs: support & optimize large folios for writable files	V2	New	15-09-2026	Nanzhe Zhao	V2 Series	Yes	Support / Performance	V2 updates the large-folio support series. It supports large folios for most readable/writable files in buffered I/O, including normal, encrypted and atomic files, while excluding inline-data, compressed and quota files. It also extends f2fs_folio_state, adds partial truncate handling and improves the large-folio write/read paths. The series contains 14 patches.	Yes
-1	F2FS-Core	Quota / Remount	-	f2fs: quota: fix unused-label warning	V1	New	17-09-2026	Arnd Bergmann	Patch	No	Bug Fix	Fixes a compiler warning when CONFIG_QUOTA is disabled. The restore_holder label introduced by the stale-lock-holder fix becomes unused without quota support, so the label is conditionally compiled under CONFIG_QUOTA.	Yes
-2	F2FS-Core	Device Alias / Superblock Validation	-	f2fs: reject device aliasing without a multi-device configuration	V1	New	18-09-2026	Seongjae Jeong	Patch	No	Bug Fix	Prevents a malformed single-device F2FS image from enabling F2FS_FEATURE_DEVICE_ALIAS without the required multi-device configuration. Without the check, segment allocation can dereference FDEV(0) when sbi->devs was never allocated.	Yes
-3	F2FS-Core	Checkpoint / Superblock Validation	-	f2fs: check every cur_*_segno[] entry on readonly images	V1	New	18-09-2026	Kaixuan Li	Patch	No	Bug Fix	Fixes incomplete validation of cur_node_segno[] and cur_data_segno[] on read-only F2FS images. A goto caused the validation loop to terminate after index 0, allowing an invalid segment number to reach reset_curseg() and cause out-of-bounds writes.	Yes
-4	F2FS-Core	Checkpoint / SIT / NAT	-	f2fs: bound the SIT/NAT bitmaps by the checkpoint pack	V1	New	19-09-2026	Kaixuan Li	Patch	No	Bug Fix	Adds bounds checking to ensure sit_ver_bitmap_bytesize and nat_ver_bitmap_bytesize fit inside the allocated checkpoint pack. Prevents crafted filesystem images from causing checkpoint-buffer over-read/overwrite conditions during mount and unmount.	Yes
+#!/system/bin/sh
+
+###############################################################################
+# F2FS FGGC / COPY-OFFLOAD TEST
+#
+# Target:
+#     /data
+#
+# Assumption:
+#     /data is the ~460 GiB F2FS user-data filesystem.
+#
+# Strategy:
+#
+#     1. Preallocate large file
+#     2. Create test files
+#     3. Delete selected files
+#     4. Refill filesystem
+#     5. Generate FGGC pressure
+#     6. Capture F2FS GC / copy-offload traces
+#
+###############################################################################
+
+set -u
+
+TEST_DIR="/data/f2fs_gc_test"
+RESERVE_FILE="/data/f2fs_gc_reserve.bin"
+
+LOG_DIR="/data/f2fs_gc_logs"
+GC_LOG="${LOG_DIR}/gc_trace.log"
+MON_LOG="${LOG_DIR}/space_monitor.log"
+
+# Amount reserved for initial space pressure.
+#
+# 400 GiB is intentionally used instead of 450 GiB so that the
+# workload has enough room to create/delete/rewrite files.
+RESERVE_GIB=400
+
+# Number of workload files.
+NUM_FILES=200
+
+# Size of each workload file.
+#
+# 128 MiB × 200 = 25.6 GiB
+FILE_MIB=128
+
+# Number of files to delete.
+DELETE_EVERY=2
+
+# Number of refill files.
+REFILL_FILES=100
+
+###############################################################################
+# Helpers
+###############################################################################
+
+log()
+{
+    echo "[FGGC-TEST] $*"
+}
+
+die()
+{
+    echo "[FGGC-TEST][ERROR] $*"
+    exit 1
+}
+
+###############################################################################
+# Basic checks
+###############################################################################
+
+log "Checking /data ..."
+
+if [ ! -d /data ]; then
+    die "/data does not exist"
+fi
+
+DF_LINE=$(df -h /data | tail -n 1)
+
+log "Filesystem:"
+echo "$DF_LINE"
+
+FSTYPE=$(stat -f -c %T /data 2>/dev/null)
+
+log "Filesystem type: $FSTYPE"
+
+if [ "$FSTYPE" != "f2fs" ]; then
+    log "WARNING: /data does not report f2fs."
+    log "Continue only if this is expected on your Android build."
+fi
+
+###############################################################################
+# Check available space
+###############################################################################
+
+AVAIL_KB=$(df -k /data | tail -n 1 | awk '{print $4}')
+
+if [ -z "$AVAIL_KB" ]; then
+    die "Unable to determine /data free space"
+fi
+
+log "Available space before test: ${AVAIL_KB} KB"
+
+###############################################################################
+# Create directories
+###############################################################################
+
+rm -rf "$TEST_DIR"
+mkdir -p "$TEST_DIR"
+
+mkdir -p "$LOG_DIR"
+
+###############################################################################
+# Start logging
+###############################################################################
+
+log "Starting kernel GC trace capture"
+
+(
+    while true
+    do
+        dmesg -c >> "$GC_LOG" 2>&1
+        sleep 1
+    done
+) &
+
+DMESG_PID=$!
+
+log "dmesg collector PID: $DMESG_PID"
+
+###############################################################################
+# Space monitor
+###############################################################################
+
+(
+    while true
+    do
+        echo "==================================================" >> "$MON_LOG"
+        date >> "$MON_LOG"
+        df -h /data >> "$MON_LOG"
+
+        if [ -d /sys/fs/f2fs ]; then
+            find /sys/fs/f2fs -maxdepth 2 -type f 2>/dev/null \
+                | grep -E "free_segments|dirty_segments|gc_" \
+                | while read f
+                do
+                    echo "$f:" >> "$MON_LOG"
+                    cat "$f" >> "$MON_LOG" 2>/dev/null
+                done
+        fi
+
+        sleep 5
+    done
+) &
+
+MON_PID=$!
+
+###############################################################################
+# Initial filesystem state
+###############################################################################
+
+log "Initial /data state:"
+df -h /data
+
+###############################################################################
+# Reserve large portion of /data
+###############################################################################
+
+if [ ! -f "$RESERVE_FILE" ]; then
+
+    log "Creating ${RESERVE_GIB} GiB preallocation file"
+
+    START=$(date +%s)
+
+    fallocate -l "${RESERVE_GIB}G" "$RESERVE_FILE"
+
+    RET=$?
+
+    END=$(date +%s)
+
+    if [ $RET -ne 0 ]; then
+        die "fallocate failed"
+    fi
+
+    log "fallocate completed in $((END-START)) seconds"
+
+else
+
+    log "Reserve file already exists"
+
+fi
+
+log "Filesystem after reservation:"
+df -h /data
+
+###############################################################################
+# Create initial workload
+###############################################################################
+
+log "Creating ${NUM_FILES} files of ${FILE_MIB} MiB each"
+
+i=1
+
+while [ $i -le $NUM_FILES ]
+do
+
+    FILE="${TEST_DIR}/file_$(printf "%04d" "$i")"
+
+    log "Creating $FILE"
+
+    fallocate -l "${FILE_MIB}M" "$FILE"
+
+    if [ $? -ne 0 ]; then
+        log "fallocate failed at file $i"
+        break
+    fi
+
+    # Write actual data into the file.
+    #
+    # This is important because we don't want the test to consist
+    # entirely of merely reserved/unwritten extents.
+    #
+    dd if=/dev/zero \
+       of="$FILE" \
+       bs=1M \
+       count="$FILE_MIB" \
+       conv=fsync \
+       2>/dev/null
+
+    i=$((i + 1))
+
+done
+
+log "Initial workload complete"
+
+df -h /data
+
+###############################################################################
+# Sync
+###############################################################################
+
+sync
+
+sleep 5
+
+###############################################################################
+# Delete alternating files
+###############################################################################
+
+log "Deleting alternating files"
+
+i=2
+
+while [ $i -le $NUM_FILES ]
+do
+
+    FILE="${TEST_DIR}/file_$(printf "%04d" "$i")"
+
+    if [ -f "$FILE" ]; then
+        rm -f "$FILE"
+    fi
+
+    i=$((i + DELETE_EVERY))
+
+done
+
+sync
+
+log "Deletion phase complete"
+
+df -h /data
+
+###############################################################################
+# Refill phase
+###############################################################################
+
+log "Starting refill phase"
+
+i=1
+
+while [ $i -le $REFILL_FILES ]
+do
+
+    FILE="${TEST_DIR}/refill_$(printf "%04d" "$i")"
+
+    log "Creating refill file $FILE"
+
+    fallocate -l "${FILE_MIB}M" "$FILE"
+
+    if [ $? -ne 0 ]; then
+        log "Refill stopped at file $i"
+        break
+    fi
+
+    dd if=/dev/zero \
+       of="$FILE" \
+       bs=1M \
+       count="$FILE_MIB" \
+       conv=fsync \
+       2>/dev/null
+
+    i=$((i + 1))
+
+done
+
+sync
+
+log "Refill complete"
+
+df -h /data
+
+###############################################################################
+# Additional pressure phase
+###############################################################################
+
+log "Starting additional allocation pressure"
+
+PRESSURE_DIR="${TEST_DIR}/pressure"
+
+mkdir -p "$PRESSURE_DIR"
+
+i=1
+
+while true
+do
+
+    FILE="${PRESSURE_DIR}/pressure_$(printf "%05d" "$i")"
+
+    fallocate -l 256M "$FILE"
+
+    if [ $? -ne 0 ]; then
+        log "Allocation stopped at pressure file $i"
+        break
+    fi
+
+    dd if=/dev/zero \
+       of="$FILE" \
+       bs=1M \
+       count=256 \
+       conv=fsync \
+       2>/dev/null
+
+    i=$((i + 1))
+
+    if [ $((i % 10)) -eq 0 ]; then
+        log "Pressure files created: $i"
+        df -h /data
+    fi
+
+done
+
+###############################################################################
+# FGGC observation period
+###############################################################################
+
+log "=================================================="
+log "FGGC PRESSURE PHASE"
+log "=================================================="
+
+log "At this point the filesystem should be under allocation pressure."
+
+df -h /data
+
+log "Waiting for GC activity..."
+
+sleep 30
+
+###############################################################################
+# Stop monitors
+###############################################################################
+
+kill "$MON_PID" 2>/dev/null
+kill "$DMESG_PID" 2>/dev/null
+
+###############################################################################
+# Final state
+###############################################################################
+
+sync
+
+log "=================================================="
+log "TEST COMPLETE"
+log "=================================================="
+
+df -h /data
+
+log "GC log:"
+log "$GC_LOG"
+
+log "Monitor log:"
+log "$MON_LOG"
+
+###############################################################################
+# IMPORTANT:
+#
+# The reserve file is intentionally NOT removed automatically.
+#
+# Keeping it allows you to inspect the filesystem state after the test.
+#
+# Remove manually only after collecting logs:
+#
+#     rm -f /data/f2fs_gc_reserve.bin
+#
+###############################################################################
