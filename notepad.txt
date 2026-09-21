@@ -1,446 +1,258 @@
-#!/bin/sh
-
-###############################################################################
-# F2FS Controlled GC Test
-#
-# Goal:
-#   1. Create 1 GiB of 256 KiB files.
-#   2. Sync them to F2FS.
-#   3. Delete every second file.
-#   4. Sync again.
-#   5. Trigger F2FS urgent GC.
-#   6. Capture filesystem/GC statistics.
-#
-# Intended investigation:
-#   Source LBA -> Destination LBA relationship during F2FS GC migration.
-###############################################################################
-
-############################
-# CONFIGURATION
-############################
-
-MOUNT_POINT="/mnt/pass_through/0/emulated"
-
-TEST_DIR="$MOUNT_POINT/f2fs_gc_test"
-
-LOG_DIR="/data/local/tmp/f2fs_gc_test_logs"
-
-FILE_SIZE_KB=256
-
-# 4096 x 256 KiB = 1 GiB
-NUM_FILES=4096
-
-# Minimum free space required before starting test.
-MIN_FREE_MB=2048
-
-############################
-# HELPER FUNCTIONS
-############################
-
-timestamp()
-{
-    date '+%Y-%m-%d_%H-%M-%S'
-}
-
-log()
-{
-    echo "[$(date '+%H:%M:%S')] $1"
-}
-
-get_free_mb()
-{
-    df -k "$MOUNT_POINT" | tail -1 | awk '{print int($4 / 1024)}'
-}
-
-get_f2fs_stat()
-{
-    echo "============================================================"
-    echo "F2FS STATUS - $(date)"
-    echo "============================================================"
-
-    echo ""
-    echo "Filesystem:"
-    df -h "$MOUNT_POINT"
-
-    echo ""
-    echo "F2FS sysfs:"
-    echo "free_segments:"
-    cat /sys/fs/f2fs/sda11/free_segments 2>/dev/null
-
-    echo "dirty_segments:"
-    cat /sys/fs/f2fs/sda11/dirty_segments 2>/dev/null
-
-    echo "gc_urgent:"
-    cat /sys/fs/f2fs/sda11/gc_urgent 2>/dev/null
-
-    echo ""
-    echo "GC counters:"
-    echo "gc_foreground_calls:"
-    cat /sys/fs/f2fs/sda11/gc_foreground_calls 2>/dev/null
-
-    echo "gc_background_calls:"
-    cat /sys/fs/f2fs/sda11/gc_background_calls 2>/dev/null
-
-    echo "moved_blocks_foreground:"
-    cat /sys/fs/f2fs/moved_blocks_foreground 2>/dev/null
-
-    echo "moved_blocks_background:"
-    cat /sys/fs/f2fs/moved_blocks_background 2>/dev/null
-
-    echo ""
-    echo "DebugFS F2FS status:"
-    cat /sys/kernel/debug/f2fs/status 2>/dev/null
-
-    echo ""
-}
-
-############################
-# INITIAL CHECKS
-############################
-
-echo ""
-echo "============================================================"
-echo "        F2FS CONTROLLED GARBAGE COLLECTION TEST"
-echo "============================================================"
-echo ""
-
-log "Mount point : $MOUNT_POINT"
-log "Test dir    : $TEST_DIR"
-log "File size   : ${FILE_SIZE_KB} KB"
-log "File count  : $NUM_FILES"
-log "Total data  : 1 GiB"
-echo ""
-
-if [ "$(id -u)" != "0" ]; then
-    log "ERROR: Run this script as root."
-    exit 1
-fi
-
-if [ ! -d "$MOUNT_POINT" ]; then
-    log "ERROR: Mount point does not exist: $MOUNT_POINT"
-    exit 1
-fi
-
-if [ ! -d /sys/fs/f2fs/sda11 ]; then
-    log "ERROR: /sys/fs/f2fs/sda11 does not exist."
-    exit 1
-fi
-
-if [ ! -e /sys/fs/f2fs/sda11/gc_urgent ]; then
-    log "ERROR: gc_urgent sysfs node does not exist."
-    exit 1
-fi
-
-############################
-# FREE SPACE CHECK
-############################
-
-FREE_MB=$(get_free_mb)
-
-log "Current free space: ${FREE_MB} MB"
-
-if [ "$FREE_MB" -lt "$MIN_FREE_MB" ]; then
-    log "ERROR: Less than ${MIN_FREE_MB} MB free."
-    log "Free some space before running the test."
-    exit 1
-fi
-
-############################
-# CREATE LOG DIRECTORY
-############################
-
-mkdir -p "$LOG_DIR"
-
-RUN_ID=$(timestamp)
-
-TEST_LOG="$LOG_DIR/test_${RUN_ID}.log"
-KERNEL_LOG="$LOG_DIR/kernel_${RUN_ID}.log"
-BEFORE_LOG="$LOG_DIR/before_gc_${RUN_ID}.log"
-AFTER_LOG="$LOG_DIR/after_gc_${RUN_ID}.log"
-
-exec > "$TEST_LOG" 2>&1
-
-echo "============================================================"
-echo "TEST START: $(date)"
-echo "============================================================"
-
-############################
-# BASELINE
-############################
-
-log "Collecting initial F2FS state..."
-
-get_f2fs_stat | tee "$BEFORE_LOG"
-
-############################
-# REMOVE OLD TEST DIRECTORY
-############################
-
-if [ -d "$TEST_DIR" ]; then
-    log "Removing previous test directory..."
-    rm -rf "$TEST_DIR"
-    sync
-fi
-
-mkdir -p "$TEST_DIR"
-
-############################
-# CREATE FILES
-############################
-
-log "Creating $NUM_FILES files..."
-log "Each file = ${FILE_SIZE_KB} KB"
-log "Expected total = approximately 1 GiB"
-
-START_TIME=$(date +%s)
-
-i=0
-
-while [ "$i" -lt "$NUM_FILES" ]; do
-
-    FILE="$TEST_DIR/file_$(printf '%05d' "$i")"
-
-    dd if=/dev/zero \
-       of="$FILE" \
-       bs=256K \
-       count=1 \
-       2>/dev/null
-
-    if [ $? -ne 0 ]; then
-        log "ERROR: Failed creating $FILE"
-        exit 1
-    fi
-
-    i=$((i + 1))
-
-    if [ $((i % 256)) -eq 0 ]; then
-        log "Created $i / $NUM_FILES files"
-    fi
-
-done
-
-END_TIME=$(date +%s)
-
-log "File creation completed."
-log "Creation time: $((END_TIME - START_TIME)) seconds"
-
-############################
-# FORCE DATA TO STORAGE
-############################
-
-log "Running sync..."
-
-sync
-
-sleep 3
-
-log "State after file creation:"
-
-get_f2fs_stat
-
-############################
-# DELETE EVERY SECOND FILE
-############################
-
-log "Deleting every second file..."
-
-i=1
-
-while [ "$i" -lt "$NUM_FILES" ]; do
-
-    FILE="$TEST_DIR/file_$(printf '%05d' "$i")"
-
-    rm -f "$FILE"
-
-    i=$((i + 2))
-
-done
-
-log "Deletion completed."
-
-############################
-# FORCE DELETIONS TO STORAGE
-############################
-
-log "Running sync after deletion..."
-
-sync
-
-sleep 5
-
-############################
-# STATE BEFORE GC
-############################
-
-log "============================================================"
-log "STATE BEFORE MANUAL GC"
-log "============================================================"
-
-get_f2fs_stat
-
-############################
-# COUNT REMAINING FILES
-############################
-
-REMAINING=$(find "$TEST_DIR" -type f | wc -l)
-
-log "Remaining files : $REMAINING"
-log "Deleted files   : $((NUM_FILES - REMAINING))"
-
-############################
-# START KERNEL LOG CAPTURE
-############################
-
-log "Starting kernel log capture..."
-
-dmesg -w > "$KERNEL_LOG" 2>&1 &
-
-DMESG_PID=$!
-
-log "Kernel log PID: $DMESG_PID"
-
-sleep 2
-
-############################
-# RECORD GC COUNTERS
-############################
-
-FG_BEFORE=$(cat /sys/fs/f2fs/sda11/gc_foreground_calls 2>/dev/null)
-BG_BEFORE=$(cat /sys/fs/f2fs/sda11/gc_background_calls 2>/dev/null)
-MFG_BEFORE=$(cat /sys/fs/f2fs/sda11/moved_blocks_foreground 2>/dev/null)
-MBG_BEFORE=$(cat /sys/fs/f2fs/sda11/moved_blocks_background 2>/dev/null)
-
-log "GC counters before trigger:"
-log "FG GC  = $FG_BEFORE"
-log "BG GC  = $BG_BEFORE"
-log "moved FG = $MFG_BEFORE"
-log "moved BG = $MBG_BEFORE"
-
-############################
-# TRIGGER URGENT GC
-############################
-
-log "============================================================"
-log "TRIGGERING F2FS URGENT GC"
-log "============================================================"
-
-TRIGGER_TIME=$(date '+%Y-%m-%d %H:%M:%S')
-
-echo 1 > /sys/fs/f2fs/sda11/gc_urgent
-
-if [ $? -ne 0 ]; then
-    log "ERROR: Failed to trigger gc_urgent."
-else
-    log "gc_urgent successfully triggered."
-fi
-
-log "Trigger time: $TRIGGER_TIME"
-
-############################
-# WAIT FOR GC
-############################
-
-log "Waiting for GC..."
-
-# Give GC enough time to migrate valid blocks.
-sleep 30
-
-############################
-# STOP KERNEL LOG CAPTURE
-############################
-
-kill "$DMESG_PID" 2>/dev/null
-
-sleep 1
-
-############################
-# FINAL STATE
-############################
-
-log "============================================================"
-log "STATE AFTER GC"
-log "============================================================"
-
-get_f2fs_stat | tee "$AFTER_LOG"
-
-############################
-# GC COUNTER DELTA
-############################
-
-FG_AFTER=$(cat /sys/fs/f2fs/sda11/gc_foreground_calls 2>/dev/null)
-BG_AFTER=$(cat /sys/fs/f2fs/sda11/gc_background_calls 2>/dev/null)
-MFG_AFTER=$(cat /sys/fs/f2fs/sda11/moved_blocks_foreground 2>/dev/null)
-MBG_AFTER=$(cat /sys/fs/f2fs/sda11/moved_blocks_background 2>/dev/null)
-
-echo ""
-echo "============================================================"
-echo "GC COUNTER DELTA"
-echo "============================================================"
-
-echo "Foreground GC:"
-echo "Before = $FG_BEFORE"
-echo "After  = $FG_AFTER"
-
-echo ""
-echo "Background GC:"
-echo "Before = $BG_BEFORE"
-echo "After  = $BG_AFTER"
-
-echo ""
-echo "Moved blocks - Foreground:"
-echo "Before = $MFG_BEFORE"
-echo "After  = $MFG_AFTER"
-
-echo ""
-echo "Moved blocks - Background:"
-echo "Before = $MBG_BEFORE"
-echo "After  = $MBG_AFTER"
-
-############################
-# FINAL DISK STATE
-############################
-
-echo ""
-echo "============================================================"
-echo "FINAL FILESYSTEM STATE"
-echo "============================================================"
-
-df -h "$MOUNT_POINT"
-
-echo ""
-echo "Remaining test files:"
-find "$TEST_DIR" -type f | wc -l
-
-echo ""
-echo "Test directory:"
-du -sh "$TEST_DIR"
-
-############################
-# FINISH
-############################
-
-echo ""
-echo "============================================================"
-echo "TEST COMPLETE"
-echo "============================================================"
-
-echo "Test log:"
-echo "$TEST_LOG"
-
-echo ""
-echo "Kernel log:"
-echo "$KERNEL_LOG"
-
-echo ""
-echo "Before-GC log:"
-echo "$BEFORE_LOG"
-
-echo ""
-echo "After-GC log:"
-echo "$AFTER_LOG"
-
-echo ""
-echo "End time:"
-date
-
-exit 0
+console:/ #
+console:/ #
+console:/ #
+console:/ #
+console:/ #
+console:/ #
+console:/ #
+console:/ #
+console:/ #
+console:/ #
+console:/ #
+console:/ #
+console:/ #
+console:/ #
+console:/ #
+console:/ # [   64.490415][  T332] operation not supported error, dev sda, sector 10534920 op 0x14:(COPY_SRC) flags 0x0 phys_seg 1 prio class 0
+[   64.503845][  T125] list_add corruption. prev->next should be next (ffffff8057fef450), but was ffffffc080a3b420. (prev=ffffffc080a3b420).
+[   64.516577][  T125] kernel BUG at lib/list_debug.c:34!
+[   64.521866][  T125] Internal error: Oops - BUG: 00000000f2000800 [#1] PREEMPT SMP
+[   64.529558][  T125] Dumping ftrace buffer:
+[   64.533776][  T125]    (ftrace buffer empty)
+[   64.538229][  T125] Modules linked in: machine_dlkm(O) swr_dmic_dlkm(O) wcd9378_dlkm(O) wcd939x_dlkm(O) wcd938x_dlkm(O) lpass_cdc_wsa_macro_dlkm(O) lpass_cdc_wsa2_macro_dlkm(O) lpass_cdc_va_macro_dlkm(O) lpass_cdc_rx_macro_dlkm(O) lpass_cdc_tx_macro_dlkm(O) lpass_bt_swr_dlkm(O) rmnet_offload(O) rmnet_wlan(O) rmnet_aps(O) rmnet_perf(O) rmnet_shs(O) rmnet_perf_tether(O) swr_ctrl_dlkm(O) wcd9xxx_dlkm(O) adsp_loader_dlkm(O) pinctrl_lpi_dlkm(O) audio_prm_dlkm(O) audio_pkt_dlkm(O) lpass_cdc_dlkm(O) rmnet_core(O) wsa885x_i2c_dlkm(O) spf_core_dlkm(O) gpr_dlkm(O) rmnet_ctl(O) adsp_sleepmon(O) q6_notifier_dlkm(O) ipanetm(O) ipam(O) msm_drm(O) coresight_tmc(O) bt_fm_swr(O) usb_f_gsi(O) usb_f_qdss(O) btfm_slim_codec(O) camera(O) msm_video(O) msm_eva(O) dwc3_msm(O) spcom(O) cnss2(O) btpower(O) qrtr_mhi(O) phy_msm_ssusb_qmp(O) qcom_q6v5_pas(O) spss_utils(O) pci_phy_access(O) msm_memshare(O) msm_kgsl(O) glink_probe(O) frpc_adsprpc(O) qti_ptd_share(O) btfmcodec(O) qcom_cache_allocation(O) slc_mpam(O) qti_power_telemetry(O) mpam_msc_slc(O)
+[   64.538331][  T125]  qcom_pon(O) qcom_cpuss_sleep_stats_v4(O) atmel_mxt_ts(O) qcom_spss(O) qcom_spmi_adc5_gen3(O) qcom_i2c_pmic(O) phy_qcom_m31_eusb2(O) goodix_ts(O) hdcp_qseecom_dlkm(O) lm363x_regulator(O) heap_mem_ext_v01(O) st_fts(O) stm_ftrace(O) stm_p_ost(O) ledtrig_pattern(O) cnss_plat_ipc_qmi_svc(O) leds_qcom_flash(O) leds_qcom_lpg(O) phy_msm_m31_eusb2(O) qrng_dlkm(O) qbt_handler(O) spi_geni_qcom(O) swr_haptics_dlkm(O) qti_thermal_vendor_hooks(O) sync_fence(O) sys_pm_vx(O) hvc_gunyah(O) sysmon_subsystem_stats(O) cnss_utils(O) rmnet_sch(O) cpucp_log(O) qti_userspace_cdev(O) phy_qcom_emu(O) bwmon(O) nvmem_qfprom(O) usb_f_ccid(O) slim_qcom_ngd_ctrl(O) pinctrl_spmi_gpio(O) qti_ocp_notifier(O) qcedev_mod_dlkm(O) phy_qcom_qmp_combo(O) pinctrl_spmi_mpp(O) cdsprm(O) hung_task_enh(O) phy_qcom_eusb2_repeater(O) msm_mmrm(O) qcrypto_msm_dlkm(O) leds_lm36274(O) mpam_msc(O) r8168(O) qcom_pil_info(O) smp2p_sleepstate(O) qti_fixed_regulator(O) eom_driver(O) wsa884x_dlkm(O) wsa883x_dlkm(O) wcd9378_slave_dlkm(O) reboot_mode(O)
+[   64.631201][  T125]  platform_mpam(O) memlat(O) glink_pkt(O) qcom_amoled_regulator(O) qti_qmi_sensor_v2(O) dmesg_dumper(O) qptf(O) qcom_glink_spss(O) qti_qmi_cdev(O) ti_lmu(O) gsim(O) simple_amp_dlkm(O) slimbus(O) smmu_proxy_dlkm(O) qcom_lpm_monitor(O) qcom_pd_mapper(O) q6_dlkm(O) i3c_master_msm_geni(O) leds_qpnp_vibrator_ldo(O) audpkt_ion_dlkm(O) cnss_nl(O) qcom_vadc_common(O) smp2p(O) leds_ti_lmu_common(O) spmi_pmic_arb_debug(O) mac80211(O) qcom_hv_haptics(O) phy_generic(O) radio_i2c_rtc6226_qca(O) qce50_dlkm(O) altmode_glink(O) qti_glink_adc(O) pmic_glink_debug(O) hdmi_dlkm(O) synx_driver(O) tz_log_dlkm(O) mhi_dev_satellite(O) mhi_dev_uci(O) qts(O) msm_hfi_core(O) mhi(O) spmi_pmic_err_debug(O) ufshixs_kioxia(O) qti_dynamic_hw_trip(O) lmh_stats(O) thermal_pause(O) qcom_pmic_ecid(O) coresight_tpdm(O) qcom_q6v5(O) ddr_cdev(O) cnss_prealloc(O) stub_dlkm(O) usb_f_cdev(O) coresight_uetm(O) microdump_collector(O) stm_heartbeat(O) coresight_remote_etm(O) charger_ulog_glink(O) coresight_stm(O) coresight_tmc_sec(O)
+[   64.723450][  T125]  coresight_dummy(O) stm_console(O) qti_battery_charger(O) qcom_va_minidump(O) qcom_sysmon(O) wcd939x_slave_dlkm(O) mbhc_dlkm(O) rmnet_mem(O) ucsi_qti_glink(O) q6_pdr_dlkm(O) thermal_config(O) qti_cpufreq_cdev(O) qti_battery_debug(O) sps_drv(O) qsee_ipc_irq_bridge(O) ipclite(O) spi_cnss_proto(O) msm_hw_fence(O) wcd938x_slave_dlkm(O) qcom_spmi_temp_alarm(O) tmecom_intf_dlkm(O) snd_event_dlkm(O) f_fs_ipc_log(O) pci_msm_drv(O) cfg80211(O) gunyah_trace(O) snd_usb_audio_qmi(O) qti_devfreq_cdev(O) msm_ext_display(O) coresight_tgu(O) gh_panic_notifier(O) coresight_tpda(O) repeater_qti_pmic_eusb2(O) gh_rm_booster(O) gh_irq_lend(O) coresight_trace_noc(O) coresight_cti(O) coresight_funnel(O) coresight_replicator(O) qmp_dlkm(O) smem_mailbox(O) wlan_firmware_service(O) coresight_csr(O) nb7vpq904m(O) qrtr_gunyah(O) qti_amoled_ecm(O) cpu_mpam(O) qti_pmic_glink(O) msm_sysstats(O) pdr_interface(O) msm_geni_serial(O) spi_msm_geni(O) qcom_pdr_msg(O) cpu_hotplug(O) repeater(O) swr_dlkm(O) coresight_qmi(O)
+[   64.814983][  T125]  sdca_registers_dlkm(O) redriver(O) wcd_core_dlkm(O) mpam(O) msm_sharedmem(O) lge_touch_sw49410(O) gh_ctrl(O) qrtr_smd(O) qti_btl(O) llcc_heuristics(O) qcom_stats(O) bcl_pmic5(O) rproc_qcom_common(O) qcom_dynamic_ramoops(O) qcom_voltage_adj(O) core_hang_detect(O) boot_stats(O) qcom_smd(O) msm_performance(O) msm_show_epoch(O) gh_tlmm_vm_mem_access(O) eud(O) mem_hooks(O) dcc_v2(O) cpuss_telemetry(O) qcom_ramdump(O) mem_offline(O) pm8941_pwrkey(O) qcom_fdcvs(O) i2c_qcom_geni(O) stm_core(O) wcd_usbss_i2c(O) msm_show_resume_irq(O) coresight(O) lt9611uxc(O) qcom_rng(O) hwmon(O) qcom_glink_smem(O) qcom_lpm(O) qmi_helpers(O) qcom_edac(O) governor_msm_adreno_ro(O) panel_event_notifier(O) drm_display_helper(O) governor_gpubw_mon(O) governor_msm_adreno_tz(O) bam_dma(O) debugcc_alor(O) qcom_glink(O) pcie_pdc(O) rdbg(O) zram(O) zsmalloc(O) qpace_drv(O) hci_uart tipc_diag ieee802154_6lowpan rfcomm tipc nhc_routing vcan r8153_ecm pptp btqca w5100_spi hidp ieee802154_socket btsdio nhc_dest nhc_ipv6 btbcm ftdi_sio
+[   64.906250][  T125]  nhc_mobility mac802154 ax88179_178a virtio_balloon nhc_udp usbserial 8021q 9pnet_fd pwrseq_core bluetooth vmw_vsock_virtio_transport l2tp_ppp 9pnet w5100 virtio_pci nhc_hop rtl8150 ppp_mppe nhc_fragment ppp_deflate bsd_comp pppox virtio_console ieee802154 rust_binder can asix cdc_ncm tls ppp_generic netfs cdc_ether nfc cdc_acm l2tp_core virtio_blk ptp aqc111 gzvm usbmon pps_core cdc_eem slcan usbnet cctrng open_dice slhc libarc4 virtio_pci_legacy_dev wwan r8152 gnss vcpu_stall_detector can_dev 6lowpan mii macsec rfkill virtio_pci_modern_dev qnoc_alor(O) qnoc_canoe(O) qnoc_chora(O) debugcc_canoe(O) icc_rpmh(O) qcom_dcvs(O) camcc_alor(O) cambistmclkcc_canoe(O) camcc_canoe(O) clk_dummy(O) clk_rpmh(O) dcvs_fp(O) dispcc_canoe(O) evacc_canoe(O) gcc_alor(O) gcc_canoe(O) gcc_chora(O) icc_bcm_voter(O) gpucc_canoe(O) rpmh_regulator(O) sdhci_msm(O) tcsrcc_canoe(O) ufs_qcom(O) tcsrcc_chora(O) videocc_canoe(O) videocc_chora(O) clk_qcom(O) i2c_msm_geni(O) qcom_rpmh(O) mem_buf(O) msm_qmp(O) smcinvoke_dlkm(O)
+[   64.998591][  T125]  qcom_soc_wdt(O) arm_smmu(O) crm_v2(O) msm_gpi(O) qcom_iommu_debug(O) mem_buf_msgq(O) qcom_wdt_core(O) qcom_dload_mode(O) memory_dump_v2(O) qcom_aoss(O) pinctrl_alor(O) qcom_logbuf_boot_log(O) pinctrl_canoe(O) pinctrl_chora(O) pmic_pon_log(O) qcom_logbuf_vendor_hooks(O) qcom_tsens(O) qrtr(O) si_core_module(O) ufshcd_crypto_qti(O) pinctrl_msm(O) qcom_pdc(O) qcom_ipc_logging(O) minidump(O) qcom_dma_heaps(O) mem_buf_dev(O) gh_rm_heap_manager(O) qcom_iommu_util(O) arm_smmu_pmu(O) secure_buffer(O) gic_intr_routing(O) cpucp_fast(O) mem_prot(O) mdt_loader(O) qcom_ice(O) sched_walt(O) qcom_scm(O) gh_vcpu_mgr(O) qcom_pmu_lib(O) gh_mem_notifier(O) gh_rm_drv(O) socinfo(O) gdsc_regulator(O) phy_qcom_ufs_qrbtc_sdm845(O) phy_qcom_ufs_qmp_v4_canoe(O) qcom_cpu_vendor_hooks(O) qcom_spmi_pmic(O) qcom_llcc_pmu(O) stub_regulator(O) gh_arm_drv(O) bcl_soc(O) proxy_consumer(O) qcom_scmi_client(O) clk_scmi(O) cmd_db(O) qcom_scmi_vendor(O) cpu_phys_log_map(O) cqhci(O) debug_symbol(O) debug_regulator(O) deferred_free_helper(O)
+[   65.090648][  T125]  gh_dbl(O) gh_msgq(O) icc_clk(O) icc_debug(O) iommu_logger(O) kryo_arm64_edac(O) smem(O) llcc_qcom(O) msm_dma_iommu_mapping(O) nvmem_qcom_spmi_sdam(O) phy_qcom_ufs(O) qcom_ipcc(O) qcom_cpucp(O) qcom_reboot_reason(O) qcom_hwspinlock(O) sg(O) qti_regmap_debugfs(O) spmi_pmic_arb(O) rtc_pm8xxx(O) qseecom_proxy(O) qcom_sdei(O) qnoc_qos(O)
+[   65.215379][  T125] CPU: 1 UID: 0 PID: 125 Comm: kworker/u33:1 Tainted: G        W  O       6.12.38-android16-5-maybe-dirty-4k #1 74dcf584f9232fad82a66713ef3be6639cc5cce9
+[   65.230979][  T125] Tainted: [W]=WARN, [O]=OOT_MODULE
+[   65.236169][  T125] Hardware name: Qualcomm Technologies, Inc. Canoe MTP + ST54L + Kundu (DT)
+[   65.244917][  T125] Workqueue: writeback wb_workfn (flush-8:0)
+[   65.250914][  T125] pstate: 63400005 (nZCv daif +PAN -UAO +TCO +DIT -SSBS BTYPE=--)
+[   65.258771][  T125] pc : __list_add_valid_or_report+0xd4/0xdc
+[   65.264677][  T125] lr : __list_add_valid_or_report+0xd4/0xdc
+[   65.270583][  T125] sp : ffffffc080a3b120
+[   65.274702][  T125] x29: ffffffc080a3b160 x28: fffffffee206ed00 x27: ffffffc080a3b3e0
+[   65.282738][  T125] x26: ffffffc080a3b300 x25: 0000000000000002 x24: 000000000005c85a
+[   65.290775][  T125] x23: ffffffc080a3b3fc x22: ffffffc080a3b420 x21: ffffff8057fef330
+[   65.298810][  T125] x20: ffffff80778fc940 x19: ffffff8050de0000 x18: ffffffdf6780bf00
+[   65.306845][  T125] x17: 00000000c006287d x16: 00000000c006287d x15: 0000000000000004
+[   65.314882][  T125] x14: ffffff8b67b38000 x13: 0000000000000003 x12: 0000000000000003
+[   65.322917][  T125] x11: 00000000ffffbfff x10: c0000000ffffbfff x9 : 9033c286c645da00
+[   65.330953][  T125] x8 : 9033c286c645da00 x7 : 205b5d3534383330 x6 : 352e34362020205b
+[   65.338989][  T125] x5 : ffffffdf67a609d0 x4 : ffffffc080a3accf x3 : 0000000000000000
+[   65.347024][  T125] x2 : ffffff8b67ddbd78 x1 : ffffff8b67dcd588 x0 : 0000000000000075
+[   65.355059][  T125] Call trace:
+[   65.358296][  T125]  __list_add_valid_or_report+0xd4/0xdc
+[   65.363843][  T125]  f2fs_allocate_data_block+0xd2c/0xe18
+[   65.369393][  T125]  do_write_page+0x9c/0x5b0
+[   65.373868][  T125]  f2fs_outplace_write_data+0x78/0x100
+[   65.379326][  T125]  f2fs_do_write_data_page+0x40c/0x948
+[   65.384785][  T125]  f2fs_write_single_data_page+0x284/0x7dc
+[   65.390602][  T125]  f2fs_write_data_pages+0x7d0/0xd0c
+[   65.395882][  T125]  do_writepages+0xe0/0x2f4
+[   65.400360][  T125]  __writeback_single_inode+0x44/0x4ac
+[   65.405819][  T125]  writeback_sb_inodes+0x30c/0x538
+[   65.410919][  T125]  __writeback_inodes_wb+0x9c/0xec
+[   65.416019][  T125]  wb_writeback+0x158/0x440
+[   65.420495][  T125]  wb_workfn+0x388/0x5d4
+[   65.424704][  T125]  process_scheduled_works+0x1c4/0x45c
+[   65.430162][  T125]  worker_thread+0x32c/0x3e8
+[   65.434728][  T125]  kthread+0x11c/0x1b0
+[   65.438760][  T125]  ret_from_fork+0x10/0x20
+[   65.443149][  T125] Code: 911f3c00 aa0303e1 aa0803e3 97ffe53b (d4210000)
+[   65.450124][  T125] ---[ end trace 0000000000000000 ]---
+[   65.455582][  T125] Kernel panic - not syncing: Oops - BUG: Fatal exception
+[   65.462736][  T125] SMP: stopping secondary CPUs
+[   65.469189][  T125] Dumping ftrace buffer:
+[   65.473397][  T125]    (ftrace buffer empty)
+[   65.477792][  T125] ufshcd-qcom 1d84000.ufshc: ......dumping ufs info .......
+[   65.485114][  T125] ufshcd-qcom 1d84000.ufshc: UFS Host state=1
+[   65.491197][  T125] ufshcd-qcom 1d84000.ufshc: outstanding reqs=0x0 tasks=0x0
+[   65.498519][  T125] ufshcd-qcom 1d84000.ufshc: saved_err=0x0, saved_uic_err=0x0
+[   65.506018][  T125] ufshcd-qcom 1d84000.ufshc: Device power mode=1, UIC link state=1
+[   65.513965][  T125] ufshcd-qcom 1d84000.ufshc: PM in progress=0, sys. suspended=0
+[   65.521645][  T125] ufshcd-qcom 1d84000.ufshc: Clk gate=0
+[   65.527192][  T125] ufshcd-qcom 1d84000.ufshc: last_hibern8_exit_tstamp at 0 us, hibern8_exit_cnt=47
+[   65.536567][  T125] ufshcd-qcom 1d84000.ufshc: last intr at 64488957 us, last intr status=0x420
+[   65.545496][  T125] ufshcd-qcom 1d84000.ufshc: error handling flags=0x0, req. abort count=0
+[   65.554066][  T125] ufshcd-qcom 1d84000.ufshc: hba->ufs_version=0x400, Host capabilities=0xd5c7031f, caps=0x13cc
+[   65.564512][  T125] ufshcd-qcom 1d84000.ufshc: quirks=0x400000, dev. quirks=0x840
+[   65.572192][  T125] ufshcd-qcom 1d84000.ufshc: [RX, TX]: gear=[2, 2], lane[2, 2], rate = 2
+[   65.580674][  T125] ufshcd-qcom 1d84000.ufshc: UFS RPM level = 1
+[   65.586846][  T125] ufshcd-qcom 1d84000.ufshc: UFS SPM level = 3
+[   65.593019][  T125] ufshcd-qcom 1d84000.ufshc: host_blocked=0
+[   65.593019][  T125]  host_failed =0
+[   65.593019][  T125]  Host self-block=0
+[   65.606308][  T125] ufshcd-qcom 1d84000.ufshc: ............. ufs dump complete ..........
+[   65.614781][  T125] CPU0 next event is 65648401483
+[   65.619704][  T125] CPU1 next event is 64508000000
+[   65.624626][  T125] CPU2 next event is 68004000000
+[   65.629548][  T125] CPU3 next event is 68004000000
+[   65.634470][  T125] CPU4 next event is 65744700286
+[   65.639392][  T125] CPU5 next event is 65795699972
+[   65.644315][  T125] CPU6 next event is 68008000000
+[   65.649237][  T125] CPU7 next event is 68008000000
+[   65.662614][  T125] ------------[ cut here ]------------
+[   65.668074][  T125] snapshot: device is powered off
+[   65.673098][  T125] WARNING: CPU: 1 PID: 125 at ../vendor/qcom/opensource/graphics-kernel/kgsl_snapshot.c:546 kgsl_panic_notifier_callback+0x1a0/0x358 [msm_kgsl]
+[   65.688061][  T125] Modules linked in: machine_dlkm(O) swr_dmic_dlkm(O) wcd9378_dlkm(O) wcd939x_dlkm(O) wcd938x_dlkm(O) lpass_cdc_wsa_macro_dlkm(O) lpass_cdc_wsa2_macro_dlkm(O) lpass_cdc_va_macro_dlkm(O) lpass_cdc_rx_macro_dlkm(O) lpass_cdc_tx_macro_dlkm(O) lpass_bt_swr_dlkm(O) rmnet_offload(O) rmnet_wlan(O) rmnet_aps(O) rmnet_perf(O) rmnet_shs(O) rmnet_perf_tether(O) swr_ctrl_dlkm(O) wcd9xxx_dlkm(O) adsp_loader_dlkm(O) pinctrl_lpi_dlkm(O) audio_prm_dlkm(O) audio_pkt_dlkm(O) lpass_cdc_dlkm(O) rmnet_core(O) wsa885x_i2c_dlkm(O) spf_core_dlkm(O) gpr_dlkm(O) rmnet_ctl(O) adsp_sleepmon(O) q6_notifier_dlkm(O) ipanetm(O) ipam(O) msm_drm(O) coresight_tmc(O) bt_fm_swr(O) usb_f_gsi(O) usb_f_qdss(O) btfm_slim_codec(O) camera(O) msm_video(O) msm_eva(O) dwc3_msm(O) spcom(O) cnss2(O) btpower(O) qrtr_mhi(O) phy_msm_ssusb_qmp(O) qcom_q6v5_pas(O) spss_utils(O) pci_phy_access(O) msm_memshare(O) msm_kgsl(O) glink_probe(O) frpc_adsprpc(O) qti_ptd_share(O) btfmcodec(O) qcom_cache_allocation(O) slc_mpam(O) qti_power_telemetry(O) mpam_msc_slc(O)
+[   65.688086][  T125]  qcom_pon(O) qcom_cpuss_sleep_stats_v4(O) atmel_mxt_ts(O) qcom_spss(O) qcom_spmi_adc5_gen3(O) qcom_i2c_pmic(O) phy_qcom_m31_eusb2(O) goodix_ts(O) hdcp_qseecom_dlkm(O) lm363x_regulator(O) heap_mem_ext_v01(O) st_fts(O) stm_ftrace(O) stm_p_ost(O) ledtrig_pattern(O) cnss_plat_ipc_qmi_svc(O) leds_qcom_flash(O) leds_qcom_lpg(O) phy_msm_m31_eusb2(O) qrng_dlkm(O) qbt_handler(O) spi_geni_qcom(O) swr_haptics_dlkm(O) qti_thermal_vendor_hooks(O) sync_fence(O) sys_pm_vx(O) hvc_gunyah(O) sysmon_subsystem_stats(O) cnss_utils(O) rmnet_sch(O) cpucp_log(O) qti_userspace_cdev(O) phy_qcom_emu(O) bwmon(O) nvmem_qfprom(O) usb_f_ccid(O) slim_qcom_ngd_ctrl(O) pinctrl_spmi_gpio(O) qti_ocp_notifier(O) qcedev_mod_dlkm(O) phy_qcom_qmp_combo(O) pinctrl_spmi_mpp(O) cdsprm(O) hung_task_enh(O) phy_qcom_eusb2_repeater(O) msm_mmrm(O) qcrypto_msm_dlkm(O) leds_lm36274(O) mpam_msc(O) r8168(O) qcom_pil_info(O) smp2p_sleepstate(O) qti_fixed_regulator(O) eom_driver(O) wsa884x_dlkm(O) wsa883x_dlkm(O) wcd9378_slave_dlkm(O) reboot_mode(O)
+[   65.780938][  T125]  platform_mpam(O) memlat(O) glink_pkt(O) qcom_amoled_regulator(O) qti_qmi_sensor_v2(O) dmesg_dumper(O) qptf(O) qcom_glink_spss(O) qti_qmi_cdev(O) ti_lmu(O) gsim(O) simple_amp_dlkm(O) slimbus(O) smmu_proxy_dlkm(O) qcom_lpm_monitor(O) qcom_pd_mapper(O) q6_dlkm(O) i3c_master_msm_geni(O) leds_qpnp_vibrator_ldo(O) audpkt_ion_dlkm(O) cnss_nl(O) qcom_vadc_common(O) smp2p(O) leds_ti_lmu_common(O) spmi_pmic_arb_debug(O) mac80211(O) qcom_hv_haptics(O) phy_generic(O) radio_i2c_rtc6226_qca(O) qce50_dlkm(O) altmode_glink(O) qti_glink_adc(O) pmic_glink_debug(O) hdmi_dlkm(O) synx_driver(O) tz_log_dlkm(O) mhi_dev_satellite(O) mhi_dev_uci(O) qts(O) msm_hfi_core(O) mhi(O) spmi_pmic_err_debug(O) ufshixs_kioxia(O) qti_dynamic_hw_trip(O) lmh_stats(O) thermal_pause(O) qcom_pmic_ecid(O) coresight_tpdm(O) qcom_q6v5(O) ddr_cdev(O) cnss_prealloc(O) stub_dlkm(O) usb_f_cdev(O) coresight_uetm(O) microdump_collector(O) stm_heartbeat(O) coresight_remote_etm(O) charger_ulog_glink(O) coresight_stm(O) coresight_tmc_sec(O)
+[   65.873177][  T125]  coresight_dummy(O) stm_console(O) qti_battery_charger(O) qcom_va_minidump(O) qcom_sysmon(O) wcd939x_slave_dlkm(O) mbhc_dlkm(O) rmnet_mem(O) ucsi_qti_glink(O) q6_pdr_dlkm(O) thermal_config(O) qti_cpufreq_cdev(O) qti_battery_debug(O) sps_drv(O) qsee_ipc_irq_bridge(O) ipclite(O) spi_cnss_proto(O) msm_hw_fence(O) wcd938x_slave_dlkm(O) qcom_spmi_temp_alarm(O) tmecom_intf_dlkm(O) snd_event_dlkm(O) f_fs_ipc_log(O) pci_msm_drv(O) cfg80211(O) gunyah_trace(O) snd_usb_audio_qmi(O) qti_devfreq_cdev(O) msm_ext_display(O) coresight_tgu(O) gh_panic_notifier(O) coresight_tpda(O) repeater_qti_pmic_eusb2(O) gh_rm_booster(O) gh_irq_lend(O) coresight_trace_noc(O) coresight_cti(O) coresight_funnel(O) coresight_replicator(O) qmp_dlkm(O) smem_mailbox(O) wlan_firmware_service(O) coresight_csr(O) nb7vpq904m(O) qrtr_gunyah(O) qti_amoled_ecm(O) cpu_mpam(O) qti_pmic_glink(O) msm_sysstats(O) pdr_interface(O) msm_geni_serial(O) spi_msm_geni(O) qcom_pdr_msg(O) cpu_hotplug(O) repeater(O) swr_dlkm(O) coresight_qmi(O)
+[   65.964701][  T125]  sdca_registers_dlkm(O) redriver(O) wcd_core_dlkm(O) mpam(O) msm_sharedmem(O) lge_touch_sw49410(O) gh_ctrl(O) qrtr_smd(O) qti_btl(O) llcc_heuristics(O) qcom_stats(O) bcl_pmic5(O) rproc_qcom_common(O) qcom_dynamic_ramoops(O) qcom_voltage_adj(O) core_hang_detect(O) boot_stats(O) qcom_smd(O) msm_performance(O) msm_show_epoch(O) gh_tlmm_vm_mem_access(O) eud(O) mem_hooks(O) dcc_v2(O) cpuss_telemetry(O) qcom_ramdump(O) mem_offline(O) pm8941_pwrkey(O) qcom_fdcvs(O) i2c_qcom_geni(O) stm_core(O) wcd_usbss_i2c(O) msm_show_resume_irq(O) coresight(O) lt9611uxc(O) qcom_rng(O) hwmon(O) qcom_glink_smem(O) qcom_lpm(O) qmi_helpers(O) qcom_edac(O) governor_msm_adreno_ro(O) panel_event_notifier(O) drm_display_helper(O) governor_gpubw_mon(O) governor_msm_adreno_tz(O) bam_dma(O) debugcc_alor(O) qcom_glink(O) pcie_pdc(O) rdbg(O) zram(O) zsmalloc(O) qpace_drv(O) hci_uart tipc_diag ieee802154_6lowpan rfcomm tipc nhc_routing vcan r8153_ecm pptp btqca w5100_spi hidp ieee802154_socket btsdio nhc_dest nhc_ipv6 btbcm ftdi_sio
+[   66.055965][  T125]  nhc_mobility mac802154 ax88179_178a virtio_balloon nhc_udp usbserial 8021q 9pnet_fd pwrseq_core bluetooth vmw_vsock_virtio_transport l2tp_ppp 9pnet w5100 virtio_pci nhc_hop rtl8150 ppp_mppe nhc_fragment ppp_deflate bsd_comp pppox virtio_console ieee802154 rust_binder can asix cdc_ncm tls ppp_generic netfs cdc_ether nfc cdc_acm l2tp_core virtio_blk ptp aqc111 gzvm usbmon pps_core cdc_eem slcan usbnet cctrng open_dice slhc libarc4 virtio_pci_legacy_dev wwan r8152 gnss vcpu_stall_detector can_dev 6lowpan mii macsec rfkill virtio_pci_modern_dev qnoc_alor(O) qnoc_canoe(O) qnoc_chora(O) debugcc_canoe(O) icc_rpmh(O) qcom_dcvs(O) camcc_alor(O) cambistmclkcc_canoe(O) camcc_canoe(O) clk_dummy(O) clk_rpmh(O) dcvs_fp(O) dispcc_canoe(O) evacc_canoe(O) gcc_alor(O) gcc_canoe(O) gcc_chora(O) icc_bcm_voter(O) gpucc_canoe(O) rpmh_regulator(O) sdhci_msm(O) tcsrcc_canoe(O) ufs_qcom(O) tcsrcc_chora(O) videocc_canoe(O) videocc_chora(O) clk_qcom(O) i2c_msm_geni(O) qcom_rpmh(O) mem_buf(O) msm_qmp(O) smcinvoke_dlkm(O)
+[   66.148307][  T125]  qcom_soc_wdt(O) arm_smmu(O) crm_v2(O) msm_gpi(O) qcom_iommu_debug(O) mem_buf_msgq(O) qcom_wdt_core(O) qcom_dload_mode(O) memory_dump_v2(O) qcom_aoss(O) pinctrl_alor(O) qcom_logbuf_boot_log(O) pinctrl_canoe(O) pinctrl_chora(O) pmic_pon_log(O) qcom_logbuf_vendor_hooks(O) qcom_tsens(O) qrtr(O) si_core_module(O) ufshcd_crypto_qti(O) pinctrl_msm(O) qcom_pdc(O) qcom_ipc_logging(O) minidump(O) qcom_dma_heaps(O) mem_buf_dev(O) gh_rm_heap_manager(O) qcom_iommu_util(O) arm_smmu_pmu(O) secure_buffer(O) gic_intr_routing(O) cpucp_fast(O) mem_prot(O) mdt_loader(O) qcom_ice(O) sched_walt(O) qcom_scm(O) gh_vcpu_mgr(O) qcom_pmu_lib(O) gh_mem_notifier(O) gh_rm_drv(O) socinfo(O) gdsc_regulator(O) phy_qcom_ufs_qrbtc_sdm845(O) phy_qcom_ufs_qmp_v4_canoe(O) qcom_cpu_vendor_hooks(O) qcom_spmi_pmic(O) qcom_llcc_pmu(O) stub_regulator(O) gh_arm_drv(O) bcl_soc(O) proxy_consumer(O) qcom_scmi_client(O) clk_scmi(O) cmd_db(O) qcom_scmi_vendor(O) cpu_phys_log_map(O) cqhci(O) debug_symbol(O) debug_regulator(O) deferred_free_helper(O)
+[   66.240369][  T125]  gh_dbl(O) gh_msgq(O) icc_clk(O) icc_debug(O) iommu_logger(O) kryo_arm64_edac(O) smem(O) llcc_qcom(O) msm_dma_iommu_mapping(O) nvmem_qcom_spmi_sdam(O) phy_qcom_ufs(O) qcom_ipcc(O) qcom_cpucp(O) qcom_reboot_reason(O) qcom_hwspinlock(O) sg(O) qti_regmap_debugfs(O) spmi_pmic_arb(O) rtc_pm8xxx(O) qseecom_proxy(O) qcom_sdei(O) qnoc_qos(O)
+[   66.365097][  T125] CPU: 1 UID: 0 PID: 125 Comm: kworker/u33:1 Tainted: G      D W  O       6.12.38-android16-5-maybe-dirty-4k #1 74dcf584f9232fad82a66713ef3be6639cc5cce9
+[   66.380697][  T125] Tainted: [D]=DIE, [W]=WARN, [O]=OOT_MODULE
+[   66.386691][  T125] Hardware name: Qualcomm Technologies, Inc. Canoe MTP + ST54L + Kundu (DT)
+[   66.395440][  T125] Workqueue: writeback wb_workfn (flush-8:0)
+[   66.401436][  T125] pstate: 634003c5 (nZCv DAIF +PAN -UAO +TCO +DIT -SSBS BTYPE=--)
+[   66.409294][  T125] pc : kgsl_panic_notifier_callback+0x1a0/0x358 [msm_kgsl]
+[   66.416680][  T125] lr : kgsl_panic_notifier_callback+0x1a0/0x358 [msm_kgsl]
+[   66.424064][  T125] sp : ffffffc080a3acc0
+[   66.428184][  T125] x29: ffffffc080a3ace0 x28: ffffff801d518000 x27: ffffffc080a3b3e0
+[   66.436220][  T125] x26: ffffffdf678a06e0 x25: ffffffdf679a5000 x24: ffffffdf677faff0
+[   66.444257][  T125] x23: ffffff801d518000 x22: 0000000000000000 x21: ffffffffffffd028
+[   66.452293][  T125] x20: 00000000fffffff8 x19: ffffff803f13b778 x18: ffffffdf6780bf00
+[   66.460329][  T125] x17: 0000000000000002 x16: 0000000000000000 x15: 0000000000001678
+[   66.468366][  T125] x14: 80000000ffffd678 x13: 00000000ffffd678 x12: 0000000000001678
+[   66.476402][  T125] x11: 0000000000000058 x10: 0000000000000018 x9 : 9033c286c645da00
+[   66.484438][  T125] x8 : 9033c286c645da00 x7 : 205b5d3437303836 x6 : 362e35362020205b
+[   66.492474][  T125] x5 : ffffffdf67a609d0 x4 : ffffffc080a3a84f x3 : 0000000000000000
+[   66.500510][  T125] x2 : 0000000000000003 x1 : ffffff8b67b38000 x0 : 000000000000001f
+[   66.508546][  T125] Call trace:
+[   66.511783][  T125]  kgsl_panic_notifier_callback+0x1a0/0x358 [msm_kgsl 7500b52c468e94eed1a84f12558c28ac7d72c338]
+[   66.522467][  T125]  notifier_call_chain+0x88/0x16c
+[   66.527480][  T125]  atomic_notifier_call_chain+0x3c/0x60
+[   66.533027][  T125]  panic+0x15c/0x354
+[   66.536890][  T125]  die+0x2f8/0x308
+[   66.540574][  T125]  bug_handler+0x48/0xec
+[   66.544783][  T125]  brk_handler+0x94/0x110
+[   66.549081][  T125]  do_debug_exception+0x9c/0x120
+[   66.554004][  T125]  el1_dbg+0x58/0x70
+[   66.557868][  T125]  el1h_64_sync_handler+0x40/0xcc
+[   66.562880][  T125]  el1h_64_sync+0x68/0x6c
+[   66.567177][  T125]  __list_add_valid_or_report+0xd4/0xdc
+[   66.572725][  T125]  f2fs_allocate_data_block+0xd2c/0xe18
+[   66.578273][  T125]  do_write_page+0x9c/0x5b0
+[   66.582749][  T125]  f2fs_outplace_write_data+0x78/0x100
+[   66.588208][  T125]  f2fs_do_write_data_page+0x40c/0x948
+[   66.593668][  T125]  f2fs_write_single_data_page+0x284/0x7dc
+[   66.599485][  T125]  f2fs_write_data_pages+0x7d0/0xd0c
+[   66.604766][  T125]  do_writepages+0xe0/0x2f4
+[   66.609242][  T125]  __writeback_single_inode+0x44/0x4ac
+[   66.614700][  T125]  writeback_sb_inodes+0x30c/0x538
+[   66.619801][  T125]  __writeback_inodes_wb+0x9c/0xec
+[   66.624902][  T125]  wb_writeback+0x158/0x440
+[   66.629377][  T125]  wb_workfn+0x388/0x5d4
+[   66.633587][  T125]  process_scheduled_works+0x1c4/0x45c
+[   66.639046][  T125]  worker_thread+0x32c/0x3e8
+[   66.643613][  T125]  kthread+0x11c/0x1b0
+[   66.647644][  T125]  ret_from_fork+0x10/0x20
+[   66.652031][  T125] ---[ end trace 0000000000000000 ]---
+[   66.857501][  T125] Kernel Offset: 0x1ee5400000 from 0xffffffc080000000
+[   66.864298][  T125] PHYS_OFFSET: 0x80000000
+[   66.868595][  T125] CPU features: 0x0000000,0000003c,2622792c,4f7e7e67
+[   66.875304][  T125] Memory Limit: none
+[   66.879170][  T125] Triggering late bite
+[   66.883266][  T125] Top irqs in last 9562 ms:
+[   66.887743][  T125] IRQ 13 [GICv3:arch_timer] - 923 times
+[   66.893291][  T125] IRQ 18 [GICv3:ipcc_0] - 90 times
+[   66.898391][  T125] IRQ 47 [GICv3:apps_rsc-drv-2] - 205 times
+[   66.904297][  T125] IRQ 51 [GICv3:disp_crm_sw_drv_1] - 77 times
+[   66.910380][  T125] IRQ 352 [ipcc:glink-native-19] - 90 times
+[   66.916287][  T125] msm_watchdog 17600000.qcom,wdt: Causing a QCOM Apps Watchdog bite!
+[   66.924415][  T125] msm_watchdog 17600000.qcom,wdt: Wdog - STS: 0x80000b4d, CTL: 0x0, BARK TIME: 0x47fe5, BITE TIME: 0x47fe5
+Format: Log Type - Time(microsec) - Message - Optional Info
+Log Type: B - Since Boot(Power On Reset),  D - Delta,  S - Statistic
+S - QC_IMAGE_VERSION_STRING=BOOT.MXF.2.5.3-00272-KAANAPALI-1
+S - IMAGE_VARIANT_STRING=SocKaanapaliLAA
+S - OEM_IMAGE_VERSION_STRING=ip-10-195-205-133
+S - Boot Interface: UFS
+S - Secure Boot: Off
+S - Boot Config @ 0x221c8600 = 0x00000001
+S - JTAG ID @ 0x221c8744 = 0x102b40e1
+S - OEM ID @ 0x221c8700 = 0x00000000
+S - Serial Number @ 0x221c8610 = 0x0000046aeed3a410
+S - OEM Config Row 0 @ 0x221c2158 = 0x0000000000000000
+S - OEM Config Row 1 @ 0x221c2160 = 0x0000000000000000
+S - Feature Config Row 0 @ 0x221c2188 = 0x000000ffffffff00
+S - Feature Config Row 1 @ 0x221c2190 = 0xf000000000000000
+S - OEM LCS:PROD
+S - Core 0 Frequency, 1363 MHz
+S - PBL Patch Ver: 3
+S - PBL freq: 600 MHZ
+S - Cluster: 0, Core: 0
+S - --------------------------------------------------
+PBL Timestamps (in usecs)(,version/bytes)
+--------------------------------------------------
+CPBL Start: 168
+CPBL HW INIT Start: 550
+CPBL HW INIT End: 4536
+CPBL APPS Reset Start: 4620
+CPBL APPS Sec Packet Init Start: 4788
+CPBL APPS Sec Packet Init End: 4798
+CPBL APPS Init Start: 4820
+CPBL APPS Cache Init Start: 5256
+CPBL APPS Cache Init End: 5296
+CPBL APPS Core PWRUP Start: 5375
+CPBL APPS Core PWRUP End: 5443
+CPBL APPS Init End: 5465
+CPBL APPS Reset End: 5471
+APBL start: 5486,16777474
+CPBL Exit: 5533
+ APBL Cold Boot start6281
+APBL Boot Media Detect Start: 18076
+         APBL flash init stage 1 complete: 21073
+         APBL flash init stage 2 complete: 46360
+         APBL flash init stage 3 complete: 58105
+APBL Boot Media Detect End: 59338
+APBL SHELF Load+Auth Start: 59341
+        APBL ELF MD Load Start: 67723
+        APBL ELF MD Load End: 68256
+        APBL ELF Seg Load Start: 68260
+        APBL ELF Seg Load End: 71018,4864
+                APBL SEQ Valid Set: 71041
+                APBL SEQ SA ACK Rcvd: 73148
+        APBL ELF MD Load Start: 75635
+        APBL ELF MD Load End: 76975
+        APBL ELF Auth Start: 76983
+        APBL ELF Auth End: 83005
+        APBL ELF Seg Load Start: 83006
+        APBL ELF Seg Load End: 83390,12088
+        APBL ELF Seg Verify Start: 83391
+        APBL ELF Seg Verify End: 84128
+        APBL ELF MD Load Start: 85626
+        APBL ELF MD Load End: 86945
+        APBL ELF Auth Start: 86948
+        APBL ELF Auth End: 88735
+        APBL ELF Seg Load Start: 88736
+        APBL ELF Seg Load End: 89153,12088
+        APBL ELF Seg Verify Start: 89155
+        APBL ELF Seg Verify End: 89878
+        APBL ELF MD Load Start: 91378
+        APBL ELF MD Load End: 92951
+        APBL ELF Auth Start: 92955
+        APBL ELF Auth End: 99503
+        APBL ELF Seg Load Start: 99505
+        APBL ELF Seg Load End: 101258,43760
+        APBL ELF Seg Verify Start: 101261
+        APBL ELF Seg Verify End: 102545
+        APBL ELF MD Load Start: 104045
+        APBL ELF MD Load End: 105805
+        APBL ELF Auth Start: 105810
+        APBL ELF Auth End: 112345
+        APBL ELF Seg Load Start: 112348
+        APBL ELF Seg Load End: 118181,203840
+        APBL ELF Seg Verify Start: 118183
+        APBL ELF Seg Verify End: 121731
+        APBL ELF MD Load Start: 123231
+        APBL ELF MD Load End: 124903
+        APBL ELF Auth Start: 124906
+        APBL ELF Auth End: 131488
+        APBL ELF Seg Load Start: 131491
