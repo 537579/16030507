@@ -1,0 +1,13 @@
+### Accepted
+S. NO	Patch Module	F2FS Module	Company	Patch Title - Accepted	Patch Version	Date	Patch Link
+1	F2FS-Core	Metadata / Node / Compression Cache	Kernel	f2fs: introduce metadata cache	V9	22-09-2026	Patchwork Series 1167171
+
+### Version update
+S. NO	Patch Module	F2FS Modules	Company	Patch Title Under Review	Patch Version	State	Date	Submitter	Patch Link	Impact on Performance	Type of Patch	Patch Description	Redmi Status
+1	MM / F2FS-Core	Page/Folio Private Data / Compression / Data	Kernel / NVIDIA ecosystem	Remove PG_private by using page/folio->private checks instead	V5	Under Review	20-09-2026	Zi Yan	V5 Series	No direct performance impact	Support / Refactoring	V5 updates the PG_private-removal series to prepare for future PG_folio work. It replaces PG_private checks with page/folio->private checks and includes F2FS changes to stop using PG_private and convert private-flag helpers to folio-only handling. The V5 series contains 17 patches and is being tested across F2FS, fscrypt, EROFS, zsmalloc and other subsystems.	Yes
+
+### New submit
+
+S. NO	Patch Module	F2FS Modules	Company	Patch Title Under Review	Patch Version	State	Date	Submitter	Patch Link	Impact on Performance	Type of Patch	Patch Description	Redmi Status
+1	F2FS-Core	mmap / Write Path	Kernel	f2fs: remove mappedtodisk flag usage in mmap write path	V1	Under Review	21-09-2026	Nanzhe Zhao	F2FS mailing-list record	Possible	Refactoring / Support	Removes F2FS's use of the mappedtodisk page flag in the mmap write path, aligning the filesystem with the broader kernel effort to eliminate PG_mappedtodisk/mapped-to-disk state from page handling.	Yes
+2	F2FS-Core	Resize / GC / Pinned Allocation	Kernel	f2fs: recompute the pinned area boundary after resizing	V1	Under Review / Held	22-09-2026	Zhan Xusheng	Patch	No direct performance impact	Bug Fix	Recomputes pinned_area_max_secno when filesystem size changes during resize. Without this, the pinned allocation boundary can remain beyond the new MAIN_SECS() after shrinking, potentially allowing pinned allocation into removed sections. The author subsequently asked to hold the patch after identifying an unsigned-underflow/exact-boundary issue, so it remains under review rather than accepted.	Yes
