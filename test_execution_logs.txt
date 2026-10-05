@@ -1,1 +1,244 @@
-.
+canoe:/data # ./mkfs.f2fs /dev/block/sdg
+
+    F2FS-tools: mkfs.f2fs Ver: 1.15.0 (2022-05-26)
+
+Info: Disable heap-based policy
+Info: Debug level = 0
+Info: Trim is enabled
+Info: [/dev/block/sdg] Disk Model: THGJFMT2E46BATVB
+Info: Segments per section = 1
+Info: Sections per zone = 1
+Info: sector size = 4096
+Info: total sectors = 32768 (128 MB)
+Info: zone aligned segment0 blkaddr: 512
+Info: format version with
+  "Linux version 6.12.38-android16-5-maybe-dirty-4k (kleaf@build-host) (Android (14043575, +pgo, +bolt, +lto, +mlgo, based on r536225) clang version 19.0.1 (https://android.googlesource.com/toolchain/llvm-project b3a530ec6537146650e42be89f1089e9a3588460),"
+Info: [/dev/block/sdg] Discarding device
+Info: This device doesn't support BLKSECDISCARD
+Info: Discarded 128 MB
+Info: Overprovision ratio = 20.000%
+Info: Overprovision segments = 25 (GC reserved = 18)
+Info: format successful
+canoe:/data # mount -t f2fs /dev/block/sdg /mnt/test
+canoe:/data #
+canoe:/data # cat /proc/fs/f2fs/sdg/segment_info
+format: segment_type|valid_blocks
+segment_type(0:HD, 1:WD, 2:CD, 3:HN, 4:WN, 5:CN)
+0         3|1   4|0   5|0   0|1   0|0   0|0   0|0   0|0   0|0   0|0
+10        0|0   0|0   0|0   2|0   0|0   0|0   0|0   0|0   0|0   0|0
+20        0|0   0|0   0|0   0|0   0|0   0|0   0|0   1|0   0|0   0|0
+30        0|0   0|0   0|0   0|0   0|0   0|0   0|0   0|0   0|0   0|0
+40        0|0   0|0   0|0   0|0   0|0   0|0   0|0   0|0   0|0   0|0
+50        0|0   0|0   0|0   0|0   0|0   0|0
+canoe:/data #
+canoe:/data #
+canoe:/data #
+canoe:/data #
+canoe:/data # dd if=/dev/random of=/mnt/test/1.txt bs=4K count=14848
+14848+0 records in
+14848+0 records out
+60817408 bytes (58 M) copied, 0.226 s, 257 M/s
+canoe:/data #
+canoe:/data #
+canoe:/data #
+canoe:/data # dd if=/dev/random of=/mnt/test/2.txt bs=4K count=512
+512+0 records in
+512+0 records out
+2097152 bytes (2.0 M) copied, 0.019 s, 105 M/s
+canoe:/data #
+canoe:/data #
+canoe:/data # cat /proc/fs/f2fs/sdg/segment_info
+format: segment_type|valid_blocks
+segment_type(0:HD, 1:WD, 2:CD, 3:HN, 4:WN, 5:CN)
+0         3|1   4|15  5|1   0|1   1|512 1|512 1|512 1|512 1|512 1|512
+10        1|512 1|512 1|0   2|0   0|0   0|0   0|0   0|0   0|0   0|0
+20        0|0   0|0   0|0   0|0   0|0   0|0   0|0   1|512 0|0   0|0
+30        0|0   0|0   0|0   0|0   0|0   0|0   0|0   0|0   0|0   0|0
+40        0|0   0|0   0|0   0|0   0|0   0|0   0|0   0|0   0|0   0|0
+50        0|0   0|0   0|0   0|0   0|0   0|0
+canoe:/data # sync
+canoe:/data # cat /proc/fs/f2fs/sdg/segment_info
+format: segment_type|valid_blocks
+segment_type(0:HD, 1:WD, 2:CD, 3:HN, 4:WN, 5:CN)
+0         3|1   4|16  5|1   0|1   1|512 1|512 1|512 1|512 1|512 1|512
+10        1|512 1|512 1|512 2|0   1|512 1|512 1|512 1|512 1|512 1|512
+20        1|512 1|512 1|512 1|512 1|512 1|512 1|512 1|512 1|512 1|512
+30        1|512 1|512 1|512 1|512 1|512 1|0   0|0   0|0   0|0   0|0
+40        0|0   0|0   0|0   0|0   0|0   0|0   0|0   0|0   0|0   0|0
+50        0|0   0|0   0|0   0|0   0|0   0|0
+canoe:/data # touch /mnt/test/test_file1.txt
+canoe:/data # echo "Hallow oppo copy offloading feature" > /mnt/test/test_file1.txt
+canoe:/data # sync
+canoe:/data # cat /proc/fs/f2fs/sdg/segment_info
+format: segment_type|valid_blocks
+segment_type(0:HD, 1:WD, 2:CD, 3:HN, 4:WN, 5:CN)
+0         3|1   4|17  5|1   0|1   1|512 1|512 1|512 1|512 1|512 1|512
+10        1|512 1|512 1|512 2|0   1|512 1|512 1|512 1|512 1|512 1|512
+20        1|512 1|512 1|512 1|512 1|512 1|512 1|512 1|512 1|512 1|512
+30        1|512 1|512 1|512 1|512 1|512 1|0   0|0   0|0   0|0   0|0
+40        0|0   0|0   0|0   0|0   0|0   0|0   0|0   0|0   0|0   0|0
+50        0|0   0|0   0|0   0|0   0|0   0|0
+canoe:/data # dd if=/dev/random of=/mnt/test/3.txt bs=4K count=512
+dd: /mnt/test/3.txt: write error: No space left on device
+492+0 records in
+491+0 records out
+2011136 bytes (1.9 M) copied, 0.018 s, 107 M/s
+1|canoe:/data #
+1|canoe:/data #
+1|canoe:/data #
+1|canoe:/data # sync
+canoe:/data #
+canoe:/data # cat /proc/fs/f2fs/sdg/segment_info
+format: segment_type|valid_blocks
+segment_type(0:HD, 1:WD, 2:CD, 3:HN, 4:WN, 5:CN)
+0         3|1   4|18  5|1   0|1   1|512 1|512 1|512 1|512 1|512 1|512
+10        1|512 1|512 1|512 2|0   1|512 1|512 1|512 1|512 1|512 1|512
+20        1|512 1|512 1|512 1|512 1|512 1|512 1|512 1|512 1|512 1|512
+30        1|512 1|512 1|512 1|512 1|512 1|491 0|0   0|0   0|0   0|0
+40        0|0   0|0   0|0   0|0   0|0   0|0   0|0   0|0   0|0   0|0
+50        0|0   0|0   0|0   0|0   0|0   0|0
+canoe:/data # sync
+canoe:/data #
+canoe:/data #
+canoe:/data #
+canoe:/data # ./fibmap.f2fs /mnt/test/2.txt
+----------------bdev info-------------------
+devname = 1d840`
+start_lba = 0
+
+----------------file info-------------------
+/mnt/test/2.txt :
+--------------------------------------------
+dev       [8:96]
+ino       [0x      14 : 20]
+mode      [0x    81b6 : 33206]
+nlink     [0x       1 : 1]
+uid       [0x       0 : 0]
+gid       [0x       0 : 0]
+size      [0x  200000 : 2097152]
+blksize   [0x    1000 : 4096]
+blocks    [0x    1000 : 4096]
+--------------------------------------------
+
+file_pos   start_blk     end_blk        blks
+       0        8704        9215         512
+canoe:/data # ./fibmap.f2fs /mnt/test/test_file1.txt
+----------------bdev info-------------------
+devname = 1d840`
+start_lba = 0
+
+----------------file info-------------------
+/mnt/test/test_file1.txt :
+--------------------------------------------
+dev       [8:96]
+ino       [0x      15 : 21]
+mode      [0x    81b6 : 33206]
+nlink     [0x       1 : 1]
+uid       [0x       0 : 0]
+gid       [0x       0 : 0]
+size      [0x      24 : 36]
+blksize   [0x    1000 : 4096]
+blocks    [0x       1 : 1]
+--------------------------------------------
+
+file_pos   start_blk     end_blk        blks
+       0           0           0           1
+canoe:/data # rm /mnt/test/test_file1.txt
+canoe:/data # rm /mnt/test/3.txt
+canoe:/data #
+canoe:/data #
+canoe:/data #
+canoe:/data # sync
+canoe:/data # cat /proc/fs/f2fs/sdg/segment_info
+format: segment_type|valid_blocks
+segment_type(0:HD, 1:WD, 2:CD, 3:HN, 4:WN, 5:CN)
+0         3|1   4|17  5|1   0|1   1|512 1|512 1|512 1|512 1|512 1|512
+10        1|512 1|512 1|512 2|0   1|512 1|512 1|512 1|512 1|512 1|512
+20        1|512 1|512 1|512 1|512 1|512 1|512 1|512 1|512 1|512 1|512
+30        1|512 1|512 1|512 1|512 1|512 1|21  1|99  0|0   0|0   0|0
+40        0|0   0|0   0|0   0|0   0|0   0|0   0|0   0|0   0|0   0|0
+50        0|0   0|0   0|0   0|0   0|0   0|0
+canoe:/data # ./fibmap.f2fs /mnt/test/Logs_with_Patch.log
+----------------bdev info-------------------
+devname = 1d840`
+start_lba = 0
+
+----------------file info-------------------
+/mnt/test/Logs_with_Patch.log :
+--------------------------------------------
+dev       [8:96]
+ino       [0x      17 : 23]
+mode      [0x    81b6 : 33206]
+nlink     [0x       1 : 1]
+uid       [0x       0 : 0]
+gid       [0x       0 : 0]
+size      [0x   77b8d : 490381]
+blksize   [0x    1000 : 4096]
+blocks    [0x     3c0 : 960]
+--------------------------------------------
+
+file_pos   start_blk     end_blk        blks
+       0       22507       22626         120
+canoe:/data # cp /mnt/test/2.txt /data/copy_of_2_txt.txt
+canoe:/data #
+canoe:/data #
+canoe:/data #
+canoe:/data #
+canoe:/data #
+canoe:/data #
+canoe:/data #
+canoe:/data # rm /mnt/test/1.txt
+canoe:/data #
+canoe:/data # ./f2fs_resize /mnt/test 20480
+Issuing F2FS_IOC_RESIZE_FS ioctl to 20480 blocks on /mnt/test...
+Success! Filesystem online shrink complete.
+canoe:/data # cat /proc/fs/f2fs/sdg/segment_info
+format: segment_type|valid_blocks
+segment_type(0:HD, 1:WD, 2:CD, 3:HN, 4:WN, 5:CN)
+0         3|1   4|2   5|0   0|1   1|0   1|0   1|0   1|0   1|0   1|512
+10        1|0   1|0   1|0   2|120 1|0   1|0   1|0   1|0   1|0   1|0
+20        1|0   1|0   1|0   1|0   1|0   1|0   1|0   1|0   1|0   1|0
+30        1|0   1|0
+canoe:/data # ./fibmap.f2fs /mnt/test/Logs_with_Patch.log
+----------------bdev info-------------------
+devname = 1d840`
+start_lba = 0
+
+----------------file info-------------------
+/mnt/test/Logs_with_Patch.log :
+--------------------------------------------
+dev       [8:96]
+ino       [0x      17 : 23]
+mode      [0x    81b6 : 33206]
+nlink     [0x       1 : 1]
+uid       [0x       0 : 0]
+gid       [0x       0 : 0]
+size      [0x   77b8d : 490381]
+blksize   [0x    1000 : 4096]
+blocks    [0x     3c0 : 960]
+--------------------------------------------
+
+file_pos   start_blk     end_blk        blks
+       0       10752       10871         120
+canoe:/data # ./fibmap.f2fs /mnt/test/2.txt
+----------------bdev info-------------------
+devname = 1d840`
+start_lba = 0
+
+----------------file info-------------------
+/mnt/test/2.txt :
+--------------------------------------------
+dev       [8:96]
+ino       [0x      14 : 20]
+mode      [0x    81b6 : 33206]
+nlink     [0x       1 : 1]
+uid       [0x       0 : 0]
+gid       [0x       0 : 0]
+size      [0x  200000 : 2097152]
+blksize   [0x    1000 : 4096]
+blocks    [0x    1000 : 4096]
+--------------------------------------------
+
+file_pos   start_blk     end_blk        blks
+       0        8704        9215         512
+canoe:/data #
