@@ -1,8 +1,12 @@
-Studied F2FS GC flow through gc_data_segment(), victim selection, valid-block migration, move_data_block(), move_data_page(), f2fs_do_write_data_page(), f2fs_outplace_write_data(), do_write_page(), and f2fs_allocate_data_block().
-Added F2FS debug instrumentation to correlate victim segment/offset, source PBA, destination PBA, inode/index and migration flow.
-Integrated the block-copy offload series needed to expose queue limits, REQ_OP_COPY_SRC/DST and blkdev_copy_offload().
-Initially validated the concept on QEMU and corrected the ordering so source-read/GC state handling was not broken before destination allocation.
-Created a reusable f2fs_gc_try_copy_offload() helper that converts F2FS PBAs to device sectors and submits the copy request.
-Integrated offload into move_data_block() and into the deferred write path for move_data_page() via do_write_page().
-Moved testing to the real SM8850 platform with a Kioxia 512 GB UFS 4.1 device.
-Resolved the previous crash and captured a complete GC/offload trace.
+F2FS Background GC (BGGC) – Copy-Offload Validation
+1. Objective
+Validate the current F2FS garbage-collection copy-offload implementation during Background Garbage Collection (BGGC) on the UFS device.
+The validation is intended to confirm:
+BGGC selects victim segments and migrates valid data blocks.
+F2FS invokes the copy-offload path for migrated data blocks.
+The copy request is issued as a 4-KiB device-copy operation in the current implementation.
+Source and destination physical block addresses (PBAs) can be correlated from F2FS logs.
+The SCSI/UFS layer receives the copy command on UFS LUN 6.
+The copy command completes successfully.
+Consecutive migrated blocks show sequential source and destination PBAs.
+The current implementation performs one copy-offload operation per migrated 4-KiB block; batching/optimization is intentionally outside the scope of this validation.
