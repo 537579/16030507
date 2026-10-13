@@ -2682,7 +2682,6 @@ int f2fs_do_write_data_page(struct f2fs_io_info *fio)
 
 //KIC-s
 	if (PageGced(folio_page(folio, 0))) {
-//		printk(KERN_ALERT"%s root num = %p \n",__FUNCTION__,folio_page(folio, 0));
 		fio->io_type = FS_GC_DATA_IO;
 		ClearPageGced(folio_page(folio, 0));
 	}
@@ -2788,22 +2787,13 @@ got_it:
 
 	/* LFS mode write path */
 	f2fs_outplace_write_data(&dn, fio);
-#if 1
+
 	if ((fio->io_type == FS_GC_DATA_IO ||
 				page_private_gcing(fio->page)) &&
 			__is_valid_data_blkaddr(fio->old_blkaddr) &&
 			__is_valid_data_blkaddr(fio->new_blkaddr))
-		f2fs_info(fio->sbi,
-				"[F2FS_GC][FLOW=%016llx] WRITE_SUBMITTED "
-				"SRC_PBA=0x%llx DST_PBA=0x%llx DST_SEG=%u ino=%lu bidx=%lu",
-				(unsigned long long)F2FS_GC_FLOW_ID(
-					GET_SEGNO(fio->sbi, fio->old_blkaddr),
-					GET_BLKOFF_FROM_SEG0(fio->sbi, fio->old_blkaddr)),
-				(unsigned long long)fio->old_blkaddr,
-				(unsigned long long)fio->new_blkaddr,
-				GET_SEGNO(fio->sbi, fio->new_blkaddr),
-				inode->i_ino, folio->index);
-#endif
+
+
 	trace_f2fs_do_write_data_page(folio, OPU);
 	set_inode_flag(inode, FI_APPEND_WRITE);
 	if (atomic_commit)
@@ -4245,7 +4235,7 @@ static int f2fs_iomap_begin(struct inode *inode, loff_t offset, loff_t length,
 	if ((flags & IOMAP_WRITE) &&
 		!f2fs_overwrite_io(inode, offset, length))
 		map.m_may_create = true;
-a
+
 	err = f2fs_map_blocks(inode, &map, F2FS_GET_BLOCK_DIO);
 	if (err)
 		return err;
