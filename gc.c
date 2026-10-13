@@ -26,10 +26,12 @@
 
 static struct kmem_cache *victim_entry_slab;
 
+#if 0
 extern unsigned int tsip_fggc_count;
 extern unsigned int tsip_bggc_count;
 extern unsigned int tsip_trace_ctrl;
 extern unsigned int tsip_fggc_started;
+#endif
 
 /*
  * GC migration trace:
@@ -94,22 +96,6 @@ static int f2fs_gc_try_copy_offload(struct f2fs_sb_info *sbi,
 	params.end_io = NULL;
 	params.private = NULL;
 
-	f2fs_info(sbi,
-		"[F2FS_GC:%s][FLOW=%016llx] "
-		"COPY_OFFLOAD_PREPARED "
-		"SRC_PBA=0x%llx SRC_SECTOR=%llu "
-		"DST_PBA=0x%llx DST_SECTOR=%llu "
-		"LEN=%lu "
-		"SRC_MAX_COPY=%u DST_MAX_COPY=%u", __func__,
-		(unsigned long long)flow_id,
-		(unsigned long long)old_blkaddr,
-		(unsigned long long)src_sector,
-		(unsigned long long)new_blkaddr,
-		(unsigned long long)dst_sector,
-		F2FS_BLKSIZE,
-		bdev_max_copy_sectors(src_bdev),
-		bdev_max_copy_sectors(dst_bdev));
-
 	if (!bdev_max_copy_sectors(src_bdev) ||
 	    !bdev_max_copy_sectors(dst_bdev)) {
 
@@ -124,6 +110,7 @@ static int f2fs_gc_try_copy_offload(struct f2fs_sb_info *sbi,
 		return -EOPNOTSUPP;
 	}
 
+#if 1
 	f2fs_info(sbi,
 		"[F2FS_GC:%s][FLOW=%016llx] "
 		"COPY_OFFLOAD_ATTEMPT "
@@ -133,21 +120,11 @@ static int f2fs_gc_try_copy_offload(struct f2fs_sb_info *sbi,
 		(unsigned long long)old_blkaddr,
 		(unsigned long long)new_blkaddr,
 		F2FS_BLKSIZE);
-
+#endif
 	ret = blkdev_copy_offload(&params);
-
-	f2fs_info(sbi,
-		"[F2FS_GC:%s][FLOW=%016llx] "
-		"COPY_OFFLOAD_RETURN "
-		"ret=%d SRC_PBA=0x%llx DST_PBA=0x%llx", __func__,
-		(unsigned long long)flow_id,
-		ret,
-		(unsigned long long)old_blkaddr,
-		(unsigned long long)new_blkaddr);
 
 	return ret;
 }
-
 
 static unsigned int count_bits(const unsigned long *addr,
 				unsigned int offset, unsigned int len);
@@ -1498,25 +1475,15 @@ static int move_data_block(struct inode *inode, block_t bidx,
 	if (!check_valid_map(F2FS_I_SB(inode), segno, off)) {
 
 		f2fs_info(fio.sbi,
-			"[F2FS_GC:%s][FLOW=%016llx] "
-			"BLOCK_INVALID_SKIP "
-			"victim_seg=%u off=%d", __func__,
-			(unsigned long long)flow_id,
-			segno, off);
+				"[F2FS_GC:%s][FLOW=%016llx] "
+				"BLOCK_INVALID_SKIP "
+				"victim_seg=%u off=%d", __func__,
+				(unsigned long long)flow_id,
+				segno, off);
 
 		err = -ENOENT;
 		goto out;
 	}
-
-	f2fs_info(fio.sbi,
-		"[F2FS_GC:%s][FLOW=%016llx] "
-		"MIGRATION_START "
-		"victim_seg=%u off=%d ino=%lu bidx=%llu", __func__,
-		(unsigned long long)flow_id,
-		segno,
-		off,
-		inode->i_ino,
-		(unsigned long long)bidx);
 
 	/*
 	 * Check whether this inode/block can be moved by GC.
@@ -1526,27 +1493,19 @@ static int move_data_block(struct inode *inode, block_t bidx,
 	if (err) {
 
 		f2fs_info(fio.sbi,
-			"[F2FS_GC:%s][FLOW=%016llx] "
-			"MIGRATION_SKIP_PINNED err=%d", __func__,
-			(unsigned long long)flow_id,
-			err);
+				"[F2FS_GC:%s][FLOW=%016llx] "
+				"MIGRATION_SKIP_PINNED err=%d", __func__,
+				(unsigned long long)flow_id,
+				err);
 
 		goto out;
 	}
-	
-	f2fs_info(F2FS_I_SB(inode),
-        "[F2FS_GC:%s][FLOW=%016llx] MIGRATION_START "
-        "victim_seg=%u off=%d ino=%lu bidx=%llu", __func__,
-        (unsigned long long)F2FS_GC_FLOW_ID(segno, off),
-        segno, off,
-        inode->i_ino,
-        (unsigned long long)bidx);
 
 	set_new_dnode(&dn, inode, NULL, NULL, 0);
 
 	err = f2fs_get_dnode_of_data(&dn,
-					bidx,
-					LOOKUP_NODE);
+			bidx,
+			LOOKUP_NODE);
 
 	if (err)
 		goto out;
@@ -1606,8 +1565,6 @@ static int move_data_block(struct inode *inode, block_t bidx,
 	 * STEP 1: READ SOURCE BEFORE DESTINATION ALLOCATION
 	 * ============================================================
 	 *
-	 * This ordering is intentional.
-	 *
 	 * Source block is read into META_MAPPING before destination
 	 * allocation changes F2FS SIT/segment state.
 	 */
@@ -1628,13 +1585,6 @@ static int move_data_block(struct inode *inode, block_t bidx,
 	 * Read source physical block.
 	 */
 	if (!folio_test_uptodate(mfolio)) {
-
-		f2fs_info(fio.sbi,
-			"[F2FS_GC:%s][FLOW=%016llx] "
-			"SOURCE_READ "
-			"SRC_PBA=0x%llx", __func__, 
-			(unsigned long long)flow_id,
-			(unsigned long long)fio.old_blkaddr);
 
 		err = f2fs_submit_page_bio(&fio);
 
@@ -1691,17 +1641,6 @@ static int move_data_block(struct inode *inode, block_t bidx,
 	}
 
 	fio.new_blkaddr = newaddr;
-
-	f2fs_info(fio.sbi,
-		"[F2FS_GC:%s][FLOW=%016llx] "
-		"DEST_ALLOCATED "
-		"SRC_PBA=0x%llx "
-		"DST_PBA=0x%llx "
-		"DST_SEG=%u", __func__,
-		(unsigned long long)flow_id,
-		(unsigned long long)fio.old_blkaddr,
-		(unsigned long long)newaddr,
-		GET_SEGNO(fio.sbi, newaddr));
 
 	/*
 	 * ============================================================
@@ -1763,9 +1702,7 @@ static int move_data_block(struct inode *inode, block_t bidx,
 	}
 
 	/*
-	 * ============================================================
 	 * STEP 4A: NATIVE COPY SUCCESS
-	 * ============================================================
 	 */
 	if (copy_offloaded) {
 
@@ -1800,35 +1737,11 @@ static int move_data_block(struct inode *inode, block_t bidx,
 					NULL,
 					FS_GC_DATA_IO,
 					F2FS_BLKSIZE);
-
-		f2fs_info(fio.sbi,
-			"[F2FS_GC:%s][FLOW=%016llx] "
-			"MAPPING_UPDATED "
-			"SRC_PBA=0x%llx "
-			"DST_PBA=0x%llx "
-			"RESULT=OFFLOAD", __func__,
-			(unsigned long long)flow_id,
-			(unsigned long long)fio.old_blkaddr,
-			(unsigned long long)newaddr);
-
 		goto put_out;
 	}
 
 	/*
-	 * ============================================================
 	 * STEP 4B: ORIGINAL CPU COPY FALLBACK
-	 * ============================================================
-	 */
-	f2fs_info(fio.sbi,
-		"[F2FS_GC:%s][FLOW=%016llx] "
-		"CPU_COPY_START "
-		"SRC_PBA=0x%llx "
-		"DST_PBA=0x%llx", __func__,
-		(unsigned long long)flow_id,
-		(unsigned long long)fio.old_blkaddr,
-		(unsigned long long)newaddr);
-
-	/*
 	 * Create destination folio.
 	 */
 	efolio = f2fs_filemap_get_folio(META_MAPPING(fio.sbi),
@@ -1848,9 +1761,7 @@ static int move_data_block(struct inode *inode, block_t bidx,
 	fio.encrypted_page = &efolio->page;
 
 	/*
-	 * ============================================================
 	 * ORIGINAL CPU memcpy() PATH
-	 * ============================================================
 	 */
 	f2fs_wait_on_page_writeback(
 			fio.encrypted_page,
@@ -1903,48 +1814,19 @@ static int move_data_block(struct inode *inode, block_t bidx,
 	set_inode_flag(inode,
 		       FI_APPEND_WRITE);
 
-	f2fs_info(fio.sbi,
-		"[F2FS_GC:%s][FLOW=%016llx] "
-		"MAPPING_UPDATED "
-		"SRC_PBA=0x%llx "
-		"DST_PBA=0x%llx "
-		"RESULT=CPU_COPY", __func__,
-		(unsigned long long)flow_id,
-		(unsigned long long)fio.old_blkaddr,
-		(unsigned long long)newaddr);
-
 	f2fs_put_page(fio.encrypted_page,
 		      true);
 
 	goto put_out;
 
 	/*
-	 * ============================================================
 	 * ERROR RECOVERY
-	 * ============================================================
 	 */
 recover_block:
 
 	if (err) {
-
-		f2fs_info(fio.sbi,
-			"[F2FS_GC:%s][FLOW=%016llx] "
-			"MIGRATION_RECOVER "
-			"SRC_PBA=0x%llx "
-			"DST_PBA=0x%llx "
-			"ERR=%d", __func__,
-			(unsigned long long)flow_id,
-			(unsigned long long)fio.old_blkaddr,
-			(unsigned long long)newaddr,
-			err);
-
-		f2fs_do_replace_block(fio.sbi,
-				      &sum,
-				      newaddr,
-				      fio.old_blkaddr,
-				      true,
-				      true,
-				      true);
+		f2fs_do_replace_block(fio.sbi, &sum, newaddr, fio.old_blkaddr,
+				      true, true, true);
 	}
 
 up_out:
@@ -1972,12 +1854,6 @@ static int move_data_page(struct inode *inode, block_t bidx, int gc_type,
 	struct folio *folio;
 	int err = 0;
 
-	f2fs_info(F2FS_I_SB(inode),
-		"[F2FS_GC:%s:%d][FLOW=%016llx] MIGRATION_START: "
-		"victim_seg=%u off=%d ino=%lu bidx=%llu", __func__, gc_type,
-		(unsigned long long)F2FS_GC_FLOW_ID(segno, off),
-		segno, off, inode->i_ino, (unsigned long long)bidx);
-
 	folio = f2fs_get_lock_data_folio(inode, bidx, true);
 	if (IS_ERR(folio))
 		return PTR_ERR(folio);
@@ -2000,7 +1876,6 @@ static int move_data_page(struct inode *inode, block_t bidx, int gc_type,
 		set_page_private_gcing(&folio->page);
 //KIC-s
 		SetPageGced(&folio->page);;
-//		printk(KERN_ALERT"%s set gced to data page %p \n",__FUNCTION__, page);
 //KIC-o
 	} else {
 		struct f2fs_io_info fio = {
