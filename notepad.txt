@@ -1,12 +1,178 @@
-F2FS Background GC (BGGC) – Copy-Offload Validation
-1. Objective
-Validate the current F2FS garbage-collection copy-offload implementation during Background Garbage Collection (BGGC) on the UFS device.
-The validation is intended to confirm:
-BGGC selects victim segments and migrates valid data blocks.
-F2FS invokes the copy-offload path for migrated data blocks.
-The copy request is issued as a 4-KiB device-copy operation in the current implementation.
-Source and destination physical block addresses (PBAs) can be correlated from F2FS logs.
-The SCSI/UFS layer receives the copy command on UFS LUN 6.
-The copy command completes successfully.
-Consecutive migrated blocks show sequential source and destination PBAs.
-The current implementation performs one copy-offload operation per migrated 4-KiB block; batching/optimization is intentionally outside the scope of this validation.
+# F2FS Garbage Collection Copy-Offload Optimization
+
+## Status Report and Proposed Implementation Plan
+
+### 1. Objective
+
+The objective of this investigation is to optimize F2FS garbage collection (GC) by reducing the overhead associated with migrating valid data blocks.
+
+Currently, the GC copy-offload implementation submits copy requests on a block-by-block basis. Each request copies a single 4 KiB block from its original physical block address (PBA) to a newly allocated destination PBA.
+
+Although this approach enables the storage device to perform the data copy, it introduces a separate copy-offload operation for every migrated block. The optimization aims to determine whether multiple eligible blocks can be combined into larger copy requests, reducing request-submission overhead and potentially improving GC performance.
+
+### 2. Current Implementation Status
+
+The current implementation performs the following operations during GC data migration:
+
+1. Identify a valid source block for migration.
+2. Validate the corresponding inode and logical block mapping.
+3. Allocate a destination block through the existing F2FS allocation mechanism.
+4. Attempt copy-offload using the source and destination physical block addresses.
+5. Update the F2FS block mapping after a successful copy.
+6. Fall back to the existing CPU-based migration path if copy-offload fails.
+
+The current implementation therefore supports copy-offload at the individual-block level, including a fallback mechanism.
+
+Previous BGGC testing also demonstrated that copy-offload requests reached the storage device. The observed requests were 4 KiB in size despite a reported copy capability of up to 1 MiB. This indicates an opportunity to investigate larger requests, provided that F2FS can safely construct and submit them.
+
+**Current status:** Block-by-block copy-offload is implemented. Multi-block GC copy-offload batching is still under investigation and has not yet been completed.
+
+### 3. Why Multi-Block Batching Is Difficult
+
+The primary challenge is not the block-layer copy API itself. The challenge is integrating batching into the existing F2FS GC migration lifecycle without violating filesystem consistency.
+
+#### 3.1 Source and destination address continuity
+
+Multiple blocks can be combined into a single copy request only when the source and destination ranges satisfy the required continuity and device constraints.
+
+For example, the following blocks are potential candidates for batching:
+
+| Block | Source PBA | Destination PBA |
+| ----- | ---------: | --------------: |
+| 0     |       1000 |            5000 |
+| 1     |       1001 |            5001 |
+| 2     |       1002 |            5002 |
+
+Both source and destination addresses advance contiguously.
+
+However, F2FS allocates destination blocks through its existing allocation mechanism. Consecutive GC migrations are not guaranteed to receive consecutive destination addresses. A discontinuity in either range can prevent those blocks from being combined into a single contiguous copy request.
+
+Consequently, batching requires explicit address tracking and eligibility checks.
+
+#### 3.2 F2FS allocation and segment accounting
+
+Destination allocation is not simply a matter of selecting the next physical block address.
+
+The existing F2FS allocation path maintains filesystem metadata and segment accounting. Any batching implementation must continue using the appropriate allocation mechanisms and preserve their per-block bookkeeping.
+
+Manually incrementing destination PBAs to construct a contiguous range would bypass those mechanisms and is therefore not a safe solution.
+
+#### 3.3 Mapping updates and filesystem consistency
+
+The current migration path performs the copy and updates the corresponding data-block mapping as part of the same per-block operation.
+
+Batching changes this execution model because multiple blocks may be prepared before the copy request is submitted.
+
+For every migrated block, the implementation must ensure that:
+
+* The source mapping remains valid while migration is pending.
+* The destination has been allocated correctly.
+* The copied data corresponds to the expected source block.
+* The mapping is updated only after the copy has completed successfully.
+* Segment validity, summary information, and other relevant F2FS bookkeeping remain consistent.
+* A failed copy does not leave a mapping pointing to an invalid or incomplete destination.
+
+This requires careful coordination between batch preparation, synchronization, copy submission, mapping updates, and error recovery.
+
+#### 3.4 Synchronization and migration lifecycle
+
+The existing migration path relies on the synchronization and lifecycle assumptions of individual-block GC.
+
+Deferring copy submission introduces a longer interval between destination allocation and mapping update. During that interval, the implementation must prevent conflicting operations from invalidating the pending migration.
+
+The batch implementation must therefore define how the required synchronization is retained or how mappings are safely revalidated before committing each block.
+
+#### 3.5 Multiple copy-offload paths
+
+The current source review identified copy-offload logic in both `gc.c` and `segment.c`.
+
+These paths serve different parts of the GC and write-submission flow. Their responsibilities must be clearly separated before batching is introduced to avoid duplicate copy attempts, incorrect bypassing of normal writes, or inconsistent completion handling.
+
+### 4. Block-Layer Investigation
+
+The block-layer implementation of `blkdev_copy_offload()` supports source and destination segment arrays and accepts transfers larger than one block.
+
+The implementation validates the transfer lengths and alignment and divides the operation into chunks according to the supported copy limits of the source and destination devices.
+
+Therefore, the block layer provides a potential mechanism for reducing the number of copy-offload calls made by F2FS.
+
+However, this does not automatically make batching safe at the filesystem layer. F2FS must first establish that the blocks can be migrated together while preserving the required allocation, synchronization, mapping, and recovery semantics.
+
+### 5. Proposed Way Forward
+
+The recommended approach is to implement conservative, bounded batching in stages.
+
+**Phase 1 — Establish the performance baseline**
+
+* Benchmark the current block-by-block implementation.
+* Run the same workload on an image without F2FS GC copy-offload support.
+* Capture kernel logs and copy-offload request sizes.
+* Record workload elapsed time, GC activity, request counts, and storage-level copy transactions where available.
+
+This establishes whether the current implementation provides a measurable benefit.
+
+**Phase 2 — Implement batch preparation**
+
+Refactor the relevant migration path to collect eligible blocks while preserving the existing F2FS allocation mechanism.
+
+Each pending block must retain the information required for mapping validation, completion, and recovery.
+
+**Phase 3 — Implement contiguous-range batching**
+
+Combine blocks only when the source and destination addresses are both contiguous and all applicable device and request constraints are satisfied.
+
+Start with a bounded batch of up to 16 blocks, equivalent to 64 KiB for 4 KiB F2FS blocks. This is an initial engineering limit, not a hardware-imposed maximum.
+
+Flush the batch whenever an address discontinuity occurs, the batch reaches its limit, or a relevant device or GC boundary is encountered.
+
+**Phase 4 — Preserve mapping and error-handling semantics**
+
+After successful copying, update each block mapping individually and maintain the required F2FS bookkeeping.
+
+If a batch fails, execute a recovery path that preserves filesystem consistency and uses the existing migration fallback where appropriate.
+
+**Phase 5 — Validate correctness**
+
+Test contiguous and noncontiguous ranges, copy-offload failures, destination-allocation failures, and workloads that trigger foreground and background GC.
+
+Confirm that the implementation does not introduce data corruption, stale mappings, incorrect segment accounting, or duplicate copy operations.
+
+**Phase 6 — Measure the optimization**
+
+Compare the baseline and batched implementations using the same workload and comparable initial filesystem conditions.
+
+Measure copy-offload calls per migrated block, transfer sizes, GC completion time, overall workload time, and storage-level transactions.
+
+### 6. Performance Measurement Plan
+
+Two comparisons are required.
+
+**Comparison A — Existing copy-offload implementation versus no copy-offload support**
+
+This determines the benefit of the current implementation. Both images should use the same workload and equivalent filesystem conditions.
+
+**Comparison B — Batched copy-offload versus existing block-by-block copy-offload**
+
+This determines the incremental benefit of the proposed optimization. The no-offload image is not a substitute for this comparison because it measures a different optimization.
+
+The initial benchmark will measure the elapsed time of a repeatable fragmentation and write workload. Kernel logs and storage-level traces will be used to establish whether GC actually occurred and how the copy-offload implementation behaved.
+
+Workload elapsed time alone must not be interpreted as isolated GC latency.
+
+### 7. Expected Outcome
+
+The proposed optimization is intended to reduce the number of copy-offload submissions per migrated block and increase the average transfer size.
+
+Potential benefits include reduced request-submission overhead and improved GC throughput.
+
+The actual performance improvement remains to be established experimentally. It will depend on address continuity, device copy limits, GC workload characteristics, and the cost of the additional batching and synchronization logic.
+
+### 8. Conclusion
+
+The investigation has established that the existing implementation performs copy-offload at the individual-block level and that the block layer supports larger copy operations.
+
+The main engineering challenge is integrating multi-block batching into F2FS without bypassing destination allocation, segment accounting, mapping consistency, or existing error-recovery behavior.
+
+The immediate priorities are to measure the current implementation against the no-offload baseline, complete the migration-lifecycle analysis, and then implement and validate bounded batching.
+
+This staged approach provides a measurable baseline before introducing a more complex GC migration mechanism.
