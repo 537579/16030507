@@ -1,13 +1,13 @@
 #!/system/bin/sh
 # F2FS GC stress/latency test for a dedicated test partition.
 # Example:
-# F2FS_IO=/data/required_bins/f2fs_io IMAGE_LABEL=with_offload ROUNDS=2 LEAVE_FREE_MB=96 sh /data/local/tmp/f2fs_gc_force_latency.sh /mnt/test /dev/block/sdg
+# F2FS_IO=/data/required_bins/f2fs_io IMAGE_LABEL=with_offload ROUNDS=2 LEAVE_FREE_MB=96 sh /data/local/tmp/f2fs_gc_force_latency_known_content_verbose.sh /mnt/test /dev/block/sdg
 #
 # Fills according to actual free space, deletes alternating files, rewrites
 # freed space, then invokes synchronous GC via `f2fs_io gc 1 <file>`.
 # No script can guarantee GC moves a victim: that depends on F2FS segment state
 # and policy. A successful ioctl does not prove blocks were migrated.
-# WARNING: use only on a disposable test partition; this writes most of it.
+# This test deliberately writes substantial data to the test filesystem.
 
 PATH=/system/bin:/system/xbin:/vendor/bin:/sbin:/bin
 export PATH
@@ -21,6 +21,7 @@ GC_WAIT_SEC="${GC_WAIT_SEC:-30}"
 RESULT_CSV="${RESULT_CSV:-/data/local/tmp/f2fs_gc_force_latency.csv}"
 F2FS_IO="${F2FS_IO:-/data/required_bins/f2fs_io}"
 KEEP_FILES="${KEEP_FILES:-0}"
+VERBOSE="${VERBOSE:-1}"
 MIGRATION_LINES="${MIGRATION_LINES:-1000}"
 MIGRATION_CHUNK_KB="${MIGRATION_CHUNK_KB:-4}"
 MIGRATION_SOURCE="${MIGRATION_SOURCE:-/data/local/tmp/f2fs_gc_migration_source.txt}"
@@ -40,7 +41,7 @@ esac
 [ "$ROUNDS" -ge 1 ] && [ "$LEAVE_FREE_MB" -ge 16 ] && [ "$CHUNK_MB" -ge 1 ] && [ "$GC_WAIT_SEC" -ge 1 ] && [ "$MIGRATION_LINES" -ge 1000 ] && [ "$MIGRATION_CHUNK_KB" -ge 4 ] || exit 2
 
 DEVBASE="${SRC##*/}"
-F2FS_TAG="F2FS-fs (${DEVBASE})"
+F2FS_TAG="${F2FS_TAG:-F2FS-fs (${DEVBASE})}"
 BASE="$MNT/.f2fs_gc_force_test"
 MIGRATION_FILE="$BASE/migration_known_content.txt"
 LOGDIR="/data/local/tmp/f2fs_gc_force_${DEVBASE}_${IMAGE_LABEL}_$(date +%Y%m%d_%H%M%S)"
@@ -54,14 +55,42 @@ uptime_s() { awk '{print $1}' /proc/uptime; }
 target_dmesg() { dmesg 2>&1 | grep -F "$F2FS_TAG"; }
 count_markers() { grep -c 'GC_TIMING:.*duration_us=' "$1" 2>/dev/null; }
 duration_marker() { sed -n 's/.*GC_TIMING:.*duration_us=\([0-9][0-9]*\).*/\1/p' "$1" | tail -1; }
+new_duration_marker() {
+  sed -n 's/.*GC_TIMING:.*duration_us=\([0-9][0-9]*\).*/\1/p' "$1" |
+    awk -v skip="$2" 'NR > skip { value=$0 } END { if (value != "") print value }'
+}
+count_copy_success() { grep -c 'COPY_OFFLOAD_SUCCESS' "$1" 2>/dev/null; }
 
-echo "Image=$IMAGE_LABEL mount=$MNT source=$SRC log_filter='$F2FS_TAG' f2fs_io=$F2FS_IO"
-echo "Will generate a ${MIGRATION_LINES}-line known-content file on /data, fragment its copy on the test F2FS mount, then fill/churn and request synchronous GC."
-echo "WARNING: only run on a disposable test partition."
+say() {
+  [ "$VERBOSE" = 0 ] || echo "$*"
+}
+
+echo "============================================================"
+echo "F2FS GC known-content / copy-offload test"
+echo "Image       : $IMAGE_LABEL"
+echo "Mount       : $MNT"
+echo "Source      : $SRC"
+echo "F2FS log tag: $F2FS_TAG"
+echo "f2fs_io     : $F2FS_IO"
+echo "Rounds      : $ROUNDS"
+echo "Target file : $MIGRATION_LINES lines, copied in ${MIGRATION_CHUNK_KB} KiB chunks"
+echo "Free reserve: ${LEAVE_FREE_MB} MiB; fill chunk: ${CHUNK_MB} MiB"
+echo "Log dir     : $LOGDIR"
+echo "CSV         : $RESULT_CSV"
+echo "============================================================"
+
+# Aggregates use GC_TIMING durations observed after each round. A round with
+# no new marker is excluded from the average.
+TOTAL_GC_US=0
+VALID_GC_ROUNDS=0
+TOTAL_COPY_SUCCESS=0
+ROUNDS_WITH_COPY=0
 
 R=1
 while [ "$R" -le "$ROUNDS" ]; do
-  echo "=== Round $R/$ROUNDS ==="
+  echo
+  echo "-------------------- ROUND $R/$ROUNDS --------------------"
+  say "[stage 1/8] Preparing test directory: $BASE"
   rm -rf "$BASE" || exit 1
   mkdir -p "$BASE/fill" "$BASE/rewrite" "$BASE/spacers" || exit 1
 
@@ -69,6 +98,7 @@ while [ "$R" -le "$ROUNDS" ]; do
   # then copy it to the F2FS test mount in small pieces with spacer allocations
   # between pieces. This encourages non-contiguous physical allocation of the
   # target file; it does NOT guarantee a particular victim segment is selected.
+  say "[stage 2/8] Generating known-content source file on /data: $MIGRATION_SOURCE"
   : > "$MIGRATION_SOURCE" || { echo "ERROR: cannot create $MIGRATION_SOURCE"; exit 1; }
   LINE=1
   while [ "$LINE" -le "$MIGRATION_LINES" ]; do
@@ -77,13 +107,17 @@ while [ "$R" -le "$ROUNDS" ]; do
   done
   sync
   SRC_BYTES="$(wc -c < "$MIGRATION_SOURCE" | tr -d ' ')"
-  echo "Generated source=$MIGRATION_SOURCE lines=$MIGRATION_LINES bytes=$SRC_BYTES"
+  say "  Source generated: lines=$MIGRATION_LINES bytes=$SRC_BYTES"
+  say "[stage 3/8] Copying source to F2FS in ${MIGRATION_CHUNK_KB} KiB chunks, interleaving spacer allocations"
   : > "$MIGRATION_FILE" || exit 1
   CHUNK_BYTES=$((MIGRATION_CHUNK_KB * 1024))
   OFFSET=0
   PART=0
   while [ "$OFFSET" -lt "$SRC_BYTES" ]; do
     PART=$((PART + 1))
+    if [ "$VERBOSE" != 0 ] && [ $((PART % 100)) -eq 1 ]; then
+      say "  Copy progress: chunk $PART (offset=$OFFSET/$SRC_BYTES bytes)"
+    fi
     # Append one source chunk to the known-content destination file.
     dd if="$MIGRATION_SOURCE" bs=1 skip="$OFFSET" count="$CHUNK_BYTES" 2>/dev/null >> "$MIGRATION_FILE" || {
       echo "ERROR: failed copying source chunk $PART"; exit 1;
@@ -98,11 +132,14 @@ while [ "$R" -le "$ROUNDS" ]; do
   sync
   rm -f "$BASE/spacers"/spacer_*.bin
   sync
-  echo "Created known-content target=$MIGRATION_FILE bytes=$(wc -c < "$MIGRATION_FILE" | tr -d ' ') chunks=$PART"
+  TARGET_BYTES="$(wc -c < "$MIGRATION_FILE" | tr -d ' ')"
+  say "  Target created: $MIGRATION_FILE bytes=$TARGET_BYTES chunks=$PART"
+  say "[stage 4/8] Capturing baseline free space and F2FS GC timing-marker count"
   FB="$(free_kb)"
   target_dmesg > "$LOGDIR/before_${R}.log"
   OLD="$(count_markers "$LOGDIR/before_${R}.log")"; [ -n "$OLD" ] || OLD=0
 
+  say "[stage 5/8] Filling filesystem while preserving approximately ${LEAVE_FREE_MB} MiB plus headroom"
   I=0
   while :; do
     FREE="$(free_kb)"
@@ -113,15 +150,16 @@ while [ "$R" -le "$ROUNDS" ]; do
     dd if=/dev/zero of="$BASE/fill/chunk_${I}.bin" bs=1M count="$CHUNK_MB" conv=fsync > "$LOGDIR/fill_${R}_${I}.log" 2>&1
     RC=$?
     if [ "$RC" -ne 0 ]; then
-      echo "Fill stopped at chunk $I (rc=$RC); continuing with allocated data."
+      say "  Fill stopped at chunk $I (rc=$RC); keeping successfully allocated data."
       rm -f "$BASE/fill/chunk_${I}.bin"
       I=$((I - 1))
       break
     fi
   done
   sync
-  echo "Allocated $I chunks; free space now $(free_kb) KiB"
+  say "  Fill complete: allocated_chunks=$I free_space_kib=$(free_kb)"
 
+  say "[stage 6/8] Creating allocation churn: deleting alternating fill files and rewriting retained data"
   # Preserve migration_known_content.txt while deleting alternating bulk-fill chunks.
   # Delete every other chunk, then rewrite roughly the same amount into newly
   # allocated files to increase allocation churn/fragmentation.
@@ -137,21 +175,30 @@ while [ "$R" -le "$ROUNDS" ]; do
     [ -f "$f" ] || continue
     J=$((J + 1))
     dd if=/dev/zero of="$BASE/rewrite/rewrite_${J}.bin" bs=1M count="$CHUNK_MB" conv=fsync > "$LOGDIR/rewrite_${R}_${J}.log" 2>&1 || {
-      echo "Rewrite stopped at item $J (low free space)"; break;
+      say "  Rewrite stopped at item $J (allocation failed / low free space)."; break;
     }
   done
+  say "  Churn complete: rewrite_files_attempted=$J free_space_kib=$(free_kb)"
+  say "[stage 7/8] Preparing synchronous GC request and recording pre-GC counters"
   echo "gc control; known migration content is $MIGRATION_FILE" > "$BASE/gc_control" || exit 1
   sync
   FGC="$(free_kb)"
   target_dmesg > "$LOGDIR/pre_gc_${R}.log"
   OLD="$(count_markers "$LOGDIR/pre_gc_${R}.log")"; [ -n "$OLD" ] || OLD=0
+  OLD_COPY="$(count_copy_success "$LOGDIR/pre_gc_${R}.log")"; [ -n "$OLD_COPY" ] || OLD_COPY=0
 
+  say "  Invoking: $F2FS_IO gc 1 $BASE/gc_control"
   START="$(uptime_s)"
   "$F2FS_IO" gc 1 "$BASE/gc_control" > "$LOGDIR/gc_ioctl_${R}.log" 2>&1
   RC=$?
   END="$(uptime_s)"
   GC_MS="$(awk -v s="$START" -v e="$END" 'BEGIN {printf "%.3f",(e-s)*1000}')"
-  cat "$LOGDIR/gc_ioctl_${R}.log"
+  say "  ioctl exit status=$RC; wall-clock elapsed=${GC_MS} ms"
+  if [ -s "$LOGDIR/gc_ioctl_${R}.log" ]; then
+    say "  ioctl output:"
+    sed 's/^/    /' "$LOGDIR/gc_ioctl_${R}.log"
+  fi
+  say "[stage 8/8] Waiting up to ${GC_WAIT_SEC}s for a new GC_TIMING marker and collecting F2FS logs"
 
   T=0
   while [ "$T" -lt "$GC_WAIT_SEC" ]; do
@@ -164,7 +211,20 @@ while [ "$R" -le "$ROUNDS" ]; do
   target_dmesg > "$LOGDIR/after_${R}.log"
   NEW="$(count_markers "$LOGDIR/after_${R}.log")"; [ -n "$NEW" ] || NEW=0
   DELTA=$((NEW - OLD)); [ "$DELTA" -ge 0 ] || DELTA=0
-  GUS="$(duration_marker "$LOGDIR/after_${R}.log")"
+  GUS="$(new_duration_marker "$LOGDIR/after_${R}.log" "$OLD")"
+  [ -n "$GUS" ] || GUS=""
+  COPY_AFTER="$(count_copy_success "$LOGDIR/after_${R}.log")"
+  [ -n "$COPY_AFTER" ] || COPY_AFTER=0
+  COPY_COUNT=$((COPY_AFTER - OLD_COPY))
+  [ "$COPY_COUNT" -ge 0 ] || COPY_COUNT=0
+  if [ "$DELTA" -gt 0 ] && [ -n "$GUS" ]; then
+    TOTAL_GC_US=$((TOTAL_GC_US + GUS))
+    VALID_GC_ROUNDS=$((VALID_GC_ROUNDS + 1))
+  fi
+  if [ "$COPY_COUNT" -gt 0 ]; then
+    TOTAL_COPY_SUCCESS=$((TOTAL_COPY_SUCCESS + COPY_COUNT))
+    ROUNDS_WITH_COPY=$((ROUNDS_WITH_COPY + 1))
+  fi
   FA="$(free_kb)"
   TS="$(date +%Y-%m-%dT%H:%M:%S)"
   NOTE="sync_gc_ioctl"
@@ -172,14 +232,36 @@ while [ "$R" -le "$ROUNDS" ]; do
   [ "$DELTA" -gt 0 ] || NOTE="${NOTE};no_new_GC_TIMING_marker"
   echo "$TS,$IMAGE_LABEL,$MNT,$SRC,$R,$FB,$FGC,$FA,$I,$GC_MS,$GUS,$DELTA,$RC,$NOTE" >> "$RESULT_CSV"
 
-  echo "Free KiB before=$FB at_gc=$FGC after=$FA"
-  echo "Synchronous GC ioctl elapsed=${GC_MS} ms (not pure CPU time)"
-  echo "New GC_TIMING markers=$DELTA; last duration_us=${GUS:-not-found}"
-  echo "Filtered logs: $LOGDIR"
+  echo
+  echo "Round $R result:"
+  echo "  Free space (KiB) : before=$FB at_gc=$FGC after=$FA"
+  echo "  GC ioctl         : rc=$RC wall_elapsed=${GC_MS} ms"
+  echo "  GC timing        : new_markers=$DELTA last_duration_us=${GUS:-not-found}"
+  echo "  Copy-offload     : COPY_OFFLOAD_SUCCESS log_count=$COPY_COUNT"
+  echo "  Filtered logs    : $LOGDIR"
+  say "  CSV row appended to $RESULT_CSV"
   if [ "$KEEP_FILES" != 1 ]; then rm -rf "$BASE"; sync; fi
   echo
   R=$((R + 1))
 done
-echo "CSV: $RESULT_CSV"
-echo "Only '$F2FS_TAG' messages are stored in per-round dmesg logs. Override F2FS_TAG if the kernel uses a different F2FS log identifier."
-echo "GC cannot be guaranteed if F2FS has no eligible victim; verify GC/migration markers."
+echo
+echo "============================================================"
+echo "FINAL SUMMARY"
+echo "============================================================"
+echo "Rounds requested                  : $ROUNDS"
+echo "Rounds with a new GC_TIMING marker: $VALID_GC_ROUNDS"
+if [ "$VALID_GC_ROUNDS" -gt 0 ]; then
+  AVG_GC_US=$((TOTAL_GC_US / VALID_GC_ROUNDS))
+  AVG_GC_MS="$(awk -v u="$TOTAL_GC_US" -v n="$VALID_GC_ROUNDS" 'BEGIN {printf "%.3f",u/n/1000}')"
+  echo "Average GC duration               : ${AVG_GC_US} us (${AVG_GC_MS} ms)"
+  echo "Total measured GC duration        : ${TOTAL_GC_US} us"
+else
+  echo "Average GC duration               : N/A (no valid new GC_TIMING markers)"
+fi
+echo "Rounds with copy-offload success  : $ROUNDS_WITH_COPY"
+echo "Total COPY_OFFLOAD_SUCCESS logs   : $TOTAL_COPY_SUCCESS"
+echo "CSV                               : $RESULT_CSV"
+echo "Per-round logs                    : $LOGDIR"
+echo "============================================================"
+echo "Note: COPY_OFFLOAD_SUCCESS counts are based on F2FS-tagged dmesg lines captured after each GC request."
+echo "============================================================"
