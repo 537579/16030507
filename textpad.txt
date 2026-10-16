@@ -1,0 +1,8 @@
+Preparing the test directory.
+Generating the known-content source file on /data.
+Copying the source file to the F2FS partition in small chunks, with spacer allocations.
+Recording baseline free space and GC timing markers.
+Filling the filesystem while preserving the configured free-space reserve.
+Creating allocation churn by deleting and rewriting files.
+Preparing and invoking synchronous GC.
+Collecting the resulting F2FS logs and calculating round-level results.
