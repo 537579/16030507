@@ -1,0 +1,28 @@
+PS D:\anees\tasks\f2fs_gc_test_suite\f2fs_gc_suite_v01> .\run_on_device.ps1
+>>> Initializing ADB connection...
+>>> Preparing directories on device...
+>>> Pushing files and test suite to device...
+.\lib\: 1 file pushed. 1.6 MB/s (6762 bytes in 0.004s)
+.\tests\: 2 files pushed. 0.8 MB/s (11424 bytes in 0.014s)
+.\run_all.sh: 1 file pushed. 0.2 MB/s (1586 bytes in 0.008s)
+.\gcload: 1 file pushed. 64.3 MB/s (685784 bytes in 0.010s)
+>>> Adjusting file permissions on device...
+>>> Launching test suite on target device...
+>>> Routing benchmark adjustments to active sysfs target node: sda11
+################ MODE=offload_off ################
+tests/fg_gc.sh: /data/local/tmp/f2fs_gc_suite/tests/../lib/common.sh[141]: syntax error: unmatched '{'
+tests/fg_gc.sh[31]: syntax error: unexpected 'APPEND_METRICS="mb_s:MB/s elapsed_ms:ms enospc:flag write_p50_us:us write_p99_us:us write_p999_us:us write_max_us:us"'
+tests/bg_gc.sh: /data/local/tmp/f2fs_gc_suite/tests/../lib/common.sh[141]: syntax error: unmatched '{'
+tests/bg_gc.sh[43]: syntax error: unmatched '{'
+################ MODE=offload_on ################
+tests/fg_gc.sh: /data/local/tmp/f2fs_gc_suite/tests/../lib/common.sh[141]: syntax error: unmatched '{'
+tests/fg_gc.sh[31]: syntax error: unexpected 'APPEND_METRICS="mb_s:MB/s elapsed_ms:ms enospc:flag write_p50_us:us write_p99_us:us write_p999_us:us write_max_us:us"'
+tests/bg_gc.sh: /data/local/tmp/f2fs_gc_suite/tests/../lib/common.sh[141]: syntax error: unmatched '{'
+tests/bg_gc.sh[43]: syntax error: unmatched '{'
+done. results in /data/local/tmp/f2fs_gc_suite/results/
+>>> Pulling test logs from device...
+/data/local/tmp/f2fs_gc_suite/results/./: 4 files pulled. 0.7 MB/s (10306 bytes in 0.015s)
+Results saved successfully to .\results\20261023_163909
+>>> Executing data comparison script via py launcher...
+no results found under .\results\20261023_163909
+PS D:\anees\tasks\f2fs_gc_test_suite\f2fs_gc_suite_v01>
