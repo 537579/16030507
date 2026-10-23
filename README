@@ -1,0 +1,70 @@
+# F2FS GC test suite (Android) — copy offload off vs on
+
+Exercises F2FS foreground and background garbage collection on an Android device, measures GC performance, and compares runs with copy offloading disabled and enabled.
+
+## Layout
+
+| Path | Purpose |
+|---|---|
+| `tools/gcload.c` | Load generator + GC ioctl driver (fill, churn, 
+| append, delete, GC, GC range, checkpoint) | `lib/common.sh` | Shared 
+| shell helpers: counters, tunables, copy-offload toggle, CSV output | 
+| `tests/fg_gc.sh` | 7 foreground GC scenarios | `tests/bg_gc.sh` | 10 
+| background GC scenarios | `run_all.sh` | On-device driver: runs both 
+| suites for `offload_off` then `offload_on` | `run_on_device.sh` | Host 
+| wrapper: build, `adb push`, run, pull, compare | `tools/compare.py` | 
+| Off-vs-on comparison table |
+
+## Quick start
+
+```
+NDK=/path/to/android-ndk ./run_on_device.sh                 # full run
+NDK=... SCALE_PCT=10 ./run_on_device.sh                     # ~10x shorter smoke run
+NDK=... SUITES=fg TESTS="fg_ioctl_sync_gc" ./run_on_device.sh   # one test
+```
+
+Requires `adb root` (sysfs tunables, debugfs and the GC ioctls need root) and debugfs mounted (`mount -t debugfs none /sys/kernel/debug`) for GC counters.
+
+## Copy offload toggle
+
+The suite looks for a writable `/sys/block/<dev>/queue/copy_offload` (or the same under the dm device's `slaves/`) and writes `0`/`1`. **Your kernel may use a different control** — set it explicitly:
+
+```
+COPY_OFFLOAD_CTL=/sys/block/sda/queue/copy_offload \
+COPY_OFFLOAD_ON_VAL=1 COPY_OFFLOAD_OFF_VAL=0 ./run_on_device.sh ```
+
+If no control is found, the run is still executed and labelled, but both modes will behave identically — check `results/*/` logs for the `copy offload '<on|off>': wrote ...` line to confirm the toggle took effect.
+Confirm the device/driver actually advertises offload (e.g. copy limits in the same sysfs directory) before trusting a comparison.
+
+## Scenarios
+
+**Foreground GC** — BG thread is quiesced, fs is aged to ~90% and fragmented, so the write path (or a sync ioctl) must reclaim sections:
+
+1. `fg_append_full` – sequential append into the last free space; write stalls 2. `fg_random_overwrite` – random 4K overwrites on a ~90% full fs 3. `fg_fsync_pressure` – small appends with fsync per chunk 4. `fg_parallel_writers` – 4 concurrent appenders 5. `fg_ioctl_sync_gc` – `F2FS_IOC_GARBAGE_COLLECT` sync=1 until no victim 6. `fg_ioctl_gc_range` – `F2FS_IOC_GARBAGE_COLLECT_RANGE` (needs `main_blkaddr` sysfs) 7. `fg_enospc_recovery` – fill to ENOSPC, free 20%, confirm writes recover
+
+**Background GC** — fs aged to `FILL_PCT` with 15% deleted + random churn:
+
+1. `bg_default_idle` – stock tunables, idle 2. `bg_urgent_high` – `gc_urgent=1` 3. `bg_urgent_low` – `gc_urgent=2` 4. `bg_idle_cost_benefit` – `gc_idle=1`, short sleeps 5. `bg_idle_greedy` – `gc_idle=2`, short sleeps 6. `bg_with_foreground_io` – user IOPS/latency with BG GC off vs on 7. `bg_reclaim_after_delete` – free-segment recovery time after deleting 40% 8. `bg_fsync_workload` – fsync-heavy IO with BG GC off vs on 9. `bg_waf_soak` – 5 min churn; derives GC write amplification 10. `bg_idle_maint` – Android `sm idle-maint run` path (skipped if `sm` absent)
+
+## Metrics (in `results/<mode>/results.csv`)
+
+Throughput/IOPS, write and fsync latency percentiles (p50/p99/p99.9/max), per-GC-call latency (ioctl tests), free/dirty segment change, BG blocks moved and MB/s, GC kthread CPU time (assumes 100 Hz ticks), `gc_waf` = (user blocks + GC-moved blocks) / user blocks, and from debugfs the GC / checkpoint call counts split FG vs BG (`gc_fg`, `gc_bg`, `moved`, `moved_bg`, `cp_calls`, `cp_bg`).
+
+Each test ends with a `status`: `PASS`, `INCONCLUSIVE` (the GC type it targets never ran — tune fill/size), `UNVERIFIED` (debugfs counters unavailable), `SKIPPED` or `FAIL`. `compare.py` prints this table; ignore non-PASS rows.
+
+## Caveats
+
+- **Run on a dedicated or scratch f2fs partition if you can** (`MNT=/mnt/x`).
+  Forcing FG GC needs the fs ~90% full; on a large `/data` that means writing
+  hundreds of GB. `FILL_MAX_MB` caps aging writes but then FG GC may not
+  trigger (tests will report `INCONCLUSIVE`). Back up the device first —
+  filling `/data` can make the device unstable.
+- Tests change GC tunables and restore them at the end of each test; an
+  interrupted run may leave `gc_*` values modified (saved in
+  `results/<mode>/.tunables`).
+- Aging uses random data, so compression/dedup does not skew results.
+- Run each mode several times and compare spread; flash state (GC inside the
+  UFS device, thermal throttling) varies run to run. Alternate the order of
+  `offload_off`/`offload_on` across repeats.
+- `gc_urgent` modes 2 and 3 and some sysfs nodes depend on kernel version;
+  missing nodes only log a warning.
