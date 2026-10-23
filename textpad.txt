@@ -1,8 +1,11 @@
-Preparing the test directory.
-Generating the known-content source file on /data.
-Copying the source file to the F2FS partition in small chunks, with spacer allocations.
-Recording baseline free space and GC timing markers.
-Filling the filesystem while preserving the configured free-space reserve.
-Creating allocation churn by deleting and rewriting files.
-Preparing and invoking synchronous GC.
-Collecting the resulting F2FS logs and calculating round-level results.
+  END {
+      if (gc == "") gc = "NA"
+      if (gcbg == "") gcbg = "NA"
+      if (mv == "") mv = "NA"
+      if (mvbg == "") mvbg = "NA"
+      if (cp == "") cp = "NA"
+      if (cpbg == "") cpbg = "NA"
+
+      printf "gc_calls=%s gc_bg=%s moved=%s moved_bg=%s cp_calls=%s cp_bg=%s\n", \
+        gc, gcbg, mv, mvbg, cp, cpbg
+    }
