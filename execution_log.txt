@@ -2,27 +2,557 @@ PS D:\anees\tasks\f2fs_gc_test_suite\f2fs_gc_suite_v01> .\run_on_device.ps1
 >>> Initializing ADB connection...
 >>> Preparing directories on device...
 >>> Pushing files and test suite to device...
-.\lib\: 1 file pushed. 1.6 MB/s (6762 bytes in 0.004s)
-.\tests\: 2 files pushed. 0.8 MB/s (11424 bytes in 0.014s)
-.\run_all.sh: 1 file pushed. 0.2 MB/s (1586 bytes in 0.008s)
-.\gcload: 1 file pushed. 64.3 MB/s (685784 bytes in 0.010s)
+.\lib\: 1 file pushed. 0.3 MB/s (6771 bytes in 0.020s)
+.\tests\: 2 files pushed. 0.2 MB/s (11453 bytes in 0.059s)
+.\run_all.sh: 1 file pushed. 0.1 MB/s (1589 bytes in 0.016s)
+.\gcload: 1 file pushed. 109.6 MB/s (685784 bytes in 0.006s)
 >>> Adjusting file permissions on device...
 >>> Launching test suite on target device...
 >>> Routing benchmark adjustments to active sysfs target node: sda11
 ################ MODE=offload_off ################
-tests/fg_gc.sh: /data/local/tmp/f2fs_gc_suite/tests/../lib/common.sh[141]: syntax error: unmatched '{'
-tests/fg_gc.sh[31]: syntax error: unexpected 'APPEND_METRICS="mb_s:MB/s elapsed_ms:ms enospc:flag write_p50_us:us write_p99_us:us write_p999_us:us write_max_us:us"'
-tests/bg_gc.sh: /data/local/tmp/f2fs_gc_suite/tests/../lib/common.sh[141]: syntax error: unmatched '{'
+tests/fg_gc.sh: /data/local/tmp/f2fs_gc_suite/tests/../lib/common.sh[153]: syntax error: unmatched '{'
+tests/fg_gc.sh[133]: require_root_f2fs: inaccessible or not found
+[19:10:50] WARN: no copy_offload control found (export COPY_OFFLOAD_CTL=...); run is only labelled 'offload_off'
+[19:10:50] === fg_append_full [offload_off] ===
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+tests/fg_gc.sh[142]: age_fs: inaccessible or not found
+[19:10:51]   append_mb_s = 928.1 MB/s
+[19:10:51]   append_elapsed_ms = 840 ms
+[19:10:51]   append_enospc = 0 flag
+[19:10:51]   append_write_p50_us = 33 us
+[19:10:51]   append_write_p99_us = 112 us
+[19:10:51]   append_write_p999_us = 250 us
+[19:10:51]   append_write_max_us = 294 us
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+[19:10:51]   expected fg_gc_calls > 0 but got 0
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+[19:10:51]   duration_ms = 1101 ms
+[19:10:51]   gc_calls = 0 count
+[19:10:51]   gc_bg = 0 count
+[19:10:51]   moved = 0 count
+[19:10:51]   moved_bg = 0 count
+[19:10:51]   cp_calls = 0 count
+[19:10:52]   cp_bg = 0 count
+[19:10:52]   gc_fg = 0 count
+[19:10:52]   status = INCONCLUSIVE -
+[19:10:52] === fg_append_full: INCONCLUSIVE ===
+[19:10:52] === fg_random_overwrite [offload_off] ===
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+tests/fg_gc.sh[142]: age_fs: inaccessible or not found
+no files in /mnt/test/gctest
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+[19:10:52]   expected fg_gc_calls > 0 but got 0
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+[19:10:52]   duration_ms = 242 ms
+[19:10:52]   gc_calls = 0 count
+[19:10:52]   gc_bg = 0 count
+[19:10:52]   moved = 0 count
+[19:10:52]   moved_bg = 0 count
+[19:10:52]   cp_calls = 0 count
+[19:10:52]   cp_bg = 0 count
+[19:10:53]   gc_fg = 0 count
+[19:10:53]   status = INCONCLUSIVE -
+[19:10:53] === fg_random_overwrite: INCONCLUSIVE ===
+[19:10:53] === fg_fsync_pressure [offload_off] ===
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+tests/fg_gc.sh[142]: age_fs: inaccessible or not found
+[19:10:54]   fsyncappend_mb_s = 91.1 MB/s
+[19:10:54]   fsyncappend_elapsed_ms = 1120 ms
+[19:10:54]   fsyncappend_enospc = 0 flag
+[19:10:54]   fsyncappend_write_p50_us = 4 us
+[19:10:54]   fsyncappend_write_p99_us = 16 us
+[19:10:54]   fsyncappend_write_p999_us = 46 us
+[19:10:54]   fsyncappend_write_max_us = 54 us
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+[19:10:54]   expected fg_gc_calls > 0 but got 0
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+[19:10:54]   duration_ms = 1371 ms
+[19:10:54]   gc_calls = 0 count
+[19:10:54]   gc_bg = 0 count
+[19:10:54]   moved = 0 count
+[19:10:54]   moved_bg = 0 count
+[19:10:54]   cp_calls = 0 count
+[19:10:54]   cp_bg = 0 count
+[19:10:54]   gc_fg = 0 count
+[19:10:54]   status = INCONCLUSIVE -
+[19:10:55] === fg_fsync_pressure: INCONCLUSIVE ===
+[19:10:55] === fg_parallel_writers [offload_off] ===
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+tests/fg_gc.sh[142]: age_fs: inaccessible or not found
+[19:10:55]   par_aggregate_mb_s = 1861.4 MB/s
+[19:10:55]   par_worst_write_p99_us = 109 us
+[19:10:55]   par_worst_write_max_us = 255 us
+[19:10:55]   par_enospc_writers = 0 count
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+[19:10:55]   expected fg_gc_calls > 0 but got 0
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+[19:10:55]   duration_ms = 596 ms
+[19:10:55]   gc_calls = 0 count
+[19:10:55]   gc_bg = 0 count
+[19:10:55]   moved = 0 count
+[19:10:55]   moved_bg = 0 count
+[19:10:56]   cp_calls = 0 count
+[19:10:56]   cp_bg = 0 count
+[19:10:56]   gc_fg = 0 count
+[19:10:56]   status = INCONCLUSIVE -
+[19:10:56] === fg_parallel_writers: INCONCLUSIVE ===
+[19:10:56] === fg_ioctl_sync_gc [offload_off] ===
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+tests/fg_gc.sh[142]: age_fs: inaccessible or not found
+[19:10:56]   ioctl_calls = 2 count
+[19:10:56]   ioctl_ok = 1 count
+[19:10:56]   ioctl_busy = 0 count
+[19:10:56]   ioctl_last_errno = 61 errno
+[19:10:56]   ioctl_elapsed_ms = 0 ms
+[19:10:56]   ioctl_gc_call_p50_us = 182 us
+[19:10:56]   ioctl_gc_call_p99_us = 182 us
+[19:10:56]   ioctl_gc_call_max_us = 182 us
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+[19:10:56]   expected fg_gc_calls > 0 but got 0
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+[19:10:56]   duration_ms = 345 ms
+[19:10:56]   gc_calls = 0 count
+[19:10:56]   gc_bg = 0 count
+[19:10:56]   moved = 0 count
+[19:10:56]   moved_bg = 0 count
+[19:10:57]   cp_calls = 0 count
+[19:10:57]   cp_bg = 0 count
+[19:10:57]   gc_fg = 0 count
+[19:10:57]   status = INCONCLUSIVE -
+[19:10:57] === fg_ioctl_sync_gc: INCONCLUSIVE ===
+[19:10:57] === fg_ioctl_gc_range [offload_off] ===
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+tests/fg_gc.sh[142]: age_fs: inaccessible or not found
+[19:10:57]   range_ret = -1 rc
+[19:10:57]   range_errno = 22 errno
+[19:10:57]   range_elapsed_ms = 0.0 ms
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+[19:10:57]   expected fg_gc_calls > 0 but got 0
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+[19:10:57]   duration_ms = 237 ms
+[19:10:57]   gc_calls = 0 count
+[19:10:57]   gc_bg = 0 count
+[19:10:57]   moved = 0 count
+[19:10:57]   moved_bg = 0 count
+[19:10:57]   cp_calls = 0 count
+[19:10:57]   cp_bg = 0 count
+[19:10:57]   gc_fg = 0 count
+[19:10:57]   status = INCONCLUSIVE -
+[19:10:58] === fg_ioctl_gc_range: INCONCLUSIVE ===
+[19:10:58] === fg_enospc_recovery [offload_off] ===
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+write: Success
+[19:11:02]   recover_mb_s = 1768.8 MB/s
+[19:11:02]   recover_elapsed_ms = 57 ms
+[19:11:02]   recover_enospc = 0 flag
+[19:11:02]   recover_write_p50_us = 37 us
+[19:11:02]   recover_write_p99_us = 91 us
+[19:11:02]   recover_write_p999_us = 112 us
+[19:11:02]   recover_write_max_us = 112 us
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+[19:11:02]   expected fg_gc_calls > 0 but got 0
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+[19:11:02]   duration_ms = -5 ms
+[19:11:02]   gc_calls = 0 count
+[19:11:02]   gc_bg = 0 count
+[19:11:02]   moved = 0 count
+[19:11:02]   moved_bg = 0 count
+[19:11:02]   cp_calls = 0 count
+[19:11:02]   cp_bg = 0 count
+[19:11:02]   gc_fg = 0 count
+[19:11:02]   status = INCONCLUSIVE -
+[19:11:02] === fg_enospc_recovery: INCONCLUSIVE ===
+tests/bg_gc.sh: /data/local/tmp/f2fs_gc_suite/tests/../lib/common.sh[153]: syntax error: unmatched '{'
 tests/bg_gc.sh[43]: syntax error: unmatched '{'
 ################ MODE=offload_on ################
-tests/fg_gc.sh: /data/local/tmp/f2fs_gc_suite/tests/../lib/common.sh[141]: syntax error: unmatched '{'
-tests/fg_gc.sh[31]: syntax error: unexpected 'APPEND_METRICS="mb_s:MB/s elapsed_ms:ms enospc:flag write_p50_us:us write_p99_us:us write_p999_us:us write_max_us:us"'
-tests/bg_gc.sh: /data/local/tmp/f2fs_gc_suite/tests/../lib/common.sh[141]: syntax error: unmatched '{'
+tests/fg_gc.sh: /data/local/tmp/f2fs_gc_suite/tests/../lib/common.sh[153]: syntax error: unmatched '{'
+tests/fg_gc.sh[133]: require_root_f2fs: inaccessible or not found
+[19:11:03] WARN: no copy_offload control found (export COPY_OFFLOAD_CTL=...); run is only labelled 'offload_on'
+[19:11:03] === fg_append_full [offload_on] ===
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+tests/fg_gc.sh[142]: age_fs: inaccessible or not found
+[19:11:04]   append_mb_s = 981.4 MB/s
+[19:11:04]   append_elapsed_ms = 795 ms
+[19:11:04]   append_enospc = 0 flag
+[19:11:04]   append_write_p50_us = 32 us
+[19:11:04]   append_write_p99_us = 108 us
+[19:11:04]   append_write_p999_us = 232 us
+[19:11:04]   append_write_max_us = 296 us
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+[19:11:04]   expected fg_gc_calls > 0 but got 0
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+[19:11:04]   duration_ms = 1029 ms
+[19:11:04]   gc_calls = 0 count
+[19:11:04]   gc_bg = 0 count
+[19:11:04]   moved = 0 count
+[19:11:04]   moved_bg = 0 count
+[19:11:04]   cp_calls = 0 count
+[19:11:04]   cp_bg = 0 count
+[19:11:04]   gc_fg = 0 count
+[19:11:04]   status = INCONCLUSIVE -
+[19:11:04] === fg_append_full: INCONCLUSIVE ===
+[19:11:04] === fg_random_overwrite [offload_on] ===
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+tests/fg_gc.sh[142]: age_fs: inaccessible or not found
+no files in /mnt/test/gctest
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+[19:11:05]   expected fg_gc_calls > 0 but got 0
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+[19:11:05]   duration_ms = 244 ms
+[19:11:05]   gc_calls = 0 count
+[19:11:05]   gc_bg = 0 count
+[19:11:05]   moved = 0 count
+[19:11:05]   moved_bg = 0 count
+[19:11:05]   cp_calls = 0 count
+[19:11:05]   cp_bg = 0 count
+[19:11:05]   gc_fg = 0 count
+[19:11:05]   status = INCONCLUSIVE -
+[19:11:05] === fg_random_overwrite: INCONCLUSIVE ===
+[19:11:05] === fg_fsync_pressure [offload_on] ===
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+tests/fg_gc.sh[142]: age_fs: inaccessible or not found
+[19:11:07]   fsyncappend_mb_s = 86.3 MB/s
+[19:11:07]   fsyncappend_elapsed_ms = 1181 ms
+[19:11:07]   fsyncappend_enospc = 0 flag
+[19:11:07]   fsyncappend_write_p50_us = 4 us
+[19:11:07]   fsyncappend_write_p99_us = 18 us
+[19:11:07]   fsyncappend_write_p999_us = 50 us
+[19:11:07]   fsyncappend_write_max_us = 138 us
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+[19:11:07]   expected fg_gc_calls > 0 but got 0
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+[19:11:07]   duration_ms = 1417 ms
+[19:11:07]   gc_calls = 0 count
+[19:11:07]   gc_bg = 0 count
+[19:11:07]   moved = 0 count
+[19:11:07]   moved_bg = 0 count
+[19:11:07]   cp_calls = 0 count
+[19:11:07]   cp_bg = 0 count
+[19:11:07]   gc_fg = 0 count
+[19:11:07]   status = INCONCLUSIVE -
+[19:11:07] === fg_fsync_pressure: INCONCLUSIVE ===
+[19:11:07] === fg_parallel_writers [offload_on] ===
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+tests/fg_gc.sh[142]: age_fs: inaccessible or not found
+[19:11:08]   par_aggregate_mb_s = 1763.0 MB/s
+[19:11:08]   par_worst_write_p99_us = 141 us
+[19:11:08]   par_worst_write_max_us = 381 us
+[19:11:08]   par_enospc_writers = 0 count
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+[19:11:08]   expected fg_gc_calls > 0 but got 0
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+[19:11:08]   duration_ms = 638 ms
+[19:11:08]   gc_calls = 0 count
+[19:11:08]   gc_bg = 0 count
+[19:11:08]   moved = 0 count
+[19:11:08]   moved_bg = 0 count
+[19:11:08]   cp_calls = 0 count
+[19:11:08]   cp_bg = 0 count
+[19:11:08]   gc_fg = 0 count
+[19:11:08]   status = INCONCLUSIVE -
+[19:11:09] === fg_parallel_writers: INCONCLUSIVE ===
+[19:11:09] === fg_ioctl_sync_gc [offload_on] ===
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+tests/fg_gc.sh[142]: age_fs: inaccessible or not found
+[19:11:09]   ioctl_calls = 2 count
+[19:11:09]   ioctl_ok = 1 count
+[19:11:09]   ioctl_busy = 0 count
+[19:11:09]   ioctl_last_errno = 61 errno
+[19:11:09]   ioctl_elapsed_ms = 0 ms
+[19:11:09]   ioctl_gc_call_p50_us = 188 us
+[19:11:09]   ioctl_gc_call_p99_us = 188 us
+[19:11:09]   ioctl_gc_call_max_us = 188 us
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+[19:11:09]   expected fg_gc_calls > 0 but got 0
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+[19:11:09]   duration_ms = 337 ms
+[19:11:09]   gc_calls = 0 count
+[19:11:09]   gc_bg = 0 count
+[19:11:09]   moved = 0 count
+[19:11:09]   moved_bg = 0 count
+[19:11:09]   cp_calls = 0 count
+[19:11:09]   cp_bg = 0 count
+[19:11:09]   gc_fg = 0 count
+[19:11:09]   status = INCONCLUSIVE -
+[19:11:10] === fg_ioctl_sync_gc: INCONCLUSIVE ===
+[19:11:10] === fg_ioctl_gc_range [offload_on] ===
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+tests/fg_gc.sh[142]: age_fs: inaccessible or not found
+[19:11:10]   range_ret = -1 rc
+[19:11:10]   range_errno = 22 errno
+[19:11:10]   range_elapsed_ms = 0.0 ms
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+[19:11:10]   expected fg_gc_calls > 0 but got 0
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+[19:11:10]   duration_ms = 234 ms
+[19:11:10]   gc_calls = 0 count
+[19:11:10]   gc_bg = 0 count
+[19:11:10]   moved = 0 count
+[19:11:10]   moved_bg = 0 count
+[19:11:10]   cp_calls = 0 count
+[19:11:10]   cp_bg = 0 count
+[19:11:10]   gc_fg = 0 count
+[19:11:10]   status = INCONCLUSIVE -
+[19:11:10] === fg_ioctl_gc_range: INCONCLUSIVE ===
+[19:11:10] === fg_enospc_recovery [offload_on] ===
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+write: Success
+[19:11:15]   recover_mb_s = 1515.9 MB/s
+[19:11:15]   recover_elapsed_ms = 66 ms
+[19:11:15]   recover_enospc = 0 flag
+[19:11:15]   recover_write_p50_us = 32 us
+[19:11:15]   recover_write_p99_us = 86 us
+[19:11:15]   recover_write_p999_us = 112 us
+[19:11:15]   recover_write_max_us = 112 us
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+[19:11:15]   expected fg_gc_calls > 0 but got 0
+awk: syntax error at source line 6
+ context is
+                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
+awk: illegal statement at source line 6
+awk: illegal statement at source line 6
+[19:11:15]   duration_ms = 53 ms
+[19:11:15]   gc_calls = 0 count
+[19:11:15]   gc_bg = 0 count
+[19:11:15]   moved = 0 count
+[19:11:15]   moved_bg = 0 count
+[19:11:15]   cp_calls = 0 count
+[19:11:15]   cp_bg = 0 count
+[19:11:15]   gc_fg = 0 count
+[19:11:15]   status = INCONCLUSIVE -
+[19:11:15] === fg_enospc_recovery: INCONCLUSIVE ===
+tests/bg_gc.sh: /data/local/tmp/f2fs_gc_suite/tests/../lib/common.sh[153]: syntax error: unmatched '{'
 tests/bg_gc.sh[43]: syntax error: unmatched '{'
 done. results in /data/local/tmp/f2fs_gc_suite/results/
 >>> Pulling test logs from device...
-/data/local/tmp/f2fs_gc_suite/results/./: 4 files pulled. 0.7 MB/s (10306 bytes in 0.015s)
-Results saved successfully to .\results\20261023_163909
+/data/local/tmp/f2fs_gc_suite/results/./: 14 files pulled. 0.5 MB/s (21372 bytes in 0.041s)
+Results saved successfully to .\results\20261023_171831
 >>> Executing data comparison script via py launcher...
-no results found under .\results\20261023_163909
+| test | metric | off | on | change | verdict |
+|---|---|---:|---:|---:|---|
+| fg_append_full | append_mb_s | 928.1 | 981.4 | +5.7% | better |
+|  | append_elapsed_ms | 840 | 795 | -5.4% | better |
+|  | append_write_p50_us | 33 | 32 | -3.0% | ~same |
+|  | append_write_p99_us | 112 | 108 | -3.6% | ~same |
+|  | append_write_p999_us | 250 | 232 | -7.2% | better |
+|  | append_write_max_us | 294 | 296 | +0.7% | ~same |
+|  | duration_ms | 1,101 | 1,029 | -6.5% | better |
+|  | gc_bg | 0 | 0 |  |  |
+|  | gc_fg | 0 | 0 |  |  |
+| fg_random_overwrite | duration_ms | 242 | 244 | +0.8% | ~same |
+|  | gc_bg | 0 | 0 |  |  |
+|  | gc_fg | 0 | 0 |  |  |
+| fg_fsync_pressure | fsyncappend_mb_s | 91.1 | 86.3 | -5.3% | worse |
+|  | fsyncappend_elapsed_ms | 1,120 | 1,181 | +5.4% | worse |
+|  | fsyncappend_write_p50_us | 4 | 4 | +0.0% | ~same |
+|  | fsyncappend_write_p99_us | 16 | 18 | +12.5% | worse |
+|  | fsyncappend_write_p999_us | 46 | 50 | +8.7% | worse |
+|  | fsyncappend_write_max_us | 54 | 138 | +155.6% | worse |
+|  | duration_ms | 1,371 | 1,417 | +3.4% | ~same |
+|  | gc_bg | 0 | 0 |  |  |
+|  | gc_fg | 0 | 0 |  |  |
+| fg_parallel_writers | par_aggregate_mb_s | 1,861.4 | 1,763 | -5.3% | worse |
+|  | par_worst_write_p99_us | 109 | 141 | +29.4% | worse |
+|  | par_worst_write_max_us | 255 | 381 | +49.4% | worse |
+|  | duration_ms | 596 | 638 | +7.0% | worse |
+|  | gc_bg | 0 | 0 |  |  |
+|  | gc_fg | 0 | 0 |  |  |
+| fg_ioctl_sync_gc | ioctl_elapsed_ms | 0 | 0 |  |  |
+|  | ioctl_gc_call_p50_us | 182 | 188 | +3.3% | ~same |
+|  | ioctl_gc_call_p99_us | 182 | 188 | +3.3% | ~same |
+|  | ioctl_gc_call_max_us | 182 | 188 | +3.3% | ~same |
+|  | duration_ms | 345 | 337 | -2.3% | ~same |
+|  | gc_bg | 0 | 0 |  |  |
+|  | gc_fg | 0 | 0 |  |  |
+| fg_ioctl_gc_range | range_elapsed_ms | 0 | 0 |  |  |
+|  | duration_ms | 237 | 234 | -1.3% | ~same |
+|  | gc_bg | 0 | 0 |  |  |
+|  | gc_fg | 0 | 0 |  |  |
+| fg_enospc_recovery | recover_mb_s | 1,768.8 | 1,515.9 | -14.3% | worse |
+|  | recover_elapsed_ms | 57 | 66 | +15.8% | worse |
+|  | recover_write_p50_us | 37 | 32 | -13.5% | better |
+|  | recover_write_p99_us | 91 | 86 | -5.5% | better |
+|  | recover_write_p999_us | 112 | 112 | +0.0% | ~same |
+|  | recover_write_max_us | 112 | 112 | +0.0% | ~same |
+|  | duration_ms | -5 | 53 | +1160.0% | worse |
+|  | gc_bg | 0 | 0 |  |  |
+|  | gc_fg | 0 | 0 |  |  |
+
+Scenario validity (GC type the test targets actually ran):
+
+| test | off | on |
+|---|---|---|
+| fg_append_full | INCONCLUSIVE | INCONCLUSIVE |
+| fg_random_overwrite | INCONCLUSIVE | INCONCLUSIVE |
+| fg_fsync_pressure | INCONCLUSIVE | INCONCLUSIVE |
+| fg_parallel_writers | INCONCLUSIVE | INCONCLUSIVE |
+| fg_ioctl_sync_gc | INCONCLUSIVE | INCONCLUSIVE |
+| fg_ioctl_gc_range | INCONCLUSIVE | INCONCLUSIVE |
+| fg_enospc_recovery | INCONCLUSIVE | INCONCLUSIVE |
+
+Treat INCONCLUSIVE/UNVERIFIED rows as not comparable; a 'better'/'worse' tag needs >=5% change and is not a significance test (repeat runs and compare the spread).
 PS D:\anees\tasks\f2fs_gc_test_suite\f2fs_gc_suite_v01>
