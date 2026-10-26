@@ -2,543 +2,1042 @@ PS D:\anees\tasks\f2fs_gc_test_suite\f2fs_gc_suite_v01> .\run_on_device.ps1
 >>> Initializing ADB connection...
 >>> Preparing directories on device...
 >>> Pushing files and test suite to device...
-.\lib\: 1 file pushed. 0.3 MB/s (6771 bytes in 0.020s)
-.\tests\: 2 files pushed. 0.2 MB/s (11453 bytes in 0.059s)
-.\run_all.sh: 1 file pushed. 0.1 MB/s (1589 bytes in 0.016s)
-.\gcload: 1 file pushed. 109.6 MB/s (685784 bytes in 0.006s)
+.\lib\: 1 file pushed. 0.3 MB/s (6921 bytes in 0.026s)
+.\tests\: 2 files pushed. 0.4 MB/s (11457 bytes in 0.025s)
+.\run_all.sh: 1 file pushed. 0.2 MB/s (1589 bytes in 0.008s)
+.\gcload: 1 file pushed.
 >>> Adjusting file permissions on device...
 >>> Launching test suite on target device...
 >>> Routing benchmark adjustments to active sysfs target node: sda11
 ################ MODE=offload_off ################
-tests/fg_gc.sh: /data/local/tmp/f2fs_gc_suite/tests/../lib/common.sh[153]: syntax error: unmatched '{'
-tests/fg_gc.sh[133]: require_root_f2fs: inaccessible or not found
-[19:10:50] WARN: no copy_offload control found (export COPY_OFFLOAD_CTL=...); run is only labelled 'offload_off'
-[19:10:50] === fg_append_full [offload_off] ===
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-tests/fg_gc.sh[142]: age_fs: inaccessible or not found
-[19:10:51]   append_mb_s = 928.1 MB/s
-[19:10:51]   append_elapsed_ms = 840 ms
-[19:10:51]   append_enospc = 0 flag
-[19:10:51]   append_write_p50_us = 33 us
-[19:10:51]   append_write_p99_us = 112 us
-[19:10:51]   append_write_p999_us = 250 us
-[19:10:51]   append_write_max_us = 294 us
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-[19:10:51]   expected fg_gc_calls > 0 but got 0
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-[19:10:51]   duration_ms = 1101 ms
-[19:10:51]   gc_calls = 0 count
-[19:10:51]   gc_bg = 0 count
-[19:10:51]   moved = 0 count
-[19:10:51]   moved_bg = 0 count
-[19:10:51]   cp_calls = 0 count
-[19:10:52]   cp_bg = 0 count
-[19:10:52]   gc_fg = 0 count
-[19:10:52]   status = INCONCLUSIVE -
-[19:10:52] === fg_append_full: INCONCLUSIVE ===
-[19:10:52] === fg_random_overwrite [offload_off] ===
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-tests/fg_gc.sh[142]: age_fs: inaccessible or not found
-no files in /mnt/test/gctest
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-[19:10:52]   expected fg_gc_calls > 0 but got 0
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-[19:10:52]   duration_ms = 242 ms
-[19:10:52]   gc_calls = 0 count
-[19:10:52]   gc_bg = 0 count
-[19:10:52]   moved = 0 count
-[19:10:52]   moved_bg = 0 count
-[19:10:52]   cp_calls = 0 count
-[19:10:52]   cp_bg = 0 count
-[19:10:53]   gc_fg = 0 count
-[19:10:53]   status = INCONCLUSIVE -
-[19:10:53] === fg_random_overwrite: INCONCLUSIVE ===
-[19:10:53] === fg_fsync_pressure [offload_off] ===
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-tests/fg_gc.sh[142]: age_fs: inaccessible or not found
-[19:10:54]   fsyncappend_mb_s = 91.1 MB/s
-[19:10:54]   fsyncappend_elapsed_ms = 1120 ms
-[19:10:54]   fsyncappend_enospc = 0 flag
-[19:10:54]   fsyncappend_write_p50_us = 4 us
-[19:10:54]   fsyncappend_write_p99_us = 16 us
-[19:10:54]   fsyncappend_write_p999_us = 46 us
-[19:10:54]   fsyncappend_write_max_us = 54 us
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-[19:10:54]   expected fg_gc_calls > 0 but got 0
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-[19:10:54]   duration_ms = 1371 ms
-[19:10:54]   gc_calls = 0 count
-[19:10:54]   gc_bg = 0 count
-[19:10:54]   moved = 0 count
-[19:10:54]   moved_bg = 0 count
-[19:10:54]   cp_calls = 0 count
-[19:10:54]   cp_bg = 0 count
-[19:10:54]   gc_fg = 0 count
-[19:10:54]   status = INCONCLUSIVE -
-[19:10:55] === fg_fsync_pressure: INCONCLUSIVE ===
-[19:10:55] === fg_parallel_writers [offload_off] ===
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-tests/fg_gc.sh[142]: age_fs: inaccessible or not found
-[19:10:55]   par_aggregate_mb_s = 1861.4 MB/s
-[19:10:55]   par_worst_write_p99_us = 109 us
-[19:10:55]   par_worst_write_max_us = 255 us
-[19:10:55]   par_enospc_writers = 0 count
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-[19:10:55]   expected fg_gc_calls > 0 but got 0
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-[19:10:55]   duration_ms = 596 ms
-[19:10:55]   gc_calls = 0 count
-[19:10:55]   gc_bg = 0 count
-[19:10:55]   moved = 0 count
-[19:10:55]   moved_bg = 0 count
-[19:10:56]   cp_calls = 0 count
-[19:10:56]   cp_bg = 0 count
-[19:10:56]   gc_fg = 0 count
-[19:10:56]   status = INCONCLUSIVE -
-[19:10:56] === fg_parallel_writers: INCONCLUSIVE ===
-[19:10:56] === fg_ioctl_sync_gc [offload_off] ===
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-tests/fg_gc.sh[142]: age_fs: inaccessible or not found
-[19:10:56]   ioctl_calls = 2 count
-[19:10:56]   ioctl_ok = 1 count
-[19:10:56]   ioctl_busy = 0 count
-[19:10:56]   ioctl_last_errno = 61 errno
-[19:10:56]   ioctl_elapsed_ms = 0 ms
-[19:10:56]   ioctl_gc_call_p50_us = 182 us
-[19:10:56]   ioctl_gc_call_p99_us = 182 us
-[19:10:56]   ioctl_gc_call_max_us = 182 us
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-[19:10:56]   expected fg_gc_calls > 0 but got 0
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-[19:10:56]   duration_ms = 345 ms
-[19:10:56]   gc_calls = 0 count
-[19:10:56]   gc_bg = 0 count
-[19:10:56]   moved = 0 count
-[19:10:56]   moved_bg = 0 count
-[19:10:57]   cp_calls = 0 count
-[19:10:57]   cp_bg = 0 count
-[19:10:57]   gc_fg = 0 count
-[19:10:57]   status = INCONCLUSIVE -
-[19:10:57] === fg_ioctl_sync_gc: INCONCLUSIVE ===
-[19:10:57] === fg_ioctl_gc_range [offload_off] ===
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-tests/fg_gc.sh[142]: age_fs: inaccessible or not found
-[19:10:57]   range_ret = -1 rc
-[19:10:57]   range_errno = 22 errno
-[19:10:57]   range_elapsed_ms = 0.0 ms
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-[19:10:57]   expected fg_gc_calls > 0 but got 0
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-[19:10:57]   duration_ms = 237 ms
-[19:10:57]   gc_calls = 0 count
-[19:10:57]   gc_bg = 0 count
-[19:10:57]   moved = 0 count
-[19:10:57]   moved_bg = 0 count
-[19:10:57]   cp_calls = 0 count
-[19:10:57]   cp_bg = 0 count
-[19:10:57]   gc_fg = 0 count
-[19:10:57]   status = INCONCLUSIVE -
-[19:10:58] === fg_ioctl_gc_range: INCONCLUSIVE ===
-[19:10:58] === fg_enospc_recovery [offload_off] ===
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
+[19:40:02] WARN: no copy_offload control found (export COPY_OFFLOAD_CTL=...); run is only labelled 'offload_off'
+[19:40:02] === fg_append_full [offload_off] ===
+files=96
+used_pct=90.33
+enospc=0
+elapsed_ms=748
+mb_s=1027.3
+deleted=9
+remaining=87
+[19:40:16]   append_mb_s = 1650.7 MB/s
+[19:40:16]   append_elapsed_ms = 93 ms
+[19:40:16]   append_enospc = 0 flag
+[19:40:16]   append_write_p50_us = 23 us
+[19:40:16]   append_write_p99_us = 65 us
+[19:40:16]   append_write_p999_us = 87 us
+[19:40:16]   append_write_max_us = 95 us
+[19:40:16]   expected fg_gc_calls > 0 but got 0
+[19:40:16]   duration_ms = 482 ms
+[19:40:16]   gc_calls = 0 count
+[19:40:16]   gc_bg = 0 count
+[19:40:16]   moved = 0 count
+[19:40:16]   moved_bg = 0 count
+[19:40:16]   cp_calls = 2 count
+[19:40:16]   cp_bg = 1 count
+[19:40:16]   gc_fg = 0 count
+[19:40:16]   status = INCONCLUSIVE -
+[19:40:17] === fg_append_full: INCONCLUSIVE ===
+[19:40:17] === fg_random_overwrite [offload_off] ===
+files=96
+used_pct=90.33
+enospc=0
+elapsed_ms=722
+mb_s=1063.1
+deleted=0
+remaining=96
+[19:40:36]   churn_iops = 858116 ops/s
+[19:40:36]   churn_mb_s = 3352.0 MB/s
+[19:40:36]   churn_enospc = 0 flag
+[19:40:36]   churn_write_p50_us = 0 us
+[19:40:36]   churn_write_p99_us = 1 us
+[19:40:36]   churn_write_p999_us = 2 us
+[19:40:36]   churn_write_max_us = 100 us
+[19:40:36]   expected fg_gc_calls > 0 but got 0
+[19:40:36]   duration_ms = -1907 ms
+[19:40:36]   gc_calls = 0 count
+[19:40:36]   gc_bg = 0 count
+[19:40:36]   moved = 0 count
+[19:40:36]   moved_bg = 0 count
+[19:40:36]   cp_calls = 1 count
+[19:40:37]   cp_bg = 0 count
+[19:40:37]   gc_fg = 0 count
+[19:40:37]   status = INCONCLUSIVE -
+[19:40:37] === fg_random_overwrite: INCONCLUSIVE ===
+[19:40:37] === fg_fsync_pressure [offload_off] ===
+files=94
+used_pct=88.76
+enospc=0
+elapsed_ms=695
+mb_s=1082.3
+deleted=7
+remaining=87
+[19:40:45]   fsyncappend_mb_s = 95.0 MB/s
+[19:40:45]   fsyncappend_elapsed_ms = 894 ms
+[19:40:45]   fsyncappend_enospc = 0 flag
+[19:40:45]   fsyncappend_write_p50_us = 4 us
+[19:40:45]   fsyncappend_write_p99_us = 6 us
+[19:40:45]   fsyncappend_write_p999_us = 46 us
+[19:40:45]   fsyncappend_write_max_us = 62 us
+[19:40:45]   expected fg_gc_calls > 0 but got 0
+[19:40:45]   duration_ms = -344 ms
+[19:40:45]   gc_calls = 0 count
+[19:40:45]   gc_bg = 0 count
+[19:40:45]   moved = 0 count
+[19:40:45]   moved_bg = 0 count
+[19:40:45]   cp_calls = 1 count
+[19:40:45]   cp_bg = 0 count
+[19:40:46]   gc_fg = 0 count
+[19:40:46]   status = INCONCLUSIVE -
+[19:40:46] === fg_fsync_pressure: INCONCLUSIVE ===
+[19:40:46] === fg_parallel_writers [offload_off] ===
+files=96
+used_pct=90.33
+enospc=0
+elapsed_ms=758
+mb_s=1012.9
+deleted=11
+remaining=85
+[19:40:53]   par_aggregate_mb_s = 3643.5 MB/s
+[19:40:53]   par_worst_write_p99_us = 408 us
+[19:40:53]   par_worst_write_max_us = 868 us
+[19:40:53]   par_enospc_writers = 0 count
+[19:40:53]   expected fg_gc_calls > 0 but got 0
+[19:40:53]   duration_ms = -1189 ms
+[19:40:53]   gc_calls = 0 count
+[19:40:53]   gc_bg = 0 count
+[19:40:53]   moved = 0 count
+[19:40:53]   moved_bg = 0 count
+[19:40:53]   cp_calls = 3 count
+[19:40:54]   cp_bg = 1 count
+[19:40:54]   gc_fg = 0 count
+[19:40:54]   status = INCONCLUSIVE -
+[19:40:54] === fg_parallel_writers: INCONCLUSIVE ===
+[19:40:54] === fg_ioctl_sync_gc [offload_off] ===
+files=90
+used_pct=85.62
+enospc=0
+elapsed_ms=631
+mb_s=1141.2
+deleted=15
+remaining=75
+[19:41:01]   ioctl_calls = 2 count
+[19:41:01]   ioctl_ok = 1 count
+[19:41:01]   ioctl_busy = 0 count
+[19:41:01]   ioctl_last_errno = 61 errno
+[19:41:01]   ioctl_elapsed_ms = 0 ms
+[19:41:01]   ioctl_gc_call_p50_us = 45 us
+[19:41:01]   ioctl_gc_call_p99_us = 45 us
+[19:41:01]   ioctl_gc_call_max_us = 45 us
+[19:41:01]   duration_ms = -1368 ms
+[19:41:01]   gc_calls = 2 count
+[19:41:01]   gc_bg = 0 count
+[19:41:01]   moved = 1 count
+[19:41:01]   moved_bg = 0 count
+[19:41:01]   cp_calls = 2 count
+[19:41:01]   cp_bg = 1 count
+[19:41:01]   gc_fg = 2 count
+[19:41:01]   status = PASS -
+[19:41:02] === fg_ioctl_sync_gc: PASS ===
+[19:41:02] === fg_ioctl_gc_range [offload_off] ===
+files=90
+used_pct=85.62
+enospc=0
+elapsed_ms=675
+mb_s=1067.1
+deleted=15
+remaining=75
+[19:41:09]   range_ret = -1 rc
+[19:41:09]   range_errno = 22 errno
+[19:41:09]   range_elapsed_ms = 0.0 ms
+[19:41:09]   expected fg_gc_calls > 0 but got 0
+[19:41:09]   duration_ms = 2903 ms
+[19:41:09]   gc_calls = 0 count
+[19:41:09]   gc_bg = 0 count
+[19:41:09]   moved = 0 count
+[19:41:09]   moved_bg = 0 count
+[19:41:09]   cp_calls = 2 count
+[19:41:09]   cp_bg = 1 count
+[19:41:09]   gc_fg = 0 count
+[19:41:09]   status = INCONCLUSIVE -
+[19:41:09] === fg_ioctl_gc_range: INCONCLUSIVE ===
+[19:41:09] === fg_enospc_recovery [offload_off] ===
 write: Success
-[19:11:02]   recover_mb_s = 1768.8 MB/s
-[19:11:02]   recover_elapsed_ms = 57 ms
-[19:11:02]   recover_enospc = 0 flag
-[19:11:02]   recover_write_p50_us = 37 us
-[19:11:02]   recover_write_p99_us = 91 us
-[19:11:02]   recover_write_p999_us = 112 us
-[19:11:02]   recover_write_max_us = 112 us
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-[19:11:02]   expected fg_gc_calls > 0 but got 0
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-[19:11:02]   duration_ms = -5 ms
-[19:11:02]   gc_calls = 0 count
-[19:11:02]   gc_bg = 0 count
-[19:11:02]   moved = 0 count
-[19:11:02]   moved_bg = 0 count
-[19:11:02]   cp_calls = 0 count
-[19:11:02]   cp_bg = 0 count
-[19:11:02]   gc_fg = 0 count
-[19:11:02]   status = INCONCLUSIVE -
-[19:11:02] === fg_enospc_recovery: INCONCLUSIVE ===
-tests/bg_gc.sh: /data/local/tmp/f2fs_gc_suite/tests/../lib/common.sh[153]: syntax error: unmatched '{'
-tests/bg_gc.sh[43]: syntax error: unmatched '{'
+[19:41:14]   recover_mb_s = 1419.1 MB/s
+[19:41:14]   recover_elapsed_ms = 70 ms
+[19:41:14]   recover_enospc = 0 flag
+[19:41:14]   recover_write_p50_us = 36 us
+[19:41:14]   recover_write_p99_us = 88 us
+[19:41:14]   recover_write_p999_us = 118 us
+[19:41:14]   recover_write_max_us = 118 us
+[19:41:14]   expected fg_gc_calls > 0 but got 0
+[19:41:14]   duration_ms = 47 ms
+[19:41:14]   gc_calls = 0 count
+[19:41:14]   gc_bg = 0 count
+[19:41:14]   moved = 0 count
+[19:41:14]   moved_bg = 0 count
+[19:41:14]   cp_calls = 2 count
+[19:41:14]   cp_bg = 1 count
+[19:41:14]   gc_fg = 0 count
+[19:41:14]   status = INCONCLUSIVE -
+[19:41:14] === fg_enospc_recovery: INCONCLUSIVE ===
+[19:41:15] WARN: no copy_offload control found (export COPY_OFFLOAD_CTL=...); run is only labelled 'offload_off'
+[19:41:15] === bg_default_idle [offload_off] ===
+files=90
+used_pct=85.62
+enospc=0
+elapsed_ms=686
+mb_s=1049.6
+deleted=12
+remaining=78
+[19:41:54]   idle_elapsed_ms = 54 ms
+[19:41:54]   idle_free_seg_gain = 0 segs
+[19:41:54]   idle_dirty_seg_delta = 0 segs
+[19:41:54]   idle_bg_gc_calls = 0 count
+[19:41:54]   idle_bg_blocks_moved = 0 blocks
+[19:41:54]   idle_bg_moved_mb_s = 0.00 MB/s
+[19:41:54]   idle_gc_thread_cpu_ms = 0 ms
+[19:41:54]   expected bg_gc_calls > 0 but got 0
+[19:41:54]   duration_ms = 894 ms
+[19:41:54]   gc_calls = 0 count
+[19:41:54]   gc_bg = 0 count
+[19:41:54]   moved = 0 count
+[19:41:54]   moved_bg = 0 count
+[19:41:54]   cp_calls = 2 count
+[19:41:55]   cp_bg = 1 count
+[19:41:55]   gc_fg = 0 count
+[19:41:55]   status = INCONCLUSIVE -
+[19:41:55] === bg_default_idle: INCONCLUSIVE ===
+[19:41:55] === bg_urgent_high [offload_off] ===
+files=90
+used_pct=85.62
+enospc=0
+elapsed_ms=749
+mb_s=960.9
+deleted=12
+remaining=78
+[19:42:17]   urgent_high_elapsed_ms = -774 ms
+[19:42:17]   urgent_high_free_seg_gain = 0 segs
+[19:42:17]   urgent_high_dirty_seg_delta = 0 segs
+[19:42:17]   urgent_high_bg_gc_calls = 23 count
+[19:42:17]   urgent_high_bg_blocks_moved = 5961 blocks
+[19:42:17]   urgent_high_bg_moved_mb_s = -30.08 MB/s
+[19:42:17]   urgent_high_gc_thread_cpu_ms = 0 ms
+[19:42:17]   duration_ms = 77 ms
+[19:42:17]   gc_calls = 25 count
+[19:42:17]   gc_bg = 25 count
+[19:42:17]   moved = 5962 count
+[19:42:17]   moved_bg = 5962 count
+[19:42:17]   cp_calls = 2 count
+[19:42:17]   cp_bg = 1 count
+[19:42:17]   gc_fg = 0 count
+[19:42:17]   status = PASS -
+[19:42:17] === bg_urgent_high: PASS ===
+[19:42:17] === bg_urgent_low [offload_off] ===
+files=90
+used_pct=85.62
+enospc=0
+elapsed_ms=676
+mb_s=1065.7
+deleted=12
+remaining=78
+[19:42:39]   urgent_low_elapsed_ms = 3517 ms
+[19:42:39]   urgent_low_free_seg_gain = 0 segs
+[19:42:39]   urgent_low_dirty_seg_delta = 0 segs
+[19:42:39]   urgent_low_bg_gc_calls = 0 count
+[19:42:39]   urgent_low_bg_blocks_moved = 0 blocks
+[19:42:39]   urgent_low_bg_moved_mb_s = 0.00 MB/s
+[19:42:39]   urgent_low_gc_thread_cpu_ms = 0 ms
+[19:42:39]   expected bg_gc_calls > 0 but got 0
+[19:42:39]   duration_ms = 42 ms
+[19:42:39]   gc_calls = 0 count
+[19:42:39]   gc_bg = 0 count
+[19:42:39]   moved = 0 count
+[19:42:39]   moved_bg = 0 count
+[19:42:39]   cp_calls = 2 count
+[19:42:39]   cp_bg = 1 count
+[19:42:39]   gc_fg = 0 count
+[19:42:39]   status = INCONCLUSIVE -
+[19:42:39] === bg_urgent_low: INCONCLUSIVE ===
+[19:42:39] === bg_idle_cost_benefit [offload_off] ===
+files=90
+used_pct=85.62
+enospc=0
+elapsed_ms=670
+mb_s=1075.1
+deleted=12
+remaining=78
+[19:43:01]   costben_elapsed_ms = -774 ms
+[19:43:01]   costben_free_seg_gain = 0 segs
+[19:43:01]   costben_dirty_seg_delta = 0 segs
+[19:43:01]   costben_bg_gc_calls = 0 count
+[19:43:01]   costben_bg_blocks_moved = 0 blocks
+[19:43:01]   costben_bg_moved_mb_s = 0.00 MB/s
+[19:43:01]   costben_gc_thread_cpu_ms = 0 ms
+[19:43:01]   expected bg_gc_calls > 0 but got 0
+[19:43:01]   duration_ms = 19 ms
+[19:43:01]   gc_calls = 0 count
+[19:43:01]   gc_bg = 0 count
+[19:43:01]   moved = 0 count
+[19:43:01]   moved_bg = 0 count
+[19:43:01]   cp_calls = 2 count
+[19:43:01]   cp_bg = 1 count
+[19:43:02]   gc_fg = 0 count
+[19:43:02]   status = INCONCLUSIVE -
+[19:43:02] === bg_idle_cost_benefit: INCONCLUSIVE ===
+[19:43:02] === bg_idle_greedy [offload_off] ===
+files=90
+used_pct=85.62
+enospc=0
+elapsed_ms=716
+mb_s=1004.9
+deleted=12
+remaining=78
+[19:43:23]   greedy_elapsed_ms = -773 ms
+[19:43:23]   greedy_free_seg_gain = 0 segs
+[19:43:23]   greedy_dirty_seg_delta = 0 segs
+[19:43:23]   greedy_bg_gc_calls = 0 count
+[19:43:23]   greedy_bg_blocks_moved = 0 blocks
+[19:43:23]   greedy_bg_moved_mb_s = 0.00 MB/s
+[19:43:23]   greedy_gc_thread_cpu_ms = 0 ms
+[19:43:23]   expected bg_gc_calls > 0 but got 0
+[19:43:23]   duration_ms = 79 ms
+[19:43:23]   gc_calls = 0 count
+[19:43:23]   gc_bg = 0 count
+[19:43:24]   moved = 0 count
+[19:43:24]   moved_bg = 0 count
+[19:43:24]   cp_calls = 2 count
+[19:43:24]   cp_bg = 1 count
+[19:43:24]   gc_fg = 0 count
+[19:43:24]   status = INCONCLUSIVE -
+[19:43:24] === bg_idle_greedy: INCONCLUSIVE ===
+[19:43:24] === bg_with_foreground_io [offload_off] ===
+files=90
+used_pct=85.62
+enospc=0
+elapsed_ms=661
+mb_s=1089.3
+deleted=12
+remaining=78
+[19:43:39]   base_iops = 877741 ops/s
+[19:43:39]   base_mb_s = 3428.7 MB/s
+[19:43:39]   base_write_p50_us = 0 us
+[19:43:39]   base_write_p99_us = 1 us
+[19:43:39]   base_write_p999_us = 4 us
+[19:43:39]   base_write_max_us = 98 us
+[19:43:46]   bgon_iops = 843566 ops/s
+[19:43:46]   bgon_mb_s = 3295.2 MB/s
+[19:43:46]   bgon_write_p50_us = 0 us
+[19:43:46]   bgon_write_p99_us = 1 us
+[19:43:46]   bgon_write_p999_us = 3 us
+[19:43:46]   bgon_write_max_us = 101 us
+[19:43:46]   iops_drop_pct = 3.9 %
+[19:43:46]   expected bg_gc_calls > 0 but got 0
+[19:43:46]   duration_ms = 376 ms
+[19:43:46]   gc_calls = 0 count
+[19:43:46]   gc_bg = 0 count
+[19:43:46]   moved = 0 count
+[19:43:46]   moved_bg = 0 count
+[19:43:46]   cp_calls = 2 count
+[19:43:46]   cp_bg = 1 count
+[19:43:46]   gc_fg = 0 count
+[19:43:46]   status = INCONCLUSIVE -
+[19:43:46] === bg_with_foreground_io: INCONCLUSIVE ===
+[19:43:46] === bg_reclaim_after_delete [offload_off] ===
+[19:44:11]   time_to_stable_s = -1344 ms
+[19:44:11]   free_seg_gain = 0 segs
+[19:44:11]   bg_blocks_moved = 0 blocks
+[19:44:11]   expected bg_gc_calls > 0 but got 0
+[19:44:11]   duration_ms = -1387 ms
+[19:44:11]   gc_calls = 0 count
+[19:44:11]   gc_bg = 0 count
+[19:44:11]   moved = 0 count
+[19:44:11]   moved_bg = 0 count
+[19:44:11]   cp_calls = 2 count
+[19:44:11]   cp_bg = 1 count
+[19:44:11]   gc_fg = 0 count
+[19:44:11]   status = INCONCLUSIVE -
+[19:44:11] === bg_reclaim_after_delete: INCONCLUSIVE ===
+[19:44:11] === bg_fsync_workload [offload_off] ===
+files=90
+used_pct=85.62
+enospc=0
+elapsed_ms=663
+mb_s=1086.7
+deleted=12
+remaining=78
+[19:44:27]   base_iops = 8507 ops/s
+[19:44:27]   base_mb_s = 33.2 MB/s
+[19:44:27]   base_write_p50_us = 1 us
+[19:44:27]   base_write_p99_us = 4 us
+[19:44:27]   base_write_p999_us = 8 us
+[19:44:27]   base_write_max_us = 19 us
+[19:44:27]   base_fsync_p99_us = 146 us
+[19:44:27]   base_fsync_max_us = 3455 us
+[19:44:33]   bgon_iops = 8550 ops/s
+[19:44:33]   bgon_mb_s = 33.4 MB/s
+[19:44:33]   bgon_write_p50_us = 1 us
+[19:44:33]   bgon_write_p99_us = 2 us
+[19:44:33]   bgon_write_p999_us = 5 us
+[19:44:33]   bgon_write_max_us = 20 us
+[19:44:33]   bgon_fsync_p99_us = 128 us
+[19:44:33]   bgon_fsync_max_us = 4458 us
+[19:44:33]   iops_drop_pct = -0.5 %
+[19:44:33]   expected bg_gc_calls > 0 but got 0
+[19:44:33]   duration_ms = -46 ms
+[19:44:33]   gc_calls = 0 count
+[19:44:33]   gc_bg = 0 count
+[19:44:33]   moved = 0 count
+[19:44:33]   moved_bg = 0 count
+[19:44:33]   cp_calls = 2 count
+[19:44:33]   cp_bg = 1 count
+[19:44:33]   gc_fg = 0 count
+[19:44:33]   status = INCONCLUSIVE -
+[19:44:34] === bg_fsync_workload: INCONCLUSIVE ===
+[19:44:34] === bg_waf_soak [offload_off] ===
+files=90
+used_pct=85.62
+enospc=0
+elapsed_ms=681
+mb_s=1057.8
+deleted=9
+remaining=81
+[19:45:05]   soak_iops = 857818 ops/s
+[19:45:05]   soak_mb_s = 3350.9 MB/s
+[19:45:05]   soak_write_p50_us = 0 us
+[19:45:05]   soak_write_p99_us = 1 us
+[19:45:05]   soak_write_p999_us = 3 us
+[19:45:05]   soak_write_max_us = 117 us
+[19:45:05]   gc_blocks_moved_total = 0 blocks
+[19:45:05]   gc_blocks_moved_bg = 0 blocks
+[19:45:05]   gc_waf = 1.000 ratio
+[19:45:05]   expected bg_gc_calls > 0 but got 0
+[19:45:05]   duration_ms = 1232 ms
+[19:45:05]   gc_calls = 0 count
+[19:45:05]   gc_bg = 0 count
+[19:45:05]   moved = 0 count
+[19:45:05]   moved_bg = 0 count
+[19:45:05]   cp_calls = 2 count
+[19:45:05]   cp_bg = 1 count
+[19:45:05]   gc_fg = 0 count
+[19:45:05]   status = INCONCLUSIVE -
+[19:45:06] === bg_waf_soak: INCONCLUSIVE ===
+[19:45:06] === bg_idle_maint [offload_off] ===
+files=90
+used_pct=85.62
+enospc=0
+elapsed_ms=676
+mb_s=1065.5
+deleted=12
+remaining=78
+[19:45:45]   maint_elapsed_ms = 44 ms
+[19:45:45]   maint_free_seg_gain = 0 segs
+[19:45:45]   maint_dirty_seg_delta = 0 segs
+[19:45:45]   maint_bg_gc_calls = 0 count
+[19:45:45]   maint_bg_blocks_moved = 0 blocks
+[19:45:45]   maint_bg_moved_mb_s = 0.00 MB/s
+[19:45:45]   maint_gc_thread_cpu_ms = 0 ms
+[19:45:46]   expected bg_gc_calls > 0 but got 0
+[19:45:46]   duration_ms = 1253 ms
+[19:45:46]   gc_calls = 0 count
+[19:45:46]   gc_bg = 0 count
+[19:45:46]   moved = 0 count
+[19:45:46]   moved_bg = 0 count
+[19:45:46]   cp_calls = 2 count
+[19:45:46]   cp_bg = 1 count
+[19:45:46]   gc_fg = 0 count
+[19:45:46]   status = INCONCLUSIVE -
+[19:45:46] === bg_idle_maint: INCONCLUSIVE ===
 ################ MODE=offload_on ################
-tests/fg_gc.sh: /data/local/tmp/f2fs_gc_suite/tests/../lib/common.sh[153]: syntax error: unmatched '{'
-tests/fg_gc.sh[133]: require_root_f2fs: inaccessible or not found
-[19:11:03] WARN: no copy_offload control found (export COPY_OFFLOAD_CTL=...); run is only labelled 'offload_on'
-[19:11:03] === fg_append_full [offload_on] ===
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-tests/fg_gc.sh[142]: age_fs: inaccessible or not found
-[19:11:04]   append_mb_s = 981.4 MB/s
-[19:11:04]   append_elapsed_ms = 795 ms
-[19:11:04]   append_enospc = 0 flag
-[19:11:04]   append_write_p50_us = 32 us
-[19:11:04]   append_write_p99_us = 108 us
-[19:11:04]   append_write_p999_us = 232 us
-[19:11:04]   append_write_max_us = 296 us
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-[19:11:04]   expected fg_gc_calls > 0 but got 0
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-[19:11:04]   duration_ms = 1029 ms
-[19:11:04]   gc_calls = 0 count
-[19:11:04]   gc_bg = 0 count
-[19:11:04]   moved = 0 count
-[19:11:04]   moved_bg = 0 count
-[19:11:04]   cp_calls = 0 count
-[19:11:04]   cp_bg = 0 count
-[19:11:04]   gc_fg = 0 count
-[19:11:04]   status = INCONCLUSIVE -
-[19:11:04] === fg_append_full: INCONCLUSIVE ===
-[19:11:04] === fg_random_overwrite [offload_on] ===
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-tests/fg_gc.sh[142]: age_fs: inaccessible or not found
-no files in /mnt/test/gctest
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-[19:11:05]   expected fg_gc_calls > 0 but got 0
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-[19:11:05]   duration_ms = 244 ms
-[19:11:05]   gc_calls = 0 count
-[19:11:05]   gc_bg = 0 count
-[19:11:05]   moved = 0 count
-[19:11:05]   moved_bg = 0 count
-[19:11:05]   cp_calls = 0 count
-[19:11:05]   cp_bg = 0 count
-[19:11:05]   gc_fg = 0 count
-[19:11:05]   status = INCONCLUSIVE -
-[19:11:05] === fg_random_overwrite: INCONCLUSIVE ===
-[19:11:05] === fg_fsync_pressure [offload_on] ===
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-tests/fg_gc.sh[142]: age_fs: inaccessible or not found
-[19:11:07]   fsyncappend_mb_s = 86.3 MB/s
-[19:11:07]   fsyncappend_elapsed_ms = 1181 ms
-[19:11:07]   fsyncappend_enospc = 0 flag
-[19:11:07]   fsyncappend_write_p50_us = 4 us
-[19:11:07]   fsyncappend_write_p99_us = 18 us
-[19:11:07]   fsyncappend_write_p999_us = 50 us
-[19:11:07]   fsyncappend_write_max_us = 138 us
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-[19:11:07]   expected fg_gc_calls > 0 but got 0
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-[19:11:07]   duration_ms = 1417 ms
-[19:11:07]   gc_calls = 0 count
-[19:11:07]   gc_bg = 0 count
-[19:11:07]   moved = 0 count
-[19:11:07]   moved_bg = 0 count
-[19:11:07]   cp_calls = 0 count
-[19:11:07]   cp_bg = 0 count
-[19:11:07]   gc_fg = 0 count
-[19:11:07]   status = INCONCLUSIVE -
-[19:11:07] === fg_fsync_pressure: INCONCLUSIVE ===
-[19:11:07] === fg_parallel_writers [offload_on] ===
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-tests/fg_gc.sh[142]: age_fs: inaccessible or not found
-[19:11:08]   par_aggregate_mb_s = 1763.0 MB/s
-[19:11:08]   par_worst_write_p99_us = 141 us
-[19:11:08]   par_worst_write_max_us = 381 us
-[19:11:08]   par_enospc_writers = 0 count
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-[19:11:08]   expected fg_gc_calls > 0 but got 0
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-[19:11:08]   duration_ms = 638 ms
-[19:11:08]   gc_calls = 0 count
-[19:11:08]   gc_bg = 0 count
-[19:11:08]   moved = 0 count
-[19:11:08]   moved_bg = 0 count
-[19:11:08]   cp_calls = 0 count
-[19:11:08]   cp_bg = 0 count
-[19:11:08]   gc_fg = 0 count
-[19:11:08]   status = INCONCLUSIVE -
-[19:11:09] === fg_parallel_writers: INCONCLUSIVE ===
-[19:11:09] === fg_ioctl_sync_gc [offload_on] ===
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-tests/fg_gc.sh[142]: age_fs: inaccessible or not found
-[19:11:09]   ioctl_calls = 2 count
-[19:11:09]   ioctl_ok = 1 count
-[19:11:09]   ioctl_busy = 0 count
-[19:11:09]   ioctl_last_errno = 61 errno
-[19:11:09]   ioctl_elapsed_ms = 0 ms
-[19:11:09]   ioctl_gc_call_p50_us = 188 us
-[19:11:09]   ioctl_gc_call_p99_us = 188 us
-[19:11:09]   ioctl_gc_call_max_us = 188 us
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-[19:11:09]   expected fg_gc_calls > 0 but got 0
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-[19:11:09]   duration_ms = 337 ms
-[19:11:09]   gc_calls = 0 count
-[19:11:09]   gc_bg = 0 count
-[19:11:09]   moved = 0 count
-[19:11:09]   moved_bg = 0 count
-[19:11:09]   cp_calls = 0 count
-[19:11:09]   cp_bg = 0 count
-[19:11:09]   gc_fg = 0 count
-[19:11:09]   status = INCONCLUSIVE -
-[19:11:10] === fg_ioctl_sync_gc: INCONCLUSIVE ===
-[19:11:10] === fg_ioctl_gc_range [offload_on] ===
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-tests/fg_gc.sh[142]: age_fs: inaccessible or not found
-[19:11:10]   range_ret = -1 rc
-[19:11:10]   range_errno = 22 errno
-[19:11:10]   range_elapsed_ms = 0.0 ms
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-[19:11:10]   expected fg_gc_calls > 0 but got 0
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-[19:11:10]   duration_ms = 234 ms
-[19:11:10]   gc_calls = 0 count
-[19:11:10]   gc_bg = 0 count
-[19:11:10]   moved = 0 count
-[19:11:10]   moved_bg = 0 count
-[19:11:10]   cp_calls = 0 count
-[19:11:10]   cp_bg = 0 count
-[19:11:10]   gc_fg = 0 count
-[19:11:10]   status = INCONCLUSIVE -
-[19:11:10] === fg_ioctl_gc_range: INCONCLUSIVE ===
-[19:11:10] === fg_enospc_recovery [offload_on] ===
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
+[19:45:46] WARN: no copy_offload control found (export COPY_OFFLOAD_CTL=...); run is only labelled 'offload_on'
+[19:45:46] === fg_append_full [offload_on] ===
+files=96
+used_pct=90.33
+enospc=0
+elapsed_ms=686
+mb_s=1119.3
+deleted=9
+remaining=87
+[19:46:00]   append_mb_s = 1830.5 MB/s
+[19:46:00]   append_elapsed_ms = 84 ms
+[19:46:00]   append_enospc = 0 flag
+[19:46:00]   append_write_p50_us = 25 us
+[19:46:00]   append_write_p99_us = 60 us
+[19:46:00]   append_write_p999_us = 76 us
+[19:46:00]   append_write_max_us = 87 us
+[19:46:00]   expected fg_gc_calls > 0 but got 0
+[19:46:00]   duration_ms = 460 ms
+[19:46:00]   gc_calls = 0 count
+[19:46:00]   gc_bg = 0 count
+[19:46:00]   moved = 0 count
+[19:46:00]   moved_bg = 0 count
+[19:46:00]   cp_calls = 2 count
+[19:46:00]   cp_bg = 1 count
+[19:46:00]   gc_fg = 0 count
+[19:46:00]   status = INCONCLUSIVE -
+[19:46:00] === fg_append_full: INCONCLUSIVE ===
+[19:46:00] === fg_random_overwrite [offload_on] ===
+files=96
+used_pct=90.33
+enospc=0
+elapsed_ms=682
+mb_s=1125.7
+deleted=0
+remaining=96
+[19:46:20]   churn_iops = 822217 ops/s
+[19:46:20]   churn_mb_s = 3211.8 MB/s
+[19:46:20]   churn_enospc = 0 flag
+[19:46:20]   churn_write_p50_us = 0 us
+[19:46:20]   churn_write_p99_us = 1 us
+[19:46:20]   churn_write_p999_us = 3 us
+[19:46:20]   churn_write_max_us = 109 us
+[19:46:20]   expected fg_gc_calls > 0 but got 0
+[19:46:20]   duration_ms = -1964 ms
+[19:46:20]   gc_calls = 0 count
+[19:46:20]   gc_bg = 0 count
+[19:46:20]   moved = 0 count
+[19:46:20]   moved_bg = 0 count
+[19:46:20]   cp_calls = 1 count
+[19:46:20]   cp_bg = 0 count
+[19:46:20]   gc_fg = 0 count
+[19:46:20]   status = INCONCLUSIVE -
+[19:46:21] === fg_random_overwrite: INCONCLUSIVE ===
+[19:46:21] === fg_fsync_pressure [offload_on] ===
+files=94
+used_pct=88.76
+enospc=0
+elapsed_ms=671
+mb_s=1120.0
+deleted=7
+remaining=87
+[19:46:29]   fsyncappend_mb_s = 96.0 MB/s
+[19:46:29]   fsyncappend_elapsed_ms = 885 ms
+[19:46:29]   fsyncappend_enospc = 0 flag
+[19:46:29]   fsyncappend_write_p50_us = 4 us
+[19:46:29]   fsyncappend_write_p99_us = 5 us
+[19:46:29]   fsyncappend_write_p999_us = 46 us
+[19:46:29]   fsyncappend_write_max_us = 63 us
+[19:46:29]   expected fg_gc_calls > 0 but got 0
+[19:46:29]   duration_ms = -397 ms
+[19:46:29]   gc_calls = 0 count
+[19:46:29]   gc_bg = 0 count
+[19:46:29]   moved = 0 count
+[19:46:29]   moved_bg = 0 count
+[19:46:29]   cp_calls = 1 count
+[19:46:29]   cp_bg = 0 count
+[19:46:29]   gc_fg = 0 count
+[19:46:29]   status = INCONCLUSIVE -
+[19:46:29] === fg_fsync_pressure: INCONCLUSIVE ===
+[19:46:29] === fg_parallel_writers [offload_on] ===
+files=96
+used_pct=90.33
+enospc=0
+elapsed_ms=669
+mb_s=1147.2
+deleted=11
+remaining=85
+[19:46:37]   par_aggregate_mb_s = 3090.7 MB/s
+[19:46:37]   par_worst_write_p99_us = 125 us
+[19:46:37]   par_worst_write_max_us = 898 us
+[19:46:37]   par_enospc_writers = 0 count
+[19:46:37]   expected fg_gc_calls > 0 but got 0
+[19:46:37]   duration_ms = -1263 ms
+[19:46:37]   gc_calls = 0 count
+[19:46:37]   gc_bg = 0 count
+[19:46:37]   moved = 0 count
+[19:46:37]   moved_bg = 0 count
+[19:46:37]   cp_calls = 3 count
+[19:46:37]   cp_bg = 1 count
+[19:46:37]   gc_fg = 0 count
+[19:46:37]   status = INCONCLUSIVE -
+[19:46:37] === fg_parallel_writers: INCONCLUSIVE ===
+[19:46:37] === fg_ioctl_sync_gc [offload_on] ===
+files=90
+used_pct=85.62
+enospc=0
+elapsed_ms=702
+mb_s=1026.1
+deleted=15
+remaining=75
+[19:46:58]   ioctl_calls = 30 count
+[19:46:58]   ioctl_ok = 29 count
+[19:46:58]   ioctl_busy = 0 count
+[19:46:58]   ioctl_last_errno = 61 errno
+[19:46:58]   ioctl_elapsed_ms = 13529 ms
+[19:46:58]   ioctl_gc_call_p50_us = 482556 us
+[19:46:58]   ioctl_gc_call_p99_us = 492566 us
+[19:46:58]   ioctl_gc_call_max_us = 492566 us
+[19:46:59]   duration_ms = -481 ms
+[19:46:59]   gc_calls = 30 count
+[19:46:59]   gc_bg = 0 count
+[19:46:59]   moved = 7169 count
+[19:46:59]   moved_bg = 0 count
+[19:46:59]   cp_calls = 2 count
+[19:46:59]   cp_bg = 1 count
+[19:46:59]   gc_fg = 30 count
+[19:46:59]   status = PASS -
+[19:46:59] === fg_ioctl_sync_gc: PASS ===
+[19:46:59] === fg_ioctl_gc_range [offload_on] ===
+files=90
+used_pct=85.62
+enospc=0
+elapsed_ms=712
+mb_s=1010.6
+deleted=15
+remaining=75
+[19:47:06]   range_ret = -1 rc
+[19:47:06]   range_errno = 22 errno
+[19:47:06]   range_elapsed_ms = 0.0 ms
+[19:47:06]   expected fg_gc_calls > 0 but got 0
+[19:47:06]   duration_ms = -1367 ms
+[19:47:07]   gc_calls = 0 count
+[19:47:07]   gc_bg = 0 count
+[19:47:07]   moved = 0 count
+[19:47:07]   moved_bg = 0 count
+[19:47:07]   cp_calls = 2 count
+[19:47:07]   cp_bg = 1 count
+[19:47:07]   gc_fg = 0 count
+[19:47:07]   status = INCONCLUSIVE -
+[19:47:07] === fg_ioctl_gc_range: INCONCLUSIVE ===
+[19:47:07] === fg_enospc_recovery [offload_on] ===
 write: Success
-[19:11:15]   recover_mb_s = 1515.9 MB/s
-[19:11:15]   recover_elapsed_ms = 66 ms
-[19:11:15]   recover_enospc = 0 flag
-[19:11:15]   recover_write_p50_us = 32 us
-[19:11:15]   recover_write_p99_us = 86 us
-[19:11:15]   recover_write_p999_us = 112 us
-[19:11:15]   recover_write_max_us = 112 us
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-[19:11:15]   expected fg_gc_calls > 0 but got 0
-awk: syntax error at source line 6
- context is
-                  >>>  gc== <<< ""?"NA":gc, gcbg==""?"NA":gcbg, mv==""?"NA":mv, mvbg==""?"NA":mvbg,
-awk: illegal statement at source line 6
-awk: illegal statement at source line 6
-[19:11:15]   duration_ms = 53 ms
-[19:11:15]   gc_calls = 0 count
-[19:11:15]   gc_bg = 0 count
-[19:11:15]   moved = 0 count
-[19:11:15]   moved_bg = 0 count
-[19:11:15]   cp_calls = 0 count
-[19:11:15]   cp_bg = 0 count
-[19:11:15]   gc_fg = 0 count
-[19:11:15]   status = INCONCLUSIVE -
-[19:11:15] === fg_enospc_recovery: INCONCLUSIVE ===
-tests/bg_gc.sh: /data/local/tmp/f2fs_gc_suite/tests/../lib/common.sh[153]: syntax error: unmatched '{'
-tests/bg_gc.sh[43]: syntax error: unmatched '{'
+[19:47:11]   recover_mb_s = 1731.7 MB/s
+[19:47:11]   recover_elapsed_ms = 58 ms
+[19:47:11]   recover_enospc = 0 flag
+[19:47:11]   recover_write_p50_us = 24 us
+[19:47:11]   recover_write_p99_us = 77 us
+[19:47:11]   recover_write_p999_us = 91 us
+[19:47:11]   recover_write_max_us = 91 us
+[19:47:11]   expected fg_gc_calls > 0 but got 0
+[19:47:12]   duration_ms = 47 ms
+[19:47:12]   gc_calls = 0 count
+[19:47:12]   gc_bg = 0 count
+[19:47:12]   moved = 0 count
+[19:47:12]   moved_bg = 0 count
+[19:47:12]   cp_calls = 2 count
+[19:47:12]   cp_bg = 1 count
+[19:47:12]   gc_fg = 0 count
+[19:47:12]   status = INCONCLUSIVE -
+[19:47:12] === fg_enospc_recovery: INCONCLUSIVE ===
+[19:47:12] WARN: no copy_offload control found (export COPY_OFFLOAD_CTL=...); run is only labelled 'offload_on'
+[19:47:12] === bg_default_idle [offload_on] ===
+files=90
+used_pct=85.62
+enospc=0
+elapsed_ms=751
+mb_s=959.2
+deleted=12
+remaining=78
+[19:47:52]   idle_elapsed_ms = 45 ms
+[19:47:52]   idle_free_seg_gain = 0 segs
+[19:47:52]   idle_dirty_seg_delta = 0 segs
+[19:47:52]   idle_bg_gc_calls = 1 count
+[19:47:52]   idle_bg_blocks_moved = 1 blocks
+[19:47:52]   idle_bg_moved_mb_s = 0.09 MB/s
+[19:47:52]   idle_gc_thread_cpu_ms = 0 ms
+[19:47:52]   duration_ms = 992 ms
+[19:47:52]   gc_calls = 1 count
+[19:47:52]   gc_bg = 1 count
+[19:47:52]   moved = 1 count
+[19:47:52]   moved_bg = 1 count
+[19:47:52]   cp_calls = 2 count
+[19:47:52]   cp_bg = 1 count
+[19:47:52]   gc_fg = 0 count
+[19:47:52]   status = PASS -
+[19:47:52] === bg_default_idle: PASS ===
+[19:47:52] === bg_urgent_high [offload_on] ===
+files=90
+used_pct=85.62
+enospc=0
+elapsed_ms=641
+mb_s=1124.0
+deleted=12
+remaining=78
+[19:48:14]   urgent_high_elapsed_ms = 3523 ms
+[19:48:14]   urgent_high_free_seg_gain = 0 segs
+[19:48:14]   urgent_high_dirty_seg_delta = 0 segs
+[19:48:14]   urgent_high_bg_gc_calls = 23 count
+[19:48:14]   urgent_high_bg_blocks_moved = 5632 blocks
+[19:48:14]   urgent_high_bg_moved_mb_s = 6.24 MB/s
+[19:48:14]   urgent_high_gc_thread_cpu_ms = 0 ms
+[19:48:14]   duration_ms = 55 ms
+[19:48:14]   gc_calls = 24 count
+[19:48:14]   gc_bg = 24 count
+[19:48:14]   moved = 5705 count
+[19:48:14]   moved_bg = 5705 count
+[19:48:14]   cp_calls = 2 count
+[19:48:14]   cp_bg = 1 count
+[19:48:14]   gc_fg = 0 count
+[19:48:14]   status = PASS -
+[19:48:15] === bg_urgent_high: PASS ===
+[19:48:15] === bg_urgent_low [offload_on] ===
+files=90
+used_pct=85.62
+enospc=0
+elapsed_ms=668
+mb_s=1077.4
+
+
+deleted=12
+remaining=78
+[19:48:36]   urgent_low_elapsed_ms = -770 ms
+[19:48:36]   urgent_low_free_seg_gain = 0 segs
+[19:48:36]   urgent_low_dirty_seg_delta = 0 segs
+[19:48:36]   urgent_low_bg_gc_calls = 0 count
+[19:48:36]   urgent_low_bg_blocks_moved = 0 blocks
+[19:48:36]   urgent_low_bg_moved_mb_s = 0.00 MB/s
+[19:48:36]   urgent_low_gc_thread_cpu_ms = 0 ms
+[19:48:36]   expected bg_gc_calls > 0 but got 0
+[19:48:36]   duration_ms = 160 ms
+[19:48:36]   gc_calls = 0 count
+[19:48:37]   gc_bg = 0 count
+[19:48:37]   moved = 0 count
+[19:48:37]   moved_bg = 0 count
+[19:48:37]   cp_calls = 2 count
+[19:48:37]   cp_bg = 1 count
+[19:48:37]   gc_fg = 0 count
+[19:48:37]   status = INCONCLUSIVE -
+[19:48:37] === bg_urgent_low: INCONCLUSIVE ===
+[19:48:37] === bg_idle_cost_benefit [offload_on] ===
+files=90
+used_pct=85.62
+enospc=0
+elapsed_ms=657
+mb_s=1095.6
+deleted=12
+remaining=78
+[19:48:58]   costben_elapsed_ms = -773 ms
+[19:48:58]   costben_free_seg_gain = 0 segs
+[19:48:58]   costben_dirty_seg_delta = 0 segs
+[19:48:59]   costben_bg_gc_calls = 0 count
+[19:48:59]   costben_bg_blocks_moved = 0 blocks
+[19:48:59]   costben_bg_moved_mb_s = 0.00 MB/s
+[19:48:59]   costben_gc_thread_cpu_ms = 0 ms
+[19:48:59]   expected bg_gc_calls > 0 but got 0
+[19:48:59]   duration_ms = 93 ms
+[19:48:59]   gc_calls = 0 count
+[19:48:59]   gc_bg = 0 count
+[19:48:59]   moved = 0 count
+[19:48:59]   moved_bg = 0 count
+[19:48:59]   cp_calls = 2 count
+[19:48:59]   cp_bg = 1 count
+[19:48:59]   gc_fg = 0 count
+[19:48:59]   status = INCONCLUSIVE -
+[19:49:00] === bg_idle_cost_benefit: INCONCLUSIVE ===
+[19:49:00] === bg_idle_greedy [offload_on] ===
+files=90
+used_pct=85.62
+enospc=0
+elapsed_ms=689
+mb_s=1045.0
+deleted=12
+remaining=78
+[19:49:21]   greedy_elapsed_ms = -772 ms
+[19:49:21]   greedy_free_seg_gain = 0 segs
+[19:49:21]   greedy_dirty_seg_delta = 0 segs
+[19:49:21]   greedy_bg_gc_calls = 0 count
+[19:49:21]   greedy_bg_blocks_moved = 0 blocks
+[19:49:21]   greedy_bg_moved_mb_s = 0.00 MB/s
+[19:49:21]   greedy_gc_thread_cpu_ms = 0 ms
+[19:49:21]   expected bg_gc_calls > 0 but got 0
+[19:49:22]   duration_ms = 61 ms
+[19:49:22]   gc_calls = 0 count
+[19:49:22]   gc_bg = 0 count
+[19:49:22]   moved = 0 count
+[19:49:22]   moved_bg = 0 count
+[19:49:22]   cp_calls = 2 count
+[19:49:22]   cp_bg = 1 count
+[19:49:22]   gc_fg = 0 count
+[19:49:22]   status = INCONCLUSIVE -
+[19:49:22] === bg_idle_greedy: INCONCLUSIVE ===
+[19:49:22] === bg_with_foreground_io [offload_on] ===
+files=90
+used_pct=85.62
+enospc=0
+elapsed_ms=639
+mb_s=1126.0
+deleted=12
+remaining=78
+[19:49:37]   base_iops = 845361 ops/s
+[19:49:37]   base_mb_s = 3302.2 MB/s
+[19:49:37]   base_write_p50_us = 0 us
+[19:49:37]   base_write_p99_us = 1 us
+[19:49:37]   base_write_p999_us = 4 us
+[19:49:37]   base_write_max_us = 101 us
+[19:49:44]   bgon_iops = 804551 ops/s
+[19:49:44]   bgon_mb_s = 3142.8 MB/s
+[19:49:44]   bgon_write_p50_us = 0 us
+[19:49:44]   bgon_write_p99_us = 1 us
+[19:49:44]   bgon_write_p999_us = 3 us
+[19:49:44]   bgon_write_max_us = 93 us
+[19:49:44]   iops_drop_pct = 4.8 %
+[19:49:44]   expected bg_gc_calls > 0 but got 0
+[19:49:44]   duration_ms = 361 ms
+[19:49:44]   gc_calls = 0 count
+[19:49:44]   gc_bg = 0 count
+[19:49:44]   moved = 0 count
+[19:49:44]   moved_bg = 0 count
+[19:49:44]   cp_calls = 2 count
+[19:49:44]   cp_bg = 1 count
+[19:49:44]   gc_fg = 0 count
+[19:49:44]   status = INCONCLUSIVE -
+[19:49:45] === bg_with_foreground_io: INCONCLUSIVE ===
+[19:49:45] === bg_reclaim_after_delete [offload_on] ===
+[19:50:09]   time_to_stable_s = -1347 ms
+[19:50:09]   free_seg_gain = 0 segs
+[19:50:09]   bg_blocks_moved = 0 blocks
+[19:50:09]   expected bg_gc_calls > 0 but got 0
+[19:50:09]   duration_ms = 2851 ms
+[19:50:09]   gc_calls = 0 count
+[19:50:09]   gc_bg = 0 count
+[19:50:09]   moved = 0 count
+[19:50:09]   moved_bg = 0 count
+[19:50:09]   cp_calls = 2 count
+[19:50:09]   cp_bg = 1 count
+[19:50:09]   gc_fg = 0 count
+[19:50:09]   status = INCONCLUSIVE -
+[19:50:09] === bg_reclaim_after_delete: INCONCLUSIVE ===
+[19:50:10] === bg_fsync_workload [offload_on] ===
+files=90
+used_pct=85.62
+enospc=0
+elapsed_ms=735
+mb_s=979.7
+deleted=12
+remaining=78
+[19:50:25]   base_iops = 8225 ops/s
+[19:50:25]   base_mb_s = 32.1 MB/s
+[19:50:25]   base_write_p50_us = 1 us
+[19:50:25]   base_write_p99_us = 6 us
+[19:50:25]   base_write_p999_us = 8 us
+[19:50:25]   base_write_max_us = 21 us
+[19:50:25]   base_fsync_p99_us = 168 us
+[19:50:25]   base_fsync_max_us = 4881 us
+[19:50:31]   bgon_iops = 8470 ops/s
+[19:50:31]   bgon_mb_s = 33.1 MB/s
+[19:50:31]   bgon_write_p50_us = 1 us
+[19:50:31]   bgon_write_p99_us = 5 us
+[19:50:31]   bgon_write_p999_us = 7 us
+[19:50:31]   bgon_write_max_us = 15 us
+[19:50:31]   bgon_fsync_p99_us = 153 us
+[19:50:31]   bgon_fsync_max_us = 4139 us
+[19:50:31]   iops_drop_pct = -3.0 %
+[19:50:31]   expected bg_gc_calls > 0 but got 0
+[19:50:31]   duration_ms = 79 ms
+[19:50:31]   gc_calls = 0 count
+[19:50:31]   gc_bg = 0 count
+[19:50:31]   moved = 0 count
+[19:50:31]   moved_bg = 0 count
+[19:50:31]   cp_calls = 2 count
+[19:50:31]   cp_bg = 1 count
+[19:50:32]   gc_fg = 0 count
+[19:50:32]   status = INCONCLUSIVE -
+[19:50:32] === bg_fsync_workload: INCONCLUSIVE ===
+[19:50:32] === bg_waf_soak [offload_on] ===
+files=90
+used_pct=85.62
+enospc=0
+elapsed_ms=776
+mb_s=927.6
+deleted=9
+remaining=81
+[19:51:03]   soak_iops = 841251 ops/s
+[19:51:03]   soak_mb_s = 3286.1 MB/s
+[19:51:03]   soak_write_p50_us = 0 us
+[19:51:03]   soak_write_p99_us = 1 us
+[19:51:03]   soak_write_p999_us = 3 us
+[19:51:03]   soak_write_max_us = 133 us
+[19:51:03]   gc_blocks_moved_total = 0 blocks
+[19:51:03]   gc_blocks_moved_bg = 0 blocks
+[19:51:03]   gc_waf = 1.000 ratio
+[19:51:03]   expected bg_gc_calls > 0 but got 0
+[19:51:03]   duration_ms = 1322 ms
+[19:51:03]   gc_calls = 0 count
+[19:51:03]   gc_bg = 0 count
+[19:51:03]   moved = 0 count
+[19:51:03]   moved_bg = 0 count
+[19:51:03]   cp_calls = 2 count
+[19:51:04]   cp_bg = 1 count
+[19:51:04]   gc_fg = 0 count
+[19:51:04]   status = INCONCLUSIVE -
+[19:51:04] === bg_waf_soak: INCONCLUSIVE ===
+[19:51:04] === bg_idle_maint [offload_on] ===
+files=90
+used_pct=85.62
+enospc=0
+elapsed_ms=698
+mb_s=1032.1
+deleted=12
+remaining=78
+
+[19:51:43]   maint_elapsed_ms = 46 ms
+[19:51:43]   maint_free_seg_gain = 0 segs
+[19:51:43]   maint_dirty_seg_delta = 0 segs
+[19:51:44]   maint_bg_gc_calls = 0 count
+[19:51:44]   maint_bg_blocks_moved = 0 blocks
+[19:51:44]   maint_bg_moved_mb_s = 0.00 MB/s
+[19:51:44]   maint_gc_thread_cpu_ms = 0 ms
+[19:51:44]   expected bg_gc_calls > 0 but got 0
+[19:51:44]   duration_ms = 1326 ms
+[19:51:44]   gc_calls = 0 count
+[19:51:44]   gc_bg = 0 count
+[19:51:44]   moved = 0 count
+[19:51:44]   moved_bg = 0 count
+[19:51:44]   cp_calls = 2 count
+[19:51:44]   cp_bg = 1 count
+[19:51:44]   gc_fg = 0 count
+[19:51:44]   status = INCONCLUSIVE -
+[19:51:44] === bg_idle_maint: INCONCLUSIVE ===
 done. results in /data/local/tmp/f2fs_gc_suite/results/
 >>> Pulling test logs from device...
-/data/local/tmp/f2fs_gc_suite/results/./: 14 files pulled. 0.5 MB/s (21372 bytes in 0.041s)
-Results saved successfully to .\results\20261023_171831
+/data/local/tmp/f2fs_gc_suite/results/./: 18 files pulled. 0.9 MB/s (39941 bytes in 0.044s)
+Results saved successfully to .\results\20261023_175900
 >>> Executing data comparison script via py launcher...
 | test | metric | off | on | change | verdict |
 |---|---|---:|---:|---:|---|
-| fg_append_full | append_mb_s | 928.1 | 981.4 | +5.7% | better |
-|  | append_elapsed_ms | 840 | 795 | -5.4% | better |
-|  | append_write_p50_us | 33 | 32 | -3.0% | ~same |
-|  | append_write_p99_us | 112 | 108 | -3.6% | ~same |
-|  | append_write_p999_us | 250 | 232 | -7.2% | better |
-|  | append_write_max_us | 294 | 296 | +0.7% | ~same |
-|  | duration_ms | 1,101 | 1,029 | -6.5% | better |
+| fg_append_full | append_mb_s | 1,650.7 | 1,830.5 | +10.9% | better |
+|  | append_elapsed_ms | 93 | 84 | -9.7% | better |
+|  | append_write_p50_us | 23 | 25 | +8.7% | worse |
+|  | append_write_p99_us | 65 | 60 | -7.7% | better |
+|  | append_write_p999_us | 87 | 76 | -12.6% | better |
+|  | append_write_max_us | 95 | 87 | -8.4% | better |
+|  | duration_ms | 482 | 460 | -4.6% | ~same |
 |  | gc_bg | 0 | 0 |  |  |
 |  | gc_fg | 0 | 0 |  |  |
-| fg_random_overwrite | duration_ms | 242 | 244 | +0.8% | ~same |
+| fg_random_overwrite | churn_iops | 858,116 | 822,217 | -4.2% | ~same |
+|  | churn_mb_s | 3,352 | 3,211.8 | -4.2% | ~same |
+|  | churn_write_p50_us | 0 | 0 |  |  |
+|  | churn_write_p99_us | 1 | 1 | +0.0% | ~same |
+|  | churn_write_p999_us | 2 | 3 | +50.0% | worse |
+|  | churn_write_max_us | 100 | 109 | +9.0% | worse |
+|  | duration_ms | -1,907 | -1,964 | -3.0% | ~same |
 |  | gc_bg | 0 | 0 |  |  |
 |  | gc_fg | 0 | 0 |  |  |
-| fg_fsync_pressure | fsyncappend_mb_s | 91.1 | 86.3 | -5.3% | worse |
-|  | fsyncappend_elapsed_ms | 1,120 | 1,181 | +5.4% | worse |
+| fg_fsync_pressure | fsyncappend_mb_s | 95 | 96 | +1.1% | ~same |
+|  | fsyncappend_elapsed_ms | 894 | 885 | -1.0% | ~same |
 |  | fsyncappend_write_p50_us | 4 | 4 | +0.0% | ~same |
-|  | fsyncappend_write_p99_us | 16 | 18 | +12.5% | worse |
-|  | fsyncappend_write_p999_us | 46 | 50 | +8.7% | worse |
-|  | fsyncappend_write_max_us | 54 | 138 | +155.6% | worse |
-|  | duration_ms | 1,371 | 1,417 | +3.4% | ~same |
+|  | fsyncappend_write_p99_us | 6 | 5 | -16.7% | better |
+|  | fsyncappend_write_p999_us | 46 | 46 | +0.0% | ~same |
+|  | fsyncappend_write_max_us | 62 | 63 | +1.6% | ~same |
+|  | duration_ms | -344 | -397 | -15.4% | better |
 |  | gc_bg | 0 | 0 |  |  |
 |  | gc_fg | 0 | 0 |  |  |
-| fg_parallel_writers | par_aggregate_mb_s | 1,861.4 | 1,763 | -5.3% | worse |
-|  | par_worst_write_p99_us | 109 | 141 | +29.4% | worse |
-|  | par_worst_write_max_us | 255 | 381 | +49.4% | worse |
-|  | duration_ms | 596 | 638 | +7.0% | worse |
+| fg_parallel_writers | par_aggregate_mb_s | 3,643.5 | 3,090.7 | -15.2% | worse |
+|  | par_worst_write_p99_us | 408 | 125 | -69.4% | better |
+|  | par_worst_write_max_us | 868 | 898 | +3.5% | ~same |
+|  | duration_ms | -1,189 | -1,263 | -6.2% | better |
 |  | gc_bg | 0 | 0 |  |  |
 |  | gc_fg | 0 | 0 |  |  |
-| fg_ioctl_sync_gc | ioctl_elapsed_ms | 0 | 0 |  |  |
-|  | ioctl_gc_call_p50_us | 182 | 188 | +3.3% | ~same |
-|  | ioctl_gc_call_p99_us | 182 | 188 | +3.3% | ~same |
-|  | ioctl_gc_call_max_us | 182 | 188 | +3.3% | ~same |
-|  | duration_ms | 345 | 337 | -2.3% | ~same |
+| fg_ioctl_sync_gc | ioctl_elapsed_ms | 0 | 13,529 |  |  |
+|  | ioctl_gc_call_p50_us | 45 | 482,556 | +1072246.7% | worse |
+|  | ioctl_gc_call_p99_us | 45 | 492,566 | +1094491.1% | worse |
+|  | ioctl_gc_call_max_us | 45 | 492,566 | +1094491.1% | worse |
+|  | duration_ms | -1,368 | -481 | +64.8% | worse |
 |  | gc_bg | 0 | 0 |  |  |
-|  | gc_fg | 0 | 0 |  |  |
+|  | gc_fg | 2 | 30 | +1400.0% |  |
 | fg_ioctl_gc_range | range_elapsed_ms | 0 | 0 |  |  |
-|  | duration_ms | 237 | 234 | -1.3% | ~same |
+|  | duration_ms | 2,903 | -1,367 | -147.1% | better |
 |  | gc_bg | 0 | 0 |  |  |
 |  | gc_fg | 0 | 0 |  |  |
-| fg_enospc_recovery | recover_mb_s | 1,768.8 | 1,515.9 | -14.3% | worse |
-|  | recover_elapsed_ms | 57 | 66 | +15.8% | worse |
-|  | recover_write_p50_us | 37 | 32 | -13.5% | better |
-|  | recover_write_p99_us | 91 | 86 | -5.5% | better |
-|  | recover_write_p999_us | 112 | 112 | +0.0% | ~same |
-|  | recover_write_max_us | 112 | 112 | +0.0% | ~same |
-|  | duration_ms | -5 | 53 | +1160.0% | worse |
+| fg_enospc_recovery | recover_mb_s | 1,419.1 | 1,731.7 | +22.0% | better |
+|  | recover_elapsed_ms | 70 | 58 | -17.1% | better |
+|  | recover_write_p50_us | 36 | 24 | -33.3% | better |
+|  | recover_write_p99_us | 88 | 77 | -12.5% | better |
+|  | recover_write_p999_us | 118 | 91 | -22.9% | better |
+|  | recover_write_max_us | 118 | 91 | -22.9% | better |
+|  | duration_ms | 47 | 47 | +0.0% | ~same |
+|  | gc_bg | 0 | 0 |  |  |
+|  | gc_fg | 0 | 0 |  |  |
+| bg_default_idle | idle_elapsed_ms | 54 | 45 | -16.7% | better |
+|  | idle_free_seg_gain | 0 | 0 |  |  |
+|  | idle_bg_moved_mb_s | 0 | 0.09 |  |  |
+|  | idle_gc_thread_cpu_ms | 0 | 0 |  |  |
+|  | duration_ms | 894 | 992 | +11.0% | worse |
+|  | gc_bg | 0 | 1 |  |  |
+|  | gc_fg | 0 | 0 |  |  |
+| bg_urgent_high | urgent_high_elapsed_ms | -774 | 3,523 | +555.2% | worse |
+|  | urgent_high_free_seg_gain | 0 | 0 |  |  |
+|  | urgent_high_bg_moved_mb_s | -30.08 | 6.24 | +120.7% | better |
+|  | urgent_high_gc_thread_cpu_ms | 0 | 0 |  |  |
+|  | duration_ms | 77 | 55 | -28.6% | better |
+|  | gc_bg | 25 | 24 | -4.0% |  |
+|  | gc_fg | 0 | 0 |  |  |
+| bg_urgent_low | urgent_low_elapsed_ms | 3,517 | -770 | -121.9% | better |
+|  | urgent_low_free_seg_gain | 0 | 0 |  |  |
+|  | urgent_low_bg_moved_mb_s | 0 | 0 |  |  |
+|  | urgent_low_gc_thread_cpu_ms | 0 | 0 |  |  |
+|  | duration_ms | 42 | 160 | +281.0% | worse |
+|  | gc_bg | 0 | 0 |  |  |
+|  | gc_fg | 0 | 0 |  |  |
+| bg_idle_cost_benefit | costben_elapsed_ms | -774 | -773 | +0.1% | ~same |
+|  | costben_free_seg_gain | 0 | 0 |  |  |
+|  | costben_bg_moved_mb_s | 0 | 0 |  |  |
+|  | costben_gc_thread_cpu_ms | 0 | 0 |  |  |
+|  | duration_ms | 19 | 93 | +389.5% | worse |
+|  | gc_bg | 0 | 0 |  |  |
+|  | gc_fg | 0 | 0 |  |  |
+| bg_idle_greedy | greedy_elapsed_ms | -773 | -772 | +0.1% | ~same |
+|  | greedy_free_seg_gain | 0 | 0 |  |  |
+|  | greedy_bg_moved_mb_s | 0 | 0 |  |  |
+|  | greedy_gc_thread_cpu_ms | 0 | 0 |  |  |
+|  | duration_ms | 79 | 61 | -22.8% | better |
+|  | gc_bg | 0 | 0 |  |  |
+|  | gc_fg | 0 | 0 |  |  |
+| bg_with_foreground_io | base_iops | 877,741 | 845,361 | -3.7% | ~same |
+|  | base_mb_s | 3,428.7 | 3,302.2 | -3.7% | ~same |
+|  | base_write_p50_us | 0 | 0 |  |  |
+|  | base_write_p99_us | 1 | 1 | +0.0% | ~same |
+|  | base_write_p999_us | 4 | 4 | +0.0% | ~same |
+|  | base_write_max_us | 98 | 101 | +3.1% | ~same |
+|  | bgon_iops | 843,566 | 804,551 | -4.6% | ~same |
+|  | bgon_mb_s | 3,295.2 | 3,142.8 | -4.6% | ~same |
+|  | bgon_write_p50_us | 0 | 0 |  |  |
+|  | bgon_write_p99_us | 1 | 1 | +0.0% | ~same |
+|  | bgon_write_p999_us | 3 | 3 | +0.0% | ~same |
+|  | bgon_write_max_us | 101 | 93 | -7.9% | better |
+|  | iops_drop_pct | 3.9 | 4.8 | +23.1% | worse |
+|  | duration_ms | 376 | 361 | -4.0% | ~same |
+|  | gc_bg | 0 | 0 |  |  |
+|  | gc_fg | 0 | 0 |  |  |
+| bg_reclaim_after_delete | time_to_stable_s | -1,344 | -1,347 | -0.2% | ~same |
+|  | free_seg_gain | 0 | 0 |  |  |
+|  | duration_ms | -1,387 | 2,851 | +305.6% | worse |
+|  | gc_bg | 0 | 0 |  |  |
+|  | gc_fg | 0 | 0 |  |  |
+| bg_fsync_workload | base_iops | 8,507 | 8,225 | -3.3% | ~same |
+|  | base_mb_s | 33.2 | 32.1 | -3.3% | ~same |
+|  | base_write_p50_us | 1 | 1 | +0.0% | ~same |
+|  | base_write_p99_us | 4 | 6 | +50.0% | worse |
+|  | base_write_p999_us | 8 | 8 | +0.0% | ~same |
+|  | base_write_max_us | 19 | 21 | +10.5% | worse |
+|  | base_fsync_p99_us | 146 | 168 | +15.1% | worse |
+|  | base_fsync_max_us | 3,455 | 4,881 | +41.3% | worse |
+|  | bgon_iops | 8,550 | 8,470 | -0.9% | ~same |
+|  | bgon_mb_s | 33.4 | 33.1 | -0.9% | ~same |
+|  | bgon_write_p50_us | 1 | 1 | +0.0% | ~same |
+|  | bgon_write_p99_us | 2 | 5 | +150.0% | worse |
+|  | bgon_write_p999_us | 5 | 7 | +40.0% | worse |
+|  | bgon_write_max_us | 20 | 15 | -25.0% | better |
+|  | bgon_fsync_p99_us | 128 | 153 | +19.5% | worse |
+|  | bgon_fsync_max_us | 4,458 | 4,139 | -7.2% | better |
+|  | iops_drop_pct | -0.5 | -3 | -500.0% | better |
+|  | duration_ms | -46 | 79 | +271.7% | worse |
+|  | gc_bg | 0 | 0 |  |  |
+|  | gc_fg | 0 | 0 |  |  |
+| bg_waf_soak | soak_iops | 857,818 | 841,251 | -1.9% | ~same |
+|  | soak_mb_s | 3,350.9 | 3,286.1 | -1.9% | ~same |
+|  | soak_write_p50_us | 0 | 0 |  |  |
+|  | soak_write_p99_us | 1 | 1 | +0.0% | ~same |
+|  | soak_write_p999_us | 3 | 3 | +0.0% | ~same |
+|  | soak_write_max_us | 117 | 133 | +13.7% | worse |
+|  | gc_waf | 1 | 1 | +0.0% | ~same |
+|  | duration_ms | 1,232 | 1,322 | +7.3% | worse |
+|  | gc_bg | 0 | 0 |  |  |
+|  | gc_fg | 0 | 0 |  |  |
+| bg_idle_maint | maint_elapsed_ms | 44 | 46 | +4.5% | ~same |
+|  | maint_free_seg_gain | 0 | 0 |  |  |
+|  | maint_bg_moved_mb_s | 0 | 0 |  |  |
+|  | maint_gc_thread_cpu_ms | 0 | 0 |  |  |
+|  | duration_ms | 1,253 | 1,326 | +5.8% | worse |
 |  | gc_bg | 0 | 0 |  |  |
 |  | gc_fg | 0 | 0 |  |  |
 
@@ -550,9 +1049,19 @@ Scenario validity (GC type the test targets actually ran):
 | fg_random_overwrite | INCONCLUSIVE | INCONCLUSIVE |
 | fg_fsync_pressure | INCONCLUSIVE | INCONCLUSIVE |
 | fg_parallel_writers | INCONCLUSIVE | INCONCLUSIVE |
-| fg_ioctl_sync_gc | INCONCLUSIVE | INCONCLUSIVE |
+| fg_ioctl_sync_gc | PASS | PASS |
 | fg_ioctl_gc_range | INCONCLUSIVE | INCONCLUSIVE |
 | fg_enospc_recovery | INCONCLUSIVE | INCONCLUSIVE |
+| bg_default_idle | INCONCLUSIVE | PASS |
+| bg_urgent_high | PASS | PASS |
+| bg_urgent_low | INCONCLUSIVE | INCONCLUSIVE |
+| bg_idle_cost_benefit | INCONCLUSIVE | INCONCLUSIVE |
+| bg_idle_greedy | INCONCLUSIVE | INCONCLUSIVE |
+| bg_with_foreground_io | INCONCLUSIVE | INCONCLUSIVE |
+| bg_reclaim_after_delete | INCONCLUSIVE | INCONCLUSIVE |
+| bg_fsync_workload | INCONCLUSIVE | INCONCLUSIVE |
+| bg_waf_soak | INCONCLUSIVE | INCONCLUSIVE |
+| bg_idle_maint | INCONCLUSIVE | INCONCLUSIVE |
 
 Treat INCONCLUSIVE/UNVERIFIED rows as not comparable; a 'better'/'worse' tag needs >=5% change and is not a significance test (repeat runs and compare the spread).
 PS D:\anees\tasks\f2fs_gc_test_suite\f2fs_gc_suite_v01>
