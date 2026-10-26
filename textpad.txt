@@ -1,11 +1,48 @@
-  END {
-      if (gc == "") gc = "NA"
-      if (gcbg == "") gcbg = "NA"
-      if (mv == "") mv = "NA"
-      if (mvbg == "") mvbg = "NA"
-      if (cp == "") cp = "NA"
-      if (cpbg == "") cpbg = "NA"
-
-      printf "gc_calls=%s gc_bg=%s moved=%s moved_bg=%s cp_calls=%s cp_bg=%s\n", \
-        gc, gcbg, mv, mvbg, cp, cpbg
-    }
+#
+Test case
+Purpose and workload
+Expected behaviour
+OFF result
+ON result
+1
+fg_append_full
+Sequentially append data to an aged filesystem filled to approximately 90%. Measures throughput, elapsed time and write latency.
+Foreground GC should run when the write path needs additional free sections. The test should report valid write metrics and gc_fg > 0.
+INCONCLUSIVE
+INCONCLUSIVE
+2
+fg_random_overwrite
+Perform random 4 KiB overwrites on a nearly full filesystem. Measures IOPS, throughput and write latency.
+Out-of-place updates should create allocation pressure, potentially triggering foreground GC. The test requires verified foreground GC activity.
+INCONCLUSIVE
+INCONCLUSIVE
+3
+fg_fsync_pressure
+Append small chunks and perform fsync after each chunk. Exercises write allocation, persistence and checkpoint interactions under space pressure.
+Foreground GC should run during the workload; throughput, latency and GC counters should be valid.
+INCONCLUSIVE
+INCONCLUSIVE
+4
+fg_parallel_writers
+Run four concurrent append workloads. Measures aggregate throughput, worst per-writer p99/max write latency and ENOSPC occurrences.
+Foreground GC should run under concurrent allocation pressure. The test should also report aggregate throughput and latency without unintended ENOSPC failures.
+INCONCLUSIVE
+INCONCLUSIVE
+5
+fg_ioctl_sync_gc
+Explicitly invoke F2FS_IOC_GARBAGE_COLLECT with sync=1, repeatedly requesting synchronous GC. Measures calls, successful ioctls, blocks moved and latency.
+Synchronous GC should execute and be observable through the foreground GC counters. The test should finish when no more suitable victims remain or the configured limit is reached.
+PASS
+PASS
+6
+fg_ioctl_gc_range
+Invoke F2FS_IOC_GARBAGE_COLLECT_RANGE over a range in the filesystem's main area. Requires the main_blkaddr sysfs value.
+The range-GC ioctl should accept valid arguments, return success and demonstrate foreground GC activity. Unsupported or invalid ranges should be diagnosed separately.
+INCONCLUSIVE
+INCONCLUSIVE
+7
+fg_enospc_recovery
+Fill the filesystem to ENOSPC, create churn, delete approximately 20% of the files and attempt new writes. Measures recovery throughput and latency.
+The initial fill should reach ENOSPC, deleting files should make space available, and subsequent writes should recover without ENOSPC. Foreground GC activity must also be verified for this scenario.
+INCONCLUSIVE
+INCONCLUSIVE
