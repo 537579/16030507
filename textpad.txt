@@ -1,10 +1,10 @@
 prep_full 95 "$(scale_min1 120)" 5
 
 free=$(free_mb)
-tot=$(( free * 120 / 100 ))
+tot=$(( free * 110 / 100 ))
 
 [ "$tot" -gt 0 ] || {
-  log "ERROR: no free space available for append workload"
+  log "ERROR: insufficient free space for fsync-pressure test"
   TEST_STATUS=FAIL
   end_test
   return
