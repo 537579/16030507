@@ -1,11 +1,20 @@
-if [ -n "$f0" ] && [ -n "$f1" ]; then
-  emit "${1}free_seg_gain" "$((f1 - f0))" segs
-else
-  emit "${1}free_seg_gain" NA segs
+out=$("$GCLOAD" fillto "$TEST_DIR" 100 8 "$MNT")
+fill_rc=$?
+
+emit_load "$out" fill_ files:count used_pct:% enospc:flag mb_s:MB/s
+
+if [ "$fill_rc" -ne 0 ]; then
+  log "ERROR: fillto failed with exit code $fill_rc"
+  TEST_STATUS=FAIL
+  end_test
+  return
 fi
 
-if [ -n "$d0" ] && [ -n "$d1" ]; then
-  emit "${1}dirty_seg_delta" "$((d1 - d0))" segs
-else
-  emit "${1}dirty_seg_delta" NA segs
+fill_enospc=$(gcval "$out" enospc)
+
+if [ "$fill_enospc" != 1 ]; then
+  log "ERROR: fill phase did not confirm ENOSPC"
+  TEST_STATUS=FAIL
+  end_test
+  return
 fi
