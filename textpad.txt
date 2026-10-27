@@ -1,116 +1,22 @@
-#
-Test case
-Purpose and workload
-Expected behaviour
-OFF result
-ON result
-1
-fg_append_full
-Sequentially append data to an aged filesystem filled to approximately 90%. Measures throughput, elapsed time and write latency.
-Foreground GC should run when the write path needs additional free sections. The test should report valid write metrics and gc_fg > 0.
-INCONCLUSIVE
-INCONCLUSIVE
-2
-fg_random_overwrite
-Perform random 4 KiB overwrites on a nearly full filesystem. Measures IOPS, throughput and write latency.
-Out-of-place updates should create allocation pressure, potentially triggering foreground GC. The test requires verified foreground GC activity.
-INCONCLUSIVE
-INCONCLUSIVE
-3
-fg_fsync_pressure
-Append small chunks and perform fsync after each chunk. Exercises write allocation, persistence and checkpoint interactions under space pressure.
-Foreground GC should run during the workload; throughput, latency and GC counters should be valid.
-INCONCLUSIVE
-INCONCLUSIVE
-4
-fg_parallel_writers
-Run four concurrent append workloads. Measures aggregate throughput, worst per-writer p99/max write latency and ENOSPC occurrences.
-Foreground GC should run under concurrent allocation pressure. The test should also report aggregate throughput and latency without unintended ENOSPC failures.
-INCONCLUSIVE
-INCONCLUSIVE
-5
-fg_ioctl_sync_gc
-Explicitly invoke F2FS_IOC_GARBAGE_COLLECT with sync=1, repeatedly requesting synchronous GC. Measures calls, successful ioctls, blocks moved and latency.
-Synchronous GC should execute and be observable through the foreground GC counters. The test should finish when no more suitable victims remain or the configured limit is reached.
-PASS
-PASS
-6
-fg_ioctl_gc_range
-Invoke F2FS_IOC_GARBAGE_COLLECT_RANGE over a range in the filesystem's main area. Requires the main_blkaddr sysfs value.
-The range-GC ioctl should accept valid arguments, return success and demonstrate foreground GC activity. Unsupported or invalid ranges should be diagnosed separately.
-INCONCLUSIVE
-INCONCLUSIVE
-7
-fg_enospc_recovery
-Fill the filesystem to ENOSPC, create churn, delete approximately 20% of the files and attempt new writes. Measures recovery throughput and latency.
-The initial fill should reach ENOSPC, deleting files should make space available, and subsequent writes should recover without ENOSPC. Foreground GC activity must also be verified for this scenario.
-INCONCLUSIVE
-INCONCLUSIVE
+f2fs_node() {
+  src=$(mnt_src)
 
+  if [ -z "$src" ]; then
+    echo "ERROR: $MNT is not mounted as F2FS" >&2
+    return 1
+  fi
 
-#
-Test case
-Purpose and workload
-Expected behaviour
-OFF result
-ON result
-8
-bg_default_idle
-Age the filesystem, retain the default GC tunables, and leave the filesystem idle.
-The background GC thread should collect eligible sections under default idle-time policy. Expect background GC calls and, where applicable, blocks moved and free-segment changes.
-INCONCLUSIVE
-PASS
-9
-bg_urgent_high
-Set gc_urgent=1 and measure GC activity over the configured observation interval.
-Urgent background GC should run and produce observable background GC calls and block movement.
-PASS
-PASS
-10
-bg_urgent_low
-Set gc_urgent=2 and measure background GC activity.
-The urgent-low policy should trigger background GC under the prepared filesystem conditions.
-INCONCLUSIVE
-INCONCLUSIVE
-11
-bg_idle_cost_benefit
-Set gc_idle=1, shorten GC thread sleep intervals, and observe background GC.
-The cost-benefit idle policy should select and reclaim eligible victims when conditions permit.
-INCONCLUSIVE
-INCONCLUSIVE
-12
-bg_idle_greedy
-Set gc_idle=2, shorten GC thread sleep intervals, and observe background GC.
-The greedy idle policy should perform background collection on eligible victims.
-INCONCLUSIVE
-INCONCLUSIVE
-13
-bg_with_foreground_io
-Measure random-write IOPS and latency with background GC quiesced, then with background GC enabled.
-Background GC should run during the second phase. Compare IOPS degradation and write latency to quantify interference with application I/O.
-INCONCLUSIVE
-INCONCLUSIVE
-14
-bg_reclaim_after_delete
-Delete approximately 40% of the test data, enable background GC and observe free-segment recovery and time to a stable free-segment count.
-Background GC should execute and reclaim eligible sections. Measure the change in free segments, blocks moved and time to stability.
-INCONCLUSIVE
-INCONCLUSIVE
-15
-bg_fsync_workload
-Compare an fsync-heavy write workload with background GC quiesced versus enabled.
-Background GC should run during the second phase. Measure its impact on IOPS, write latency and fsync latency.
-INCONCLUSIVE
-INCONCLUSIVE
-16
-bg_waf_soak
-Run a sustained random-overwrite workload with background GC enabled. Measure user I/O and GC movement to estimate write amplification.
-Background GC should run, and GC movement should be measurable. Calculate GC write amplification from user writes and GC-moved blocks.
-INCONCLUSIVE
-INCONCLUSIVE
-17
-bg_idle_maint
-Invoke Android's sm idle-maint run path and observe GC activity during the maintenance interval.
-If the command is available and the filesystem has eligible victims, the maintenance path should trigger background GC. Measure blocks moved, free-segment changes and execution time.
-INCONCLUSIVE
-INCONCLUSIVE
+  bn=${src##*/}
+
+  if [ -d "/sys/fs/f2fs/$bn" ]; then
+    echo "$bn"
+    return 0
+  fi
+
+  echo "ERROR: Cannot map mount source $src to /sys/fs/f2fs" >&2
+  echo "Set F2FS_NODE explicitly after verifying the correct instance." >&2
+  return 1
+}
+
+F2FS_NODE=${F2FS_NODE:-$(f2fs_node)} || exit 3
+SYSFS=/sys/fs/f2fs/$F2FS_NODE
