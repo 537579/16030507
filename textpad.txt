@@ -1,22 +1,11 @@
-f2fs_node() {
-  src=$(mnt_src)
+prep_full 95 "$(scale_min1 120)" 5
 
-  if [ -z "$src" ]; then
-    echo "ERROR: $MNT is not mounted as F2FS" >&2
-    return 1
-  fi
+free=$(free_mb)
+tot=$(( free * 120 / 100 ))
 
-  bn=${src##*/}
-
-  if [ -d "/sys/fs/f2fs/$bn" ]; then
-    echo "$bn"
-    return 0
-  fi
-
-  echo "ERROR: Cannot map mount source $src to /sys/fs/f2fs" >&2
-  echo "Set F2FS_NODE explicitly after verifying the correct instance." >&2
-  return 1
+[ "$tot" -gt 0 ] || {
+  log "ERROR: no free space available for append workload"
+  TEST_STATUS=FAIL
+  end_test
+  return
 }
-
-F2FS_NODE=${F2FS_NODE:-$(f2fs_node)} || exit 3
-SYSFS=/sys/fs/f2fs/$F2FS_NODE
