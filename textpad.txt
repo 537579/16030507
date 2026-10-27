@@ -1,3 +1,18 @@
-now_ms() {
-  awk '{ printf "%.0f\n", $1 * 1000 }' /proc/uptime
+need_gt() {
+  # need_gt <label> <value> <minimum>
+
+  case "$2" in
+    NA)
+      if [ "$TEST_STATUS" = PASS ]; then
+        TEST_STATUS=UNVERIFIED
+      fi
+      ;;
+
+    *)
+      if [ "$2" -le "$3" ] && [ "$TEST_STATUS" = PASS ]; then
+        log "  expected $1 > $3 but got $2"
+        TEST_STATUS=INCONCLUSIVE
+      fi
+      ;;
+  esac
 }
