@@ -1,14 +1,50 @@
-if (secs <= 0 || iob == 0 || fse < 0) {
-    fprintf(stderr, "invalid churn arguments\n");
-    return 2;
+# ---------- UFS command RAM-log capture ----------
+RAMLOG_CMD=${RAMLOG_CMD:-/data/ufs_cmd_log}
+RAMLOG_ACTIVE=0
+RAMLOG_FILE=""
+
+ramlog_start() {
+    [ "$RAMLOG_ACTIVE" -eq 0 ] || {
+        log "ERROR: RAM-log capture already active"
+        return 1
+    }
+
+    if [ ! -x "$RAMLOG_CMD" ]; then
+        log "ERROR: UFS command logger not executable: $RAMLOG_CMD"
+        return 1
+    fi
+
+    mkdir -p "$RES_DIR/ramlogs"
+
+    RAMLOG_FILE="$RES_DIR/ramlogs/${TEST_NAME}.ramlog"
+
+    log "Starting UFS RAM-log capture: $TEST_NAME"
+
+    if ! "$RAMLOG_CMD" -c; then
+        log "ERROR: Failed to clear UFS RAM-log buffer"
+        return 1
+    fi
+
+    if ! "$RAMLOG_CMD" -s; then
+        log "ERROR: Failed to start UFS RAM-log capture"
+        return 1
+    fi
+
+    RAMLOG_ACTIVE=1
+    return 0
 }
 
-#########
+ramlog_stop() {
+    [ "$RAMLOG_ACTIVE" -eq 1 ] || return 0
 
-if (total == 0 || cb == 0 || fse < 0 || roll == 0) {
-    fprintf(stderr, "invalid append arguments\n");
-    return 2;
+    log "Saving UFS RAM-log: $RAMLOG_FILE"
+
+    if "$RAMLOG_CMD" -l "$RAMLOG_FILE"; then
+        log "UFS RAM-log saved: $RAMLOG_FILE"
+    else
+        log "ERROR: Failed to save UFS RAM-log: $RAMLOG_FILE"
+        TEST_STATUS=FAIL
+    fi
+
+    RAMLOG_ACTIVE=0
 }
-
-#########
-
