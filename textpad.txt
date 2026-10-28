@@ -1,65 +1,45 @@
----------- UFS command RAM-log capture ----------
+t_fg_parallel_writers() {
+  begin_test fg_parallel_writers
+  prep_full 90 "$(scale_min1 60)" 10
 
-RAMLOG_CMD=${RAMLOG_CMD:-/data/ufs_cmd_log}
-RAMLOG_PID=""
-RAMLOG_FILE=""
+  each=$(( $(free_mb) * 20 / 100 ))
+  writer_pids=""
+  writer_rc=0
 
-ramlog_start() {
-[ -x "$RAMLOG_CMD" ] || {
-log "ERROR: UFS command logger not executable: $RAMLOG_CMD"
-return 1
-}
+  # Start RAM-log capture before launching the writers.
+  ramlog_start || :
 
-mkdir -p "$RES_DIR/ramlogs"
-RAMLOG_FILE="$RES_DIR/ramlogs/${TEST_NAME}.ramlog"
+  for i in 0 1 2 3; do
+    mkdir -p "$TEST_DIR/w$i"
+    (
+      "$GCLOAD" append "$TEST_DIR/w$i" "$each" 128 0 64 \
+        > "$RES_DIR/.w$i"
+    ) &
+    writer_pids="$writer_pids $!"
+  done
 
-log "Clearing UFS RAM-log buffer: $TEST_NAME"
-"$RAMLOG_CMD" -c || {
-    log "ERROR: Failed to clear UFS RAM-log buffer"
-    return 1
-}
+  # Wait only for the writer processes, not all background jobs.
+  for pid in $writer_pids; do
+    wait "$pid" || writer_rc=1
+  done
 
-log "Starting UFS RAM-log capture in background"
+  # Stop and save the RAM log after all writers have finished.
+  ramlog_stop || writer_rc=1
 
-"$RAMLOG_CMD" -s >/dev/null 2>&1 &
-RAMLOG_PID=$!
+  agg=$(cat "$RES_DIR"/.w[0-3] |
+    awk -F= '/^mb_s=/{s+=$2} END{printf "%.1f", s}')
+  p99=$(cat "$RES_DIR"/.w[0-3] |
+    awk -F= '/^write_p99_us=/{if($2>m)m=$2} END{print m+0}')
+  mx=$(cat "$RES_DIR"/.w[0-3] |
+    awk -F= '/^write_max_us=/{if($2>m)m=$2} END{print m+0}')
+  ens=$(cat "$RES_DIR"/.w[0-3] |
+    awk -F= '/^enospc=/{s+=$2} END{print s+0}')
 
-# Give the application a moment to initialize.
-sleep 1
+  emit par_aggregate_mb_s "$agg" MB/s
+  emit par_worst_write_p99_us "$p99" us
+  emit par_worst_write_max_us "$mx" us
+  emit par_enospc_writers "$ens" count
 
-if ! kill -0 "$RAMLOG_PID" 2>/dev/null; then
-    wait "$RAMLOG_PID" 2>/dev/null
-    RAMLOG_PID=""
-    log "ERROR: UFS RAM-log capture process exited unexpectedly"
-    return 1
-fi
-
-return 0
-
-}
-
-ramlog_stop() {
-[ -n "$RAMLOG_PID" ] || return 0
-
-log "Stopping UFS RAM-log capture"
-
-# Request the same graceful termination as Ctrl+C.
-kill -INT "$RAMLOG_PID" 2>/dev/null
-
-# Wait for the capture process to finish.
-wait "$RAMLOG_PID" 2>/dev/null
-RAMLOG_PID=""
-
-log "Saving UFS RAM-log: $RAMLOG_FILE"
-
-if "$RAMLOG_CMD" -l "$RAMLOG_FILE"; then
-    log "UFS RAM-log saved: $RAMLOG_FILE"
-else
-    log "ERROR: Failed to save UFS RAM-log: $RAMLOG_FILE"
-    TEST_STATUS=FAIL
-    return 1
-fi
-
-return 0
-
+  need_fg
+  end_test
 }
