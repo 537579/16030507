@@ -1,50 +1,65 @@
-# ---------- UFS command RAM-log capture ----------
+---------- UFS command RAM-log capture ----------
+
 RAMLOG_CMD=${RAMLOG_CMD:-/data/ufs_cmd_log}
-RAMLOG_ACTIVE=0
+RAMLOG_PID=""
 RAMLOG_FILE=""
 
 ramlog_start() {
-    [ "$RAMLOG_ACTIVE" -eq 0 ] || {
-        log "ERROR: RAM-log capture already active"
-        return 1
-    }
+[ -x "$RAMLOG_CMD" ] || {
+log "ERROR: UFS command logger not executable: $RAMLOG_CMD"
+return 1
+}
 
-    if [ ! -x "$RAMLOG_CMD" ]; then
-        log "ERROR: UFS command logger not executable: $RAMLOG_CMD"
-        return 1
-    fi
+mkdir -p "$RES_DIR/ramlogs"
+RAMLOG_FILE="$RES_DIR/ramlogs/${TEST_NAME}.ramlog"
 
-    mkdir -p "$RES_DIR/ramlogs"
+log "Clearing UFS RAM-log buffer: $TEST_NAME"
+"$RAMLOG_CMD" -c || {
+    log "ERROR: Failed to clear UFS RAM-log buffer"
+    return 1
+}
 
-    RAMLOG_FILE="$RES_DIR/ramlogs/${TEST_NAME}.ramlog"
+log "Starting UFS RAM-log capture in background"
 
-    log "Starting UFS RAM-log capture: $TEST_NAME"
+"$RAMLOG_CMD" -s >/dev/null 2>&1 &
+RAMLOG_PID=$!
 
-    if ! "$RAMLOG_CMD" -c; then
-        log "ERROR: Failed to clear UFS RAM-log buffer"
-        return 1
-    fi
+# Give the application a moment to initialize.
+sleep 1
 
-    if ! "$RAMLOG_CMD" -s; then
-        log "ERROR: Failed to start UFS RAM-log capture"
-        return 1
-    fi
+if ! kill -0 "$RAMLOG_PID" 2>/dev/null; then
+    wait "$RAMLOG_PID" 2>/dev/null
+    RAMLOG_PID=""
+    log "ERROR: UFS RAM-log capture process exited unexpectedly"
+    return 1
+fi
 
-    RAMLOG_ACTIVE=1
-    return 0
+return 0
+
 }
 
 ramlog_stop() {
-    [ "$RAMLOG_ACTIVE" -eq 1 ] || return 0
+[ -n "$RAMLOG_PID" ] || return 0
 
-    log "Saving UFS RAM-log: $RAMLOG_FILE"
+log "Stopping UFS RAM-log capture"
 
-    if "$RAMLOG_CMD" -l "$RAMLOG_FILE"; then
-        log "UFS RAM-log saved: $RAMLOG_FILE"
-    else
-        log "ERROR: Failed to save UFS RAM-log: $RAMLOG_FILE"
-        TEST_STATUS=FAIL
-    fi
+# Request the same graceful termination as Ctrl+C.
+kill -INT "$RAMLOG_PID" 2>/dev/null
 
-    RAMLOG_ACTIVE=0
+# Wait for the capture process to finish.
+wait "$RAMLOG_PID" 2>/dev/null
+RAMLOG_PID=""
+
+log "Saving UFS RAM-log: $RAMLOG_FILE"
+
+if "$RAMLOG_CMD" -l "$RAMLOG_FILE"; then
+    log "UFS RAM-log saved: $RAMLOG_FILE"
+else
+    log "ERROR: Failed to save UFS RAM-log: $RAMLOG_FILE"
+    TEST_STATUS=FAIL
+    return 1
+fi
+
+return 0
+
 }
