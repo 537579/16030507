@@ -8,7 +8,10 @@
 # Results land in $SUITE_DIR/results/<mode>/results.csv
 
 SUITE_DIR=${SUITE_DIR:-/data/local/tmp/f2fs_gc_suite}
-MODES=${MODES:-"offload_off offload_on"} SUITES=${SUITES:-"fg bg"} cd "$SUITE_DIR" || exit 1
+MODES=${MODES:-"offload_off offload_on"} 
+SUITES=${SUITES:-"fg bg"} 
+
+cd "$SUITE_DIR" || exit 1
 
 capture_env() {   # capture_env <mode>
   d=$SUITE_DIR/results/$1; mkdir -p "$d"
@@ -21,9 +24,15 @@ capture_env() {   # capture_env <mode>
     echo "suite env: MNT=${MNT:-/data} FILL_PCT=${FILL_PCT:-80} SCALE_PCT=${SCALE_PCT:-100} FILL_MAX_MB=${FILL_MAX_MB:-0}"
     echo "copy_offload ctl: ${COPY_OFFLOAD_CTL:-autodetect}"
   } > "$d/env.txt"
-  node=$(ls /sys/fs/f2fs 2>/dev/null | head -n1)
+  
+  # Resolve node dynamically based on what is actually mounted to $MNT
+  dev_path=$(awk -v m="$MNT" '$2==m && $3=="f2fs" {print $1}' /proc/mounts)
+  node=${F2FS_NODE:-${dev_path##*/}}
+
+  
   [ -n "$node" ] && { echo "--- sysfs tunables ($node)"; for f in /sys/fs/f2fs/$node/gc_* /sys/fs/f2fs/$node/main_blkaddr; do echo "$(basename $f)=$(cat $f 2>/dev/null)"; done; } >> "$d/env.txt"
 }
+
 
 for m in $MODES; do
   export MODE=$m
