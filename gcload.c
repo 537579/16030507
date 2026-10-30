@@ -35,7 +35,59 @@ static uint64_t now_ns(void)
 {
     struct timespec t;
     clock_gettime(CLOCK_MONOTONIC, &t);
-    return (uint64_t)t.tv_sec * 1000000000ull + (uint64_t)t.tv_nsec; }
+    return (uint64_t)t.tv_sec * 1000000000ull + (uint64_t)t.tv_nsec; 
+}
+
+static int write_all(int fd, const void *buf, size_t len)
+{
+    const char *p = buf;
+
+    while (len > 0) {
+        ssize_t n = write(fd, p, len);
+
+        if (n < 0) {
+            if (errno == EINTR)
+                continue;
+            return -1;
+        }
+
+        if (n == 0) {
+            errno = EIO;
+            return -1;
+        }
+
+        p += n;
+        len -= (size_t)n;
+    }
+
+    return 0;
+}
+
+static int pwrite_all(int fd, const void *buf, size_t len, off_t off)
+{
+    const char *p = buf;
+
+    while (len > 0) {
+        ssize_t n = pwrite(fd, p, len, off);
+
+        if (n < 0) {
+            if (errno == EINTR)
+                continue;
+            return -1;
+        }
+
+        if (n == 0) {
+            errno = EIO;
+            return -1;
+        }
+
+        p += n;
+        len -= (size_t)n;
+        off += n;
+    }
+
+    return 0;
+}
 
 static uint64_t rng_s = 88172645463325252ull; static uint64_t rnd(void) {
     rng_s ^= rng_s << 13;
@@ -194,13 +246,14 @@ static int cmd_fillto(int argc, char **argv) {
             die(p);
         fillbuf(buf, bs);
         for (size_t i = 0; i < mb; i++) {
-            if (write(fd, buf, bs) != (ssize_t)bs) {
+            if (write_all(fd, buf, bs) < 0) {
                 if (errno == ENOSPC) {
                     enospc = 1;
                     break;
                 }
                 die("write");
             }
+
             bytes += bs;
         }
         fsync(fd);
@@ -238,6 +291,10 @@ static int cmd_churn(int argc, char **argv) {
     int secs = atoi(argv[1]);
     size_t iob = (size_t)atol(argv[2]) * 1024;
     long fse = atol(argv[3]);
+    if (secs <= 0 || iob == 0 || fse < 0) {
+        fprintf(stderr, "invalid churn arguments\n");
+        return 2;
+    }
     int maxfd = argc > 5 ? atoi(argv[5]) : 256, nfd = 0, enospc = 0;
     char **v, *buf;
     int n, *fds;
@@ -291,7 +348,7 @@ static int cmd_churn(int argc, char **argv) {
         uint64_t r = rnd();
 
         memcpy(buf, &r, 8);
-        if (pwrite(fds[i], buf, iob, off) != (ssize_t)iob) {
+        if (pwrite_all(fds[i], buf, iob, off) < 0) {
             if (errno == ENOSPC) {
                 enospc = 1;
                 break;
@@ -308,9 +365,12 @@ static int cmd_churn(int argc, char **argv) {
         }
     }
     double el = (double)(now_ns() - t0) / 1e9;
+    double mb_s = el > 0.0 ? bytes / 1048576.0 / el : 0.0;
+    double iops = el > 0.0 ? (double)ops / el : 0.0;
+
     printf("ops=%llu\nenospc=%d\nelapsed_ms=%.0f\nmb_s=%.1f\niops=%.0f\n",
-           (unsigned long long)ops, enospc, el * 1000,
-           bytes / 1048576.0 / el, ops / el);
+        (unsigned long long)ops, enospc, el * 1000,
+        mb_s, iops);
     lat_report(&wl, "write");
     lat_report(&sl, "fsync");
     return 0;
@@ -325,6 +385,11 @@ static int cmd_append(int argc, char **argv) {
     size_t cb = (size_t)atol(argv[2]) * 1024;
     long fse = atol(argv[3]);
     uint64_t roll = (uint64_t)atol(argv[4]) << 20, done = 0, in_file = 0, nw = 0;
+    if (total == 0 || cb == 0 || fse < 0 || roll == 0) {
+        fprintf(stderr, "invalid append arguments\n");
+        return 2;
+    }
+
     int fd = -1, nfile = 0, enospc = 0;
     char *buf = malloc(cb), p[512];
     struct lat wl;
@@ -345,7 +410,7 @@ static int cmd_append(int argc, char **argv) {
         }
         uint64_t r = rnd(), t = now_ns();
         memcpy(buf, &r, 8);
-        if (write(fd, buf, cb) != (ssize_t)cb) {
+        if (write_all(fd, buf, cb) < 0) {
             if (errno == ENOSPC) {
                 enospc = 1;
                 break;
@@ -369,9 +434,11 @@ static int cmd_append(int argc, char **argv) {
         close(fd);
     }
     double el = (double)(now_ns() - t0) / 1e9;
+    double mb_s = el > 0.0 ? done / 1048576.0 / el : 0.0;
+
     printf("written_mb=%llu\nenospc=%d\nelapsed_ms=%.0f\nmb_s=%.1f\n",
-           (unsigned long long)(done >> 20), enospc, el * 1000,
-           done / 1048576.0 / el);
+        (unsigned long long)(done >> 20), enospc, el * 1000,
+        mb_s);
     lat_report(&wl, "write");
     return 0;
 }
