@@ -1,137 +1,90 @@
-F2FS Garbage Collection Test Suite: Comprehensive Architectural Design Specification
-
-+--------------------------------------------------------------------------------------------------+
-
-|                                          WINDOWS HOST                                            |
-|                                                                                                  |
-|   +--------------------------+                                    +--------------------------+   |
-|   |   run_on_device.ps1      |                                    |    .\tools\compare.py    |   |
-|   | (PowerShell Orchestrator)|                                    |    (Python Analytics)    |   |
-|   +------------+-------------+                                    +------------^-------------+   |
-|                |                                                               |                 |
-+----------------|---------------------------------------------------------------|-----------------+
-
-                 | adb push (Assets) / adb shell (Invoke)                        | adb pull (Logs)
-+----------------|---------------------------------------------------------------|-----------------+
-
-|                v                                                               |                 |
-|   +----------------------------------------------------------------------------+-------------+   |
-|   |                                   ANDROID USER SPACE                                     |   |
-|   |                             (/data/local/tmp/f2fs_gc_suite)                              |   |
-|   |                                                                                          |   |
-|   |   +----------------------------------------------------------------------------------+   |   |
-|   |   |                                     run_all.sh                                   |   |   |
-|   |   |                              (Main Driver Automation Loop)                       |   |   |
-|   |   +---------------------------------------+------------------------------------------+   |   |
-|   |                                           |                                              |   |
-|   |                   +-----------------------+-----------------------+                      |   |
-|   |                   |                                               |                      |   |
-|   |                   v                                               v                      |   |
-|   |     +---------------------------+                   +---------------------------+        |   |
-|   |     |         fg_gc.sh          |                   |         bg_gc.sh          |        |   |
-|   |     |    (Foreground Matrix)    |                   |    (Background Matrix)    |        |   |
-|   |     +-------------+-------------+                   +-------------+-------------+        |   |
-|   |                   |                                               |                      |   |
-|   |                   +-----------------------+-----------------------+                      |   |
-|   |                                           |                                              |   |
-|   |                                           v                                              |   |
-|   |     +---------------------------------------------------------------------------+        |   |
-|   |     |                lib/common.sh  (Shared Functions & Lifecycle)              |        |   |
-|   |     |  - now_ms()   - f2fs_counters()  - need_gt()  - begin_test()  - end_test()|        |   |
-|   |     +-------------------------+-----------------------+-------------------------+        |   |
-|   |                               |                       |                                  |   |
-|   |                               v                       v                                  |   |
-|   |                 +---------------------------+   +---------------------------+            |   |
-|   |                 |          gcload           |   |       ufs_cmd_log         |            |   |
-|   |                 |     (IO Traffic Engine)   |   |    (UFS Trace Capturer)   |            |   |
-|   |                 +-------------+-------------+   +-------------+-------------+            |   |
-|   +-------------------------------|-------------------------------|--------------------------+
-|                                   |                               |                              |
-+-----------------------------------|-------------------------------|------------------------------+
-
-|                                   v                               v                              |
-|   +------------------------------------------------------------------------------------------+   |
-|   |                                     LINUX KERNEL SPACE                                   |   |
-|   |                                                                                          |   |
-|   |    +-----------------------------+  +-------------------------------+  +------------+    |   |
-|   |    |    /sys/fs/f2fs/$F2FS_NODE  |  | /sys/kernel/debug/f2fs/status |  | /mnt/test  |    |   |
-|   |    |      (Sysfs Management)     |  |       (DebugFS Counters)      |  | (1GB F2FS) |    |   |
-|   |    +-----------------------------+  +-------------------------------+  +------------+    |   |
-+--------------------------------------------------------------------------------------------------+
-
-Framework Execution Lifecycle
-
- [START: Host Initialization]
-               |
-               v
-  Host runs run_on_device.ps1
-  - Connects to device over root ADB
-  - Deploys test files to target dir
-  - Parses /proc/mounts to find $MNT
-  - Exports $F2FS_NODE="sdg"
-               |
-               v
- [STEP 1: Test Driver Setup]
-               |
-               v
-  Target runs run_all.sh
-  - Loops over execution modes ($MODES)
-  - Records device configuration data
-  - Forwards execution to target scripts
-               |
-               +-----------------------+
-
-               |                       |
-               v                       v
-     [STEP 2A: fg_gc.sh]     [STEP 2B: bg_gc.sh]
-
-               |                       |
-               v                       v
-     Pauses background GC    Sets up background thread
-     threads via sysfs       sleep rates via sysfs
-
-               |                       |
-               +-----------+-----------+
-                           |
-                           v
-               [common.sh: begin_test()]
-               - Saves a baseline snapshot of sysfs tunables
-               - Syncs caches and cleans test folders ($TEST_DIR)
-               - Stores initial base metrics in variable $C0
-                           |
-                           v
-               [common.sh: ramlog_start()]
-               - Truncates stale UFS trace buffers
-               - Spawns ufs_cmd_log tracker in the background
-                           |
-                           v
-               [Execute Core Test Engine Profile]
-               - gcload runs disk traffic patterns (append/churn/delete)
-                           |
-                           v
-               [common.sh: ramlog_stop()]
-               - Terminates background tracker via standard SIGINT
-               - Stores binary hardware trace data logs
-                           |
-                           v
-               [common.sh: end_test()]
-               - Pulls ending telemetry snap ($C1) from debugfs
-               - Computes relative difference: delta = $C1 - $C0
-               - Evaluates assert conditions via need_gt()
-               - Outputs values to CSV and restores sysfs profiles
-                           |
-                           v
-              Matrix Loop Completed?
-                           |
-             +------------+------------+
-
-             |                         |
-          ( No )                    ( Yes )
-
-             |                         |
-             v                         v
-     Advance to next          Host pulls CSV logs 
-    iteration sequence        and generates graphs
-                                       |
-                                       v
-                                 [END WORKFLOW]
+#
+Test
+Offload OFF
+Offload ON
+Notes
+1
+bg_fsync_workload
+INCONCLUSIVE
+INCONCLUSIVE
+No BG GC ran
+2
+bg_default_idle
+PASS
+INCONCLUSIVE
+Off: 2 BG calls, 199 blocks. On: 0
+3
+bg_urgent_high
+PASS
+PASS
+156 vs 144 blocks, co=0
+4
+bg_urgent_low
+INCONCLUSIVE
+INCONCLUSIVE
+No GC
+5
+bg_idle_cost_benefit
+PASS
+INCONCLUSIVE
+Off: 183 calls. On: 0
+6
+bg_idle_greedy
+PASS
+PASS
+On: 115 calls but 0 blocks moved, co=0
+7
+bg_with_foreground_io
+INCONCLUSIVE
+INCONCLUSIVE
+No GC
+8
+bg_reclaim_after_delete
+INCONCLUSIVE
+INCONCLUSIVE
+No GC
+9
+bg_waf_soak
+INCONCLUSIVE
+INCONCLUSIVE
+No GC
+10
+bg_idle_maint
+PASS
+PASS
+150 vs 108 blocks, co=0
+11
+fg_append_full
+INCONCLUSIVE
+INCONCLUSIVE
+ENOSPC after ~150 ms
+12
+fg_random_overwrite
+INCONCLUSIVE
+INCONCLUSIVE
+No FG GC
+13
+fg_fsync_pressure
+PASS
+PASS
+1 FG GC, 1 block, co=0
+14
+fg_parallel_writers
+INCONCLUSIVE
+INCONCLUSIVE
+No FG GC
+15
+fg_ioctl_sync_gc
+PASS
+PASS
+29 GC calls, ~7.17k blocks; On: co=7022
+16
+fg_ioctl_gc_range
+FAIL
+FAIL
+ioctl returned EINVAL (errno 22)
+17
+fg_enospc_recovery
+INCONCLUSIVE
+INCONCLUSIVE
+No FG GC
