@@ -6,11 +6,11 @@
 # ==============================================================================
 
 # --- USER CONFIGURATION ---
-$MNT          = "/mnt/test"   # Your target partition
+$MNT          = "/mnt/test"   #target partition
 $FILL_PCT     = "85"          
-$SCALE_PCT    = "10"          
-$MODES        = "offload_off offload_on"
-$SUITES       = "fg bg"       
+$SCALE_PCT    = "100"          
+$MODES        = "offload_off"
+$SUITES       = "bg fg"       
 
 # --- SYSTEM VARIABLES ---
 $DEV_DIR  = "/data/local/tmp/f2fs_gc_suite"
@@ -36,9 +36,10 @@ Write-Host ">>> Pushing files and test suite to device..." -ForegroundColor Cyan
 & adb push .\tests "$DEV_DIR/"
 & adb push .\run_all.sh "$DEV_DIR/"
 & adb push .\gcload "$DEV_DIR/"
+& adb push .\ufs_cmd_log "$DEV_DIR/"
 
 Write-Host ">>> Adjusting file permissions on device..." -ForegroundColor Cyan
-& adb shell "chmod 755 $DEV_DIR/gcload $DEV_DIR/run_all.sh $DEV_DIR/tests/*.sh"
+& adb shell "chmod 777 $DEV_DIR/gcload $DEV_DIR/run_all.sh $DEV_DIR/tests/*.sh $DEV_DIR/ufs_cmd_log"
 
 # ==============================================================================
 # STEP 2: Execute the Suite on Target Device
@@ -46,17 +47,32 @@ Write-Host ">>> Adjusting file permissions on device..." -ForegroundColor Cyan
 Write-Host ">>> Launching test suite on target device..." -ForegroundColor Magenta
 
 # Find the real active f2fs storage node on the device (excluding the 'features' folder)
-$realNode = & adb shell "ls /sys/fs/f2fs | grep -v features | head -n1"
-$realNode = $realNode.Trim()
+# $realNode = & adb shell "ls /sys/fs/f2fs | grep -v features | head -n1"
+# $realNode = $realNode.Trim()
+
+# if (-not $realNode) {
+#     Write-Warning "Could not dynamically find a discrete F2FS sysfs node name. Falling back to defaults."
+#     $nodeExport = ""
+# } else {
+#     Write-Host ">>> Routing benchmark adjustments to active sysfs target node: $realNode" -ForegroundColor Yellow
+#     # We alter the internal function behavior by manually populating the expected $node parameter context
+#     $nodeExport = "export node='$realNode' && "
+# }
+
+# Find the exact F2FS sysfs node mounted to your target path ($MNT)
+$mountInfo = & adb shell "cat /proc/mounts" | Out-String
+$realDevice = $mountInfo -split "`n" | Where-Object { $_ -match "$MNT\s+f2fs" } | ForEach-Object { ($_ -split "\s+")[0] }
+$realNode = if ($realDevice) { $realDevice.Split("/")[-1].Trim() } else { $null }
 
 if (-not $realNode) {
-    Write-Warning "Could not dynamically find a discrete F2FS sysfs node name. Falling back to defaults."
+    Write-Warning "Could not dynamically map $MNT to an F2FS node. Falling back to defaults."
     $nodeExport = ""
 } else {
     Write-Host ">>> Routing benchmark adjustments to active sysfs target node: $realNode" -ForegroundColor Yellow
-    # We alter the internal function behavior by manually populating the expected $node parameter context
-    $nodeExport = "export node='$realNode' && "
+    # Override F2FS_NODE environment variable for run_all.sh / helper script
+    $nodeExport = "export F2FS_NODE='$realNode' && "
 }
+
 
 # Construct pipeline command wrapper string
 $deviceCmd = "cd $DEV_DIR && " +
