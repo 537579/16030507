@@ -1,45 +1,137 @@
-t_fg_parallel_writers() {
-  begin_test fg_parallel_writers
-  prep_full 90 "$(scale_min1 60)" 10
+F2FS Garbage Collection Test Suite: Comprehensive Architectural Design Specification
 
-  each=$(( $(free_mb) * 20 / 100 ))
-  writer_pids=""
-  writer_rc=0
++--------------------------------------------------------------------------------------------------+
 
-  # Start RAM-log capture before launching the writers.
-  ramlog_start || :
+|                                          WINDOWS HOST                                            |
+|                                                                                                  |
+|   +--------------------------+                                    +--------------------------+   |
+|   |   run_on_device.ps1      |                                    |    .\tools\compare.py    |   |
+|   | (PowerShell Orchestrator)|                                    |    (Python Analytics)    |   |
+|   +------------+-------------+                                    +------------^-------------+   |
+|                |                                                               |                 |
++----------------|---------------------------------------------------------------|-----------------+
 
-  for i in 0 1 2 3; do
-    mkdir -p "$TEST_DIR/w$i"
-    (
-      "$GCLOAD" append "$TEST_DIR/w$i" "$each" 128 0 64 \
-        > "$RES_DIR/.w$i"
-    ) &
-    writer_pids="$writer_pids $!"
-  done
+                 | adb push (Assets) / adb shell (Invoke)                        | adb pull (Logs)
++----------------|---------------------------------------------------------------|-----------------+
 
-  # Wait only for the writer processes, not all background jobs.
-  for pid in $writer_pids; do
-    wait "$pid" || writer_rc=1
-  done
+|                v                                                               |                 |
+|   +----------------------------------------------------------------------------+-------------+   |
+|   |                                   ANDROID USER SPACE                                     |   |
+|   |                             (/data/local/tmp/f2fs_gc_suite)                              |   |
+|   |                                                                                          |   |
+|   |   +----------------------------------------------------------------------------------+   |   |
+|   |   |                                     run_all.sh                                   |   |   |
+|   |   |                              (Main Driver Automation Loop)                       |   |   |
+|   |   +---------------------------------------+------------------------------------------+   |   |
+|   |                                           |                                              |   |
+|   |                   +-----------------------+-----------------------+                      |   |
+|   |                   |                                               |                      |   |
+|   |                   v                                               v                      |   |
+|   |     +---------------------------+                   +---------------------------+        |   |
+|   |     |         fg_gc.sh          |                   |         bg_gc.sh          |        |   |
+|   |     |    (Foreground Matrix)    |                   |    (Background Matrix)    |        |   |
+|   |     +-------------+-------------+                   +-------------+-------------+        |   |
+|   |                   |                                               |                      |   |
+|   |                   +-----------------------+-----------------------+                      |   |
+|   |                                           |                                              |   |
+|   |                                           v                                              |   |
+|   |     +---------------------------------------------------------------------------+        |   |
+|   |     |                lib/common.sh  (Shared Functions & Lifecycle)              |        |   |
+|   |     |  - now_ms()   - f2fs_counters()  - need_gt()  - begin_test()  - end_test()|        |   |
+|   |     +-------------------------+-----------------------+-------------------------+        |   |
+|   |                               |                       |                                  |   |
+|   |                               v                       v                                  |   |
+|   |                 +---------------------------+   +---------------------------+            |   |
+|   |                 |          gcload           |   |       ufs_cmd_log         |            |   |
+|   |                 |     (IO Traffic Engine)   |   |    (UFS Trace Capturer)   |            |   |
+|   |                 +-------------+-------------+   +-------------+-------------+            |   |
+|   +-------------------------------|-------------------------------|--------------------------+
+|                                   |                               |                              |
++-----------------------------------|-------------------------------|------------------------------+
 
-  # Stop and save the RAM log after all writers have finished.
-  ramlog_stop || writer_rc=1
+|                                   v                               v                              |
+|   +------------------------------------------------------------------------------------------+   |
+|   |                                     LINUX KERNEL SPACE                                   |   |
+|   |                                                                                          |   |
+|   |    +-----------------------------+  +-------------------------------+  +------------+    |   |
+|   |    |    /sys/fs/f2fs/$F2FS_NODE  |  | /sys/kernel/debug/f2fs/status |  | /mnt/test  |    |   |
+|   |    |      (Sysfs Management)     |  |       (DebugFS Counters)      |  | (1GB F2FS) |    |   |
+|   |    +-----------------------------+  +-------------------------------+  +------------+    |   |
++--------------------------------------------------------------------------------------------------+
 
-  agg=$(cat "$RES_DIR"/.w[0-3] |
-    awk -F= '/^mb_s=/{s+=$2} END{printf "%.1f", s}')
-  p99=$(cat "$RES_DIR"/.w[0-3] |
-    awk -F= '/^write_p99_us=/{if($2>m)m=$2} END{print m+0}')
-  mx=$(cat "$RES_DIR"/.w[0-3] |
-    awk -F= '/^write_max_us=/{if($2>m)m=$2} END{print m+0}')
-  ens=$(cat "$RES_DIR"/.w[0-3] |
-    awk -F= '/^enospc=/{s+=$2} END{print s+0}')
+Framework Execution Lifecycle
 
-  emit par_aggregate_mb_s "$agg" MB/s
-  emit par_worst_write_p99_us "$p99" us
-  emit par_worst_write_max_us "$mx" us
-  emit par_enospc_writers "$ens" count
+ [START: Host Initialization]
+               |
+               v
+  Host runs run_on_device.ps1
+  - Connects to device over root ADB
+  - Deploys test files to target dir
+  - Parses /proc/mounts to find $MNT
+  - Exports $F2FS_NODE="sdg"
+               |
+               v
+ [STEP 1: Test Driver Setup]
+               |
+               v
+  Target runs run_all.sh
+  - Loops over execution modes ($MODES)
+  - Records device configuration data
+  - Forwards execution to target scripts
+               |
+               +-----------------------+
 
-  need_fg
-  end_test
-}
+               |                       |
+               v                       v
+     [STEP 2A: fg_gc.sh]     [STEP 2B: bg_gc.sh]
+
+               |                       |
+               v                       v
+     Pauses background GC    Sets up background thread
+     threads via sysfs       sleep rates via sysfs
+
+               |                       |
+               +-----------+-----------+
+                           |
+                           v
+               [common.sh: begin_test()]
+               - Saves a baseline snapshot of sysfs tunables
+               - Syncs caches and cleans test folders ($TEST_DIR)
+               - Stores initial base metrics in variable $C0
+                           |
+                           v
+               [common.sh: ramlog_start()]
+               - Truncates stale UFS trace buffers
+               - Spawns ufs_cmd_log tracker in the background
+                           |
+                           v
+               [Execute Core Test Engine Profile]
+               - gcload runs disk traffic patterns (append/churn/delete)
+                           |
+                           v
+               [common.sh: ramlog_stop()]
+               - Terminates background tracker via standard SIGINT
+               - Stores binary hardware trace data logs
+                           |
+                           v
+               [common.sh: end_test()]
+               - Pulls ending telemetry snap ($C1) from debugfs
+               - Computes relative difference: delta = $C1 - $C0
+               - Evaluates assert conditions via need_gt()
+               - Outputs values to CSV and restores sysfs profiles
+                           |
+                           v
+              Matrix Loop Completed?
+                           |
+             +------------+------------+
+
+             |                         |
+          ( No )                    ( Yes )
+
+             |                         |
+             v                         v
+     Advance to next          Host pulls CSV logs 
+    iteration sequence        and generates graphs
+                                       |
+                                       v
+                                 [END WORKFLOW]
