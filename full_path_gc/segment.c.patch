@@ -1,0 +1,237 @@
+--- a/fs/f2fs/segment.c
++++ b/fs/f2fs/segment.c
+@@ -32,99 +32,6 @@
+ static struct kmem_cache *sit_entry_set_slab;
+ static struct kmem_cache *revoke_entry_slab;
+ 
+-static int f2fs_gc_try_copy_offload(struct f2fs_sb_info *sbi,
+-		block_t old_blkaddr,
+-		block_t new_blkaddr,
+-		u64 flow_id)
+-{
+-	struct blk_copy_seg blk_copy_in_seg;
+-	struct blk_copy_seg blk_copy_out_seg;
+-	struct blk_copy_params params = { };
+-	struct block_device *src_bdev;
+-	struct block_device *dst_bdev;
+-	sector_t src_sector;
+-	sector_t dst_sector;
+-	int ret;
+-
+-	src_bdev = f2fs_target_device(sbi, old_blkaddr, &src_sector);
+-	dst_bdev = f2fs_target_device(sbi, new_blkaddr, &dst_sector);
+-
+-	if (!src_bdev || !dst_bdev) {
+-		f2fs_info(sbi,
+-				"[F2FS_GC:%s][FLOW=%016llx] "
+-				"COPY_OFFLOAD_INVALID_BDEV "
+-				"SRC_PBA=0x%llx DST_PBA=0x%llx",
+-				__func__,
+-				(unsigned long long)flow_id,
+-				(unsigned long long)old_blkaddr,
+-				(unsigned long long)new_blkaddr);
+-
+-		return -ENODEV;
+-	}
+-
+-
+-	blk_copy_in_seg.pos =
+-		(loff_t)src_sector << SECTOR_SHIFT;
+-
+-	blk_copy_in_seg.len =
+-		F2FS_BLKSIZE;
+-
+-	blk_copy_out_seg.pos =
+-		(loff_t)dst_sector << SECTOR_SHIFT;
+-
+-	blk_copy_out_seg.len =
+-		F2FS_BLKSIZE;
+-
+-	params.in_bdev = src_bdev;
+-	params.in_segs = &blk_copy_in_seg;
+-	params.in_nseg = 1;
+-
+-	params.out_bdev = dst_bdev;
+-	params.out_segs = &blk_copy_out_seg;
+-	params.out_nseg = 1;
+-
+-	/*
+-	 * Synchronous operation.
+-	 */
+-	params.end_io = NULL;
+-	params.private = NULL;
+-
+-	f2fs_info(sbi,
+-		"[F2FS_GC:%s][FLOW=%016llx] "
+-		"COPY_OFFLOAD_PREPARED "
+-		"SRC_PBA=0x%llx SRC_SECTOR=%llu "
+-		"DST_PBA=0x%llx DST_SECTOR=%llu "
+-		"LEN=%lu "
+-		"SRC_MAX_COPY=%u DST_MAX_COPY=%u", __func__,
+-		(unsigned long long)flow_id,
+-		(unsigned long long)old_blkaddr,
+-		(unsigned long long)src_sector,
+-		(unsigned long long)new_blkaddr,
+-		(unsigned long long)dst_sector,
+-		F2FS_BLKSIZE,
+-		bdev_max_copy_sectors(src_bdev),
+-		bdev_max_copy_sectors(dst_bdev));
+-
+-	if (!bdev_max_copy_sectors(src_bdev) ||
+-			!bdev_max_copy_sectors(dst_bdev)) {
+-
+-		f2fs_info(sbi,
+-				"[F2FS_GC:%s][FLOW=%016llx] "
+-				"COPY_OFFLOAD_UNSUPPORTED "
+-				"SRC_MAX_COPY=%u DST_MAX_COPY=%u", __func__,
+-				(unsigned long long)flow_id,
+-				bdev_max_copy_sectors(src_bdev),
+-				bdev_max_copy_sectors(dst_bdev));
+-
+-		return -EOPNOTSUPP;
+-	}
+-
+-
+-	ret = blkdev_copy_offload(&params);
+-
+-	return ret;
+-}
+-
+ static unsigned long __reverse_ulong(unsigned char *str)
+ {
+ 	unsigned long tmp = 0;
+@@ -4064,10 +3971,6 @@
+ 	int seg_type = log_type_to_seg_type(type);
+ 	bool keep_order = (f2fs_lfs_mode(sbi) &&
+ 			seg_type == CURSEG_COLD_DATA);
+-	bool gc_copy_done = false;
+-	unsigned int src_segno = NULL_SEGNO;
+-	unsigned int src_off = 0;
+-	u64 flow_id = 0;
+ 	int ret;
+ 
+ 	if (keep_order)
+@@ -4120,74 +4023,6 @@
+ 	}
+ 
+ 	/*
+-	 * Destination is now allocated.
+-	 *
+-	 * Both physical addresses are available:
+-	 *
+-	 *      fio->old_blkaddr
+-	 *              ↓
+-	 *      victim physical block
+-	 *
+-	 *      fio->new_blkaddr
+-	 *              ↓
+-	 *      newly allocated destination block
+-	 */
+-	if (__is_valid_data_blkaddr(fio->old_blkaddr)) {
+-
+-		src_segno = GET_SEGNO(sbi, fio->old_blkaddr);
+-		src_off = GET_BLKOFF_FROM_SEG0(sbi, fio->old_blkaddr);
+-
+-		flow_id = (((u64)src_segno) << 32) |
+-			(u64)src_off;
+-
+-	}
+-
+-
+-	/*
+-	 * Step 2:
+-	 *
+-	 * Try native device copy only for GC data migration.
+-	 *
+-	 * f2fs_gc_try_copy_offload() performs its own eligibility
+-	 * checks and returns -EOPNOTSUPP for unsupported cases.
+-	 */
+-
+-	if (fio->io_type == FS_GC_DATA_IO) {
+-
+-		ret = f2fs_gc_try_copy_offload(sbi,
+-				fio->old_blkaddr,
+-				fio->new_blkaddr,
+-				flow_id);
+-
+-		if (!ret) {
+-
+-			gc_copy_done = true;
+-
+-			f2fs_info(sbi,
+-					"[F2FS_GC:%s][FLOW=%016llx] "
+-					"COPY_OFFLOAD_SUCCESS "
+-					"SRC_PBA=0x%llx DST_PBA=0x%llx "
+-					"METHOD=DEVICE_COPY", __func__,
+-					(unsigned long long)flow_id,
+-					(unsigned long long)fio->old_blkaddr,
+-					(unsigned long long)fio->new_blkaddr);
+-
+-		} else {
+-
+-			f2fs_info(sbi,
+-					"[F2FS_GC:%s][FLOW=%016llx] "
+-					"COPY_OFFLOAD_FAILED "
+-					"SRC_PBA=0x%llx DST_PBA=0x%llx "
+-					"ERR=%d FALLBACK=CPU_WRITE", __func__,
+-					(unsigned long long)flow_id,
+-					(unsigned long long)fio->old_blkaddr,
+-					(unsigned long long)fio->new_blkaddr,
+-					ret);
+-		}
+-	}
+-
+-
+-	/*
+ 	 * Step 3:
+ 	 *
+ 	 * Invalidate internal cache only after destination allocation.
+@@ -4200,48 +4035,6 @@
+ 				1);
+ 
+ 	/*
+-	 * Native device copy succeeded.
+-	 *
+-	 * Do not submit the normal F2FS write BIO.
+-	 */
+-
+-	if (gc_copy_done) {
+-		struct f2fs_bio_info *io;
+-
+-		/*
+-		 * f2fs_allocate_data_block() adds fio to the
+-		 * write_io list when fio != NULL.
+-		 *
+-		 * Since device copy completed the migration directly,
+-		 * f2fs_submit_page_write() will not be called.
+-		 *
+-		 * Therefore remove fio from the write list explicitly.
+-		 */
+-		io = sbi->write_io[PAGE_TYPE_OF_BIO(fio->type)] + fio->temp;
+-
+-		if (fio->in_list) {
+-			spin_lock(&io->io_lock);
+-
+-			list_del_init(&fio->list);
+-			fio->in_list = 0;
+-
+-			spin_unlock(&io->io_lock);
+-		}
+-
+-		fio->submitted = 1;
+-
+-		clear_page_private_gcing(fio->page);
+-		folio_end_writeback(folio);
+-
+-		f2fs_update_device_state(sbi,
+-				fio->ino,
+-				fio->new_blkaddr,
+-				1);
+-
+-		goto out;
+-	}
+-
+-	/*
+ 	 * Step 4:
+ 	 *
+ 	 * Existing fallback path.

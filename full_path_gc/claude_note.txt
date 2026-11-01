@@ -1,0 +1,28 @@
+I’ve written three patches against the exact files you sent: gc.c.patch, segment.c.patch and blk-copy.c.patch. I checked that they apply cleanly to your originals and that braces and parentheses balance, but I could not compile them because I don’t have your kernel tree. Please build and test before trusting them.
+
+Fix first: blk-copy.c drops copy errors.
+
+blkdev_end_copy_sync() never copies params->status into the status that blkdev_copy_sync() returns, so a sync copy always returns 0 once it completes.
+A failed device copy was therefore treated as success by your f2fs_gc_try_copy_offload() callers, and the CPU fallback never ran. That risks silent data corruption.
+The patch fixes this, stops blkdev_copy_offload() advancing by a negative chunk, and removes the pr_info calls on every copy.
+
+Why your BG tests saw co=0. The offload only sat in move_data_block() and in do_write_page() for FS_GC_DATA_IO. Background GC marks pages dirty and lets normal writeback write them, so it never reached either hook.
+
+What gc.c now does.
+
+One hook for every path: the hook sits in gc_data_segment(), which BG GC, FG GC and the ioctls all pass through. A thin wrapper flushes the batch on every exit.
+Batching: valid blocks of a victim segment are queued, up to 128. One device command can gather scattered source runs into contiguous destination runs, using your multi-segment blk_copy_params and limited by max_copy_*_segments.
+No wasted host read: phase 3 no longer reads the source into the page cache when offload will be used.
+Safe failure handling: if a copy fails, the allocation is undone and that block goes through the unchanged CPU path.
+Cleanup: I removed the per-block attempt and the per-block f2fs_info logs from move_data_block().
+Excluded blocks: node blocks and cow files are not offloaded.
+
+segment.c. I removed the do_write_page() offload hook and its duplicate helper. I believe it can lose writes: FG move_data_page() writes the page-cache content, which may be newer than disk if the page was dirty. The hook then copies the stale on-disk block and ends writeback without writing the page.
+
+Things to check on your side
+
+Counters: copy_offload_calls isn’t maintained in any file you sent. Point your sysfs node at f2fs_gc_cpoff_calls (device copy commands). It will now count commands, not blocks, so use f2fs_gc_cpoff_blocks and f2fs_gc_cpoff_fallback too.
+Testing: run the suite with a small fallback count as an extra pass condition.
+BG behaviour: BG GC now does the copy synchronously in the GC thread, and each batch holds the checkpoint lock for the copy duration (up to 128 blocks). Check this against your latency targets.
+In-place updates: I’m assuming i_gc_rwsem is enough to keep IPU writes off the source blocks during the copy. Please verify this against your IPU investigation.
+Slow sync GC: the 687 ms per sync GC call in your earlier log may partly come from the per-block logging that this patch removes. Re-measure after applying.
