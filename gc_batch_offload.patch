@@ -1,0 +1,519 @@
+--- gc.c.orig	2026-10-22 09:52:21.529279576 +0000
++++ gc.c	2026-10-22 09:53:22.274661483 +0000
+@@ -1848,6 +1848,439 @@
+ 	return err;
+ }
+ 
++/*
++ * ===========================================================================
++ *  F2FS GC: batched (multi-block) copy offload
++ * ===========================================================================
++ *
++ * Goal: migrate a run of *physically contiguous* valid blocks of one victim
++ * segment with ONE blkdev_copy_offload() call instead of one call per 4KiB
++ * block.
++ *
++ * A batch is a run of valid blocks that satisfy ALL of:
++ *   - same victim segment, consecutive offsets in that segment
++ *     (=> source PBAs are contiguous => ONE source segment)
++ *   - same inode, same node block (same nid), ofs_in_node + 1 each
++ *     (=> one dnode lookup / one node-page lock for the whole run)
++ *   - all still valid in SIT and still mapped by the dnode to that PBA
++ *
++ * Destination blocks are allocated one by one with the unmodified
++ * f2fs_allocate_data_block() (so SIT, summary and curseg accounting is
++ * untouched) and then coalesced into destination segments.  In LFS mode they
++ * are normally one contiguous run; if another writer interleaves, the
++ * copy simply gets several out_segs (the block layer supports that).
++ *
++ * Failure policy: anything that goes wrong BEFORE the device copy completes
++ * is rolled back with f2fs_do_replace_block() (same call the single block
++ * path already uses for error recovery) and the caller falls back to the
++ * existing per-block path for the first block of the run.  No error from the
++ * offload is ever propagated to the GC caller.
++ */
++#define F2FS_GC_BATCH_MAX	64
++
++static bool gc_copy_batch = true;
++module_param(gc_copy_batch, bool, 0644);
++MODULE_PARM_DESC(gc_copy_batch, "Batch contiguous GC data blocks into one copy offload");
++
++static uint gc_copy_batch_blks = 32;
++module_param(gc_copy_batch_blks, uint, 0644);
++MODULE_PARM_DESC(gc_copy_batch_blks, "Max blocks per batched copy offload (2..64)");
++
++static bool gc_copy_batch_all = false;
++module_param(gc_copy_batch_all, bool, 0644);
++MODULE_PARM_DESC(gc_copy_batch_all,
++	"Also batch inodes that normally use move_data_page() (FG_GC only)");
++
++static bool gc_copy_batch_trace = true;
++module_param(gc_copy_batch_trace, bool, 0644);
++MODULE_PARM_DESC(gc_copy_batch_trace, "Log one line per batched copy");
++
++/* Consecutive failures after which batching switches itself off. */
++#define F2FS_GC_BATCH_MAX_FAILS	4
++static atomic_t gc_batch_fail_streak = ATOMIC_INIT(0);
++
++struct f2fs_gc_batch {
++	unsigned int		nr;
++	struct folio		*folio[F2FS_GC_BATCH_MAX];
++	block_t			old_addr[F2FS_GC_BATCH_MAX];
++	block_t			new_addr[F2FS_GC_BATCH_MAX];
++	struct f2fs_summary	sum[F2FS_GC_BATCH_MAX];
++	struct blk_copy_seg	in_seg[F2FS_GC_BATCH_MAX];
++	struct blk_copy_seg	out_seg[F2FS_GC_BATCH_MAX];
++};
++
++/* Does @bdev support copy offload with at least one src and dst segment? */
++static bool f2fs_gc_bdev_can_copy(struct block_device *bdev)
++{
++	struct queue_limits *lim;
++
++	if (!bdev)
++		return false;
++	lim = &bdev_get_queue(bdev)->limits;
++
++	/*
++	 * max_copy_*_segments == 0 would make blkdev_copy_chunk() compute a
++	 * zero-byte chunk, so refuse such devices here.
++	 */
++	return lim->max_copy_sectors &&
++	       lim->max_copy_src_segments &&
++	       lim->max_copy_dst_segments;
++}
++
++/*
++ * Coalesce @addr[0..nr) into runs of consecutive PBAs.  All blocks must live
++ * on one block device.  Returns the number of runs, or a negative errno.
++ */
++static int f2fs_gc_build_segs(struct f2fs_sb_info *sbi, const block_t *addr,
++			      unsigned int nr, struct blk_copy_seg *seg,
++			      struct block_device **bdevp)
++{
++	struct block_device *bdev = NULL, *cur;
++	unsigned int i, runs = 0, run_start = 0;
++	sector_t sector;
++
++	for (i = 0; i < nr; i++) {
++		bool last = (i + 1 == nr);
++
++		if (!last && addr[i + 1] == addr[i] + 1)
++			continue;
++
++		/* close run [run_start, i] */
++		cur = f2fs_target_device(sbi, addr[run_start], &sector);
++		if (!cur || (bdev && cur != bdev))
++			return -EXDEV;
++		bdev = cur;
++
++		seg[runs].pos = (loff_t)sector << SECTOR_SHIFT;
++		seg[runs].len = (loff_t)(i - run_start + 1) * F2FS_BLKSIZE;
++		runs++;
++		run_start = i + 1;
++	}
++
++	*bdevp = bdev;
++	return runs;
++}
++
++/*
++ * Issue ONE synchronous copy offload covering @b->nr blocks.
++ * Returns 0 on success, negative errno otherwise (nothing is modified).
++ */
++static int f2fs_gc_try_copy_offload_batch(struct f2fs_sb_info *sbi,
++					  struct f2fs_gc_batch *b, u64 flow_id,
++					  int *nr_src_runs, int *nr_dst_runs)
++{
++	struct blk_copy_params params = { };
++	struct block_device *src_bdev, *dst_bdev;
++	int in_n, out_n;
++
++	in_n = f2fs_gc_build_segs(sbi, b->old_addr, b->nr, b->in_seg, &src_bdev);
++	if (in_n < 0)
++		return in_n;
++	out_n = f2fs_gc_build_segs(sbi, b->new_addr, b->nr, b->out_seg, &dst_bdev);
++	if (out_n < 0)
++		return out_n;
++
++	if (!f2fs_gc_bdev_can_copy(src_bdev) || !f2fs_gc_bdev_can_copy(dst_bdev)) {
++		f2fs_info(sbi,
++			"[F2FS_GC:%s][FLOW=%016llx] COPY_OFFLOAD_UNSUPPORTED "
++			"SRC_MAX_COPY=%u DST_MAX_COPY=%u", __func__,
++			(unsigned long long)flow_id,
++			src_bdev ? bdev_max_copy_sectors(src_bdev) : 0,
++			dst_bdev ? bdev_max_copy_sectors(dst_bdev) : 0);
++		return -EOPNOTSUPP;
++	}
++
++	params.in_bdev = src_bdev;
++	params.in_segs = b->in_seg;
++	params.in_nseg = in_n;
++	params.out_bdev = dst_bdev;
++	params.out_segs = b->out_seg;
++	params.out_nseg = out_n;
++	params.end_io = NULL;		/* synchronous */
++	params.private = NULL;
++
++	*nr_src_runs = in_n;
++	*nr_dst_runs = out_n;
++
++	return blkdev_copy_offload(&params);
++}
++
++static void f2fs_gc_batch_put_folios(struct f2fs_gc_batch *b,
++				     unsigned int from)
++{
++	unsigned int i;
++
++	for (i = from; i < b->nr; i++)
++		f2fs_folio_put(b->folio[i], true);
++}
++
++/* Undo destination allocations [0, nr) in reverse order. */
++static void f2fs_gc_batch_rollback(struct f2fs_sb_info *sbi,
++				   struct f2fs_gc_batch *b, unsigned int nr)
++{
++	while (nr--)
++		f2fs_do_replace_block(sbi, &b->sum[nr], b->new_addr[nr],
++				      b->old_addr[nr], true, true, true);
++}
++
++/*
++ * Is it worth / safe to try a batch for this inode?  Cheap, lock free.
++ * @cap: filled with the maximum batch length.
++ */
++static bool f2fs_gc_batch_eligible(struct f2fs_sb_info *sbi,
++				   struct inode *inode, int gc_type,
++				   unsigned int segno, unsigned int *cap)
++{
++	struct curseg_info *curseg;
++	struct block_device *bdev;
++	sector_t sector;
++	unsigned int remaining, dev_cap;
++
++	if (!READ_ONCE(gc_copy_batch))
++		return false;
++
++	/* regular inodes use the lazy page-cache path unless asked otherwise */
++	if (!f2fs_meta_inode_gc_required(inode) &&
++	    !(READ_ONCE(gc_copy_batch_all) && gc_type == FG_GC))
++		return false;
++
++	/* COW / atomic files remap through the atomic inode: keep 1-by-1 */
++	if (f2fs_used_in_atomic_write(inode))
++		return false;
++
++	/* ATGC (AT_SSR) and SSR give non-sequential destinations */
++	if (sbi->am.atgc_enabled && gc_type == BG_GC &&
++	    sbi->gc_mode != GC_URGENT_HIGH)
++		return false;
++	if (F2FS_OPTION(sbi).fs_mode == FS_MODE_FRAGMENT_BLK)
++		return false;
++
++	bdev = f2fs_target_device(sbi, START_BLOCK(sbi, segno), &sector);
++	if (!f2fs_gc_bdev_can_copy(bdev))
++		return false;
++
++	/*
++	 * Peek at the cold data log.  Never let one batch cross the end of the
++	 * current destination segment: the last allocation of a segment
++	 * switches curseg, which we do not want to have to roll back.
++	 */
++	curseg = CURSEG_I(sbi, CURSEG_COLD_DATA);
++	if (READ_ONCE(curseg->alloc_type) != LFS ||
++	    READ_ONCE(curseg->segno) == NULL_SEGNO)
++		return false;
++	remaining = f2fs_usable_blks_in_seg(sbi, READ_ONCE(curseg->segno));
++	if (remaining <= READ_ONCE(curseg->next_blkoff) + 1)
++		return false;
++	remaining -= READ_ONCE(curseg->next_blkoff) + 1;
++
++	/* one device command: stay within the device's max copy size */
++	dev_cap = bdev_max_copy_sectors(bdev) >> (F2FS_BLKSIZE_BITS - SECTOR_SHIFT);
++
++	*cap = min3(clamp(READ_ONCE(gc_copy_batch_blks), 2U, (uint)F2FS_GC_BATCH_MAX),
++		    remaining, max(dev_cap, 1U));
++	return *cap >= 2;
++}
++
++/*
++ * Move up to *@nr_moved physically contiguous valid blocks, starting at
++ * offset @off of victim segment @segno, with a single copy offload.
++ *
++ * Caller holds i_gc_rwsem[WRITE|READ] of @inode and has verified that block
++ * @off is alive.  @entries is the summary block of @segno.
++ *
++ * Return: number of blocks migrated (>= 2) on success.  0 means "nothing was
++ * changed, use the per-block path for block @off".
++ */
++static unsigned int move_data_blocks_batch(struct inode *inode,
++				block_t start_bidx, int gc_type,
++				unsigned int segno, int off,
++				struct f2fs_summary *entries,
++				unsigned int usable_blks)
++{
++	struct f2fs_sb_info *sbi = F2FS_I_SB(inode);
++	struct address_space *mapping = inode->i_mapping;
++	bool lfs_mode = f2fs_lfs_mode(sbi);
++	struct f2fs_gc_batch *b;
++	struct dnode_of_data dn;
++	struct node_info ni;
++	struct f2fs_summary *first = &entries[off];
++	unsigned int ofs0 = le16_to_cpu(first->ofs_in_node);
++	nid_t nid0 = le32_to_cpu(first->nid);
++	block_t src0 = START_BLOCK(sbi, segno) + off;
++	unsigned int ofs_limit, cap, n, k, moved = 0;
++	int src_runs = 0, dst_runs = 0, err;
++	u64 flow_id = F2FS_GC_FLOW_ID(segno, off);
++
++	if (!f2fs_gc_batch_eligible(sbi, inode, gc_type, segno, &cap))
++		return 0;
++
++	if (f2fs_gc_pinned_control(inode, gc_type, segno))
++		return 0;	/* let the single path report it */
++
++	ofs_limit = (nid0 == inode->i_ino) ? ADDRS_PER_INODE(inode) :
++					     DEF_ADDRS_PER_BLOCK;
++
++	/*
++	 * Pass 1 (no locks): how many following summary entries continue the
++	 * run?  The dnode is re-verified in pass 2 under the node page lock.
++	 */
++	for (n = 1; n < cap && off + n < usable_blks &&
++		    ofs0 + n < ofs_limit; n++) {
++		struct f2fs_summary *e = &entries[off + n];
++
++		if (le32_to_cpu(e->nid) != nid0 ||
++		    le16_to_cpu(e->ofs_in_node) != ofs0 + n ||
++		    !check_valid_map(sbi, segno, off + n))
++			break;
++	}
++	if (n < 2)
++		return 0;
++
++	b = f2fs_kzalloc(sbi, sizeof(*b), GFP_NOFS);
++	if (!b)
++		return 0;
++
++	/* Lock the page cache folios in ascending index order. */
++	for (k = 0; k < n; k++) {
++		struct folio *folio = f2fs_grab_cache_folio(mapping,
++							    start_bidx + k, false);
++
++		if (IS_ERR(folio))
++			break;
++		/* a large folio would cover several indexes: don't self-lock */
++		if (k && folio_nr_pages(folio) > 1) {
++			f2fs_folio_put(folio, true);
++			break;
++		}
++		b->folio[k] = folio;
++		b->nr = k + 1;
++	}
++	if (b->nr < 2)
++		goto out_put_folios;
++	n = b->nr;
++
++	set_new_dnode(&dn, inode, NULL, NULL, 0);
++	if (f2fs_get_dnode_of_data(&dn, start_bidx, LOOKUP_NODE))
++		goto out_put_folios;
++
++	if (dn.nid != nid0 || dn.ofs_in_node != ofs0)
++		goto out_put_dnode;
++
++	/* never run past the address array of this node block */
++	if (n > ADDRS_PER_PAGE(dn.node_page, inode) - ofs0) {
++		n = ADDRS_PER_PAGE(dn.node_page, inode) - ofs0;
++		f2fs_gc_batch_put_folios(b, n);
++		b->nr = n;
++	}
++
++	/* Re-validate every block under the node page lock. */
++	for (k = 0; k < n; k++) {
++		dn.ofs_in_node = ofs0 + k;
++		if (f2fs_data_blkaddr(&dn) != src0 + k ||
++		    !check_valid_map(sbi, segno, off + k))
++			break;
++		b->old_addr[k] = src0 + k;
++	}
++	dn.ofs_in_node = ofs0;
++	if (k < n) {			/* mapping changed under us: trim */
++		f2fs_gc_batch_put_folios(b, k);
++		b->nr = n = k;
++	}
++	if (n < 2)
++		goto out_put_dnode;
++
++	if (f2fs_get_node_info(sbi, dn.nid, &ni, false))
++		goto out_put_dnode;
++
++	for (k = 0; k < n; k++) {
++		f2fs_folio_wait_writeback(b->folio[k], DATA, true, true);
++		set_summary(&b->sum[k], dn.nid, ofs0 + k, ni.version);
++	}
++	f2fs_wait_on_block_writeback_range(inode, src0, n);
++
++	if (lfs_mode)
++		f2fs_down_write(&sbi->io_order_lock);
++
++	/* Allocate n destination blocks through the stock allocator. */
++	for (k = 0; k < n; k++) {
++		err = f2fs_allocate_data_block(sbi, NULL, b->old_addr[k],
++					       &b->new_addr[k], &b->sum[k],
++					       CURSEG_COLD_DATA, NULL);
++		if (err) {
++			f2fs_gc_batch_rollback(sbi, b, k);
++			goto out_unlock_io;
++		}
++	}
++
++	/* Drop any stale META_MAPPING copy of the destination range. */
++	for (k = 0; k < n; ) {
++		unsigned int e = k + 1;
++
++		while (e < n && b->new_addr[e] == b->new_addr[e - 1] + 1)
++			e++;
++		f2fs_invalidate_internal_cache(sbi, b->new_addr[k], e - k);
++		k = e;
++	}
++
++	if (READ_ONCE(gc_copy_batch_trace))
++		f2fs_info(sbi,
++			"[F2FS_GC:%s][FLOW=%016llx] COPY_OFFLOAD_BATCH_ATTEMPT "
++			"SRC_PBA=0x%x NR=%u DST_FIRST=0x%x DST_LAST=0x%x",
++			__func__, (unsigned long long)flow_id, src0, n,
++			b->new_addr[0], b->new_addr[n - 1]);
++
++	err = f2fs_gc_try_copy_offload_batch(sbi, b, flow_id,
++					     &src_runs, &dst_runs);
++	if (err) {
++		f2fs_info(sbi,
++			"[F2FS_GC:%s][FLOW=%016llx] COPY_OFFLOAD_BATCH_FAILED "
++			"SRC_PBA=0x%x NR=%u ERR=%d FALLBACK=PER_BLOCK", __func__,
++			(unsigned long long)flow_id, src0, n, err);
++
++		f2fs_gc_batch_rollback(sbi, b, n);
++
++		if (err != -EOPNOTSUPP &&
++		    atomic_inc_return(&gc_batch_fail_streak) >=
++						F2FS_GC_BATCH_MAX_FAILS) {
++			f2fs_warn(sbi, "GC copy batching disabled after %d "
++				  "consecutive failures", F2FS_GC_BATCH_MAX_FAILS);
++			WRITE_ONCE(gc_copy_batch, false);
++		}
++		goto out_unlock_io;
++	}
++	atomic_set(&gc_batch_fail_streak, 0);
++
++	/*
++	 * Device copy done: destination holds the data.  Commit the new
++	 * mapping, exactly like the single-block success path.
++	 */
++	f2fs_invalidate_internal_cache(sbi, src0, n);
++	for (k = 0; k < n; k++) {
++		dn.ofs_in_node = ofs0 + k;
++		f2fs_update_data_blkaddr(&dn, b->new_addr[k]);
++	}
++	set_inode_flag(inode, FI_APPEND_WRITE);
++	f2fs_update_iostat(sbi, NULL, FS_GC_DATA_IO, (unsigned long long)n * F2FS_BLKSIZE);
++	moved = n;
++
++	if (READ_ONCE(gc_copy_batch_trace))
++		f2fs_info(sbi,
++			"[F2FS_GC:%s][FLOW=%016llx] COPY_OFFLOAD_BATCH_SUCCESS "
++			"SRC_PBA=0x%x NR=%u SRC_RUNS=%d DST_RUNS=%d "
++			"METHOD=DEVICE_COPY", __func__,
++			(unsigned long long)flow_id, src0, n, src_runs, dst_runs);
++
++out_unlock_io:
++	if (lfs_mode)
++		f2fs_up_write(&sbi->io_order_lock);
++out_put_dnode:
++	f2fs_put_dnode(&dn);
++out_put_folios:
++	f2fs_gc_batch_put_folios(b, 0);
++	kfree(b);
++	return moved;
++}
++
+ static int move_data_page(struct inode *inode, block_t bidx, int gc_type,
+ 						unsigned int segno, int off)
+ {
+@@ -1988,6 +2421,7 @@
+ 
+ 		if (phase == 3) {
+ 			struct folio *data_folio;
++			unsigned int batch_cap;
+ 			int err;
+ 
+ 			inode = f2fs_iget(sb, dni.ino);
+@@ -2026,6 +2460,17 @@
+ 			start_bidx = f2fs_start_bidx_of_node(nofs, inode) +
+ 								ofs_in_node;
+ 
++			/*
++			 * Batched offload moves data inside the device: do not pull
++			 * the source blocks through the host page cache.
++			 */
++			if (f2fs_gc_batch_eligible(sbi, inode, gc_type, segno,
++						   &batch_cap)) {
++				f2fs_up_write(&F2FS_I(inode)->i_gc_rwsem[WRITE]);
++				add_gc_inode(gc_list, inode);
++				continue;
++			}
++
+ 			if (f2fs_meta_inode_gc_required(inode)) {
+ 				int err = ra_data_block(inode, start_bidx);
+ 
+@@ -2056,6 +2501,7 @@
+ 		if (inode) {
+ 			struct f2fs_inode_info *fi = F2FS_I(inode);
+ 			bool locked = false;
++			unsigned int nr_batch = 0;
+ 			int err;
+ 
+ 			if (S_ISREG(inode->i_mode)) {
+@@ -2077,12 +2523,24 @@
+ 
+ 			start_bidx = f2fs_start_bidx_of_node(nofs, inode)
+ 								+ ofs_in_node;
+-			if (f2fs_meta_inode_gc_required(inode))
++			/*
++			 * Try to move a run of contiguous blocks with ONE copy
++			 * offload; returns 0 if the run could not be batched, in
++			 * which case block @off takes the per-block path below.
++			 */
++			nr_batch = locked ?
++				move_data_blocks_batch(inode, start_bidx, gc_type,
++						segno, off, sum,
++						usable_blks_in_seg) : 0;
++			if (nr_batch) {
++				err = 0;
++			} else if (f2fs_meta_inode_gc_required(inode)) {
+ 				err = move_data_block(inode, start_bidx,
+ 							gc_type, segno, off);
+-			else
++			} else {
+ 				err = move_data_page(inode, start_bidx, gc_type,
+ 								segno, off);
++			}
+ 
+ 			if (!err && (gc_type == FG_GC ||
+ 					f2fs_meta_inode_gc_required(inode)))
+@@ -2093,7 +2551,14 @@
+ 				f2fs_up_write(&fi->i_gc_rwsem[WRITE]);
+ 			}
+ 
+-			stat_inc_data_blk_count(sbi, 1, gc_type);
++			stat_inc_data_blk_count(sbi, nr_batch ? nr_batch : 1,
++						gc_type);
++
++			/* skip the blocks that the batch already migrated */
++			if (nr_batch) {
++				off += nr_batch - 1;
++				entry += nr_batch - 1;
++			}
+ 		}
+ 	}
+ 
