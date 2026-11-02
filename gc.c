@@ -16,6 +16,7 @@
 #include <linux/random.h>
 #include <linux/sched/mm.h>
 #include <linux/blkdev.h>
+#include <linux/timekeeping.h>
 
 #include "f2fs.h"
 #include "node.h"
@@ -25,13 +26,6 @@
 #include <trace/events/f2fs.h>
 
 static struct kmem_cache *victim_entry_slab;
-
-#if 0
-extern unsigned int tsip_fggc_count;
-extern unsigned int tsip_bggc_count;
-extern unsigned int tsip_trace_ctrl;
-extern unsigned int tsip_fggc_started;
-#endif
 
 /*
  * GC migration trace:
@@ -66,6 +60,16 @@ static int f2fs_gc_try_copy_offload(struct f2fs_sb_info *sbi,
 	sector_t src_sector;
 	sector_t dst_sector;
 	int ret;
+
+	struct request_queue *q = bdev_get_queue(sbi->sb->s_bdev);
+
+	/* 1. Evaluate block layer configuration setting node state */
+	if (q && q->copy_offload_enabled == 0) {
+		return -EOPNOTSUPP; 
+	}
+
+	/* 2. Increment the performance telemetry field counter securely */
+	sbi->copy_offload_calls++;
 
 	src_bdev = f2fs_target_device(sbi, old_blkaddr, &src_sector);
 	dst_bdev = f2fs_target_device(sbi, new_blkaddr, &dst_sector);
@@ -2270,6 +2274,10 @@ int f2fs_gc(struct f2fs_sb_info *sbi, struct f2fs_gc_control *gc_control)
 	};
 	unsigned int skipped_round = 0, round = 0;
 	unsigned int upper_secs;
+	
+	/* F2FS GC Duration calculation Start*/
+	u64 start_ns, end_ns;
+	start_ns = ktime_get_ns();
 
 	trace_f2fs_gc_begin(sbi->sb, gc_type, gc_control->no_bg_gc,
 				gc_control->nr_free_secs,
@@ -2408,6 +2416,11 @@ stop:
 
 	if (gc_control->err_gc_skipped && !ret)
 		ret = total_sec_freed ? 0 : -EAGAIN;
+
+	/* F2FS GC Duration calculation End*/
+	end_ns = ktime_get_ns();
+	f2fs_info(sbi, "GC_TIMING: duration_us=%llu", (end_ns - start_ns)/1000);
+
 	return ret;
 }
 
