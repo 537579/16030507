@@ -1,1 +1,22 @@
-F2FS GC traditionally migrates valid blocks through host-side read and write operations, increasing CPU involvement, memory bandwidth consumption, and I/O overhead. Copy-offload leverages UFS device-level data copying to reduce host overhead and improve GC performance.
+Column
+Details
+Sl.No.
+11
+Patch Title
+F2FS: Add test suite to validate GC copy-offload functionality
+Impact Layer
+F2FS / Block Layer / UFS
+Type – Bug Fix / New Feature / Support
+Validation / Test Support
+Performance Impact – Yes/No
+Yes – validates potential performance improvements
+Level of Impact
+Major
+Problem Statement
+F2FS garbage collection migrates valid data blocks from victim segments to new locations using conventional read-and-write operations. This can increase CPU utilization, memory traffic, and UFS I/O overhead. A test framework is required to validate whether copy-offload is triggered during GC and to compare GC behaviour with copy-offload enabled and disabled.
+Solution
+Introduces an automated F2FS GC test suite with foreground and background GC workloads. Supports enabling/disabling copy-offload through a sysfs control node. Adds copy-offload call counters and GC statistics to track GC activity, migrated blocks, and offload invocation counts. Includes workloads such as sequential writes, random overwrites, fsync pressure, parallel writers, idle GC, urgent GC, and ENOSPC recovery. Provides automated execution and result comparison between both configurations.
+Impact on UFS / F2FS
+Enables systematic validation of copy-offload integration during F2FS garbage collection. Helps identify workloads where offload is actually triggered and distinguishes conventional GC migration from offloaded data copying. Provides visibility into GC activity and copy-offload invocation frequency. Establishes a test baseline for evaluating potential reductions in CPU overhead, host-side data movement, and UFS command traffic.
+AI Report PDF
+f2fs_gc_copy_offload_test_report.pdf (to be generated)
