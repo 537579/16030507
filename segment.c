@@ -46,6 +46,16 @@ static int f2fs_gc_try_copy_offload(struct f2fs_sb_info *sbi,
 	sector_t dst_sector;
 	int ret;
 
+	struct request_queue *q = bdev_get_queue(sbi->sb->s_bdev);
+
+	/* Evaluate block layer configuration setting node state */
+	if (q && q->copy_offload_enabled == 0) {
+		return -EOPNOTSUPP; 
+	}
+
+	/* Increment the performance telemetry field counter securely */
+	sbi->copy_offload_calls++;
+
 	src_bdev = f2fs_target_device(sbi, old_blkaddr, &src_sector);
 	dst_bdev = f2fs_target_device(sbi, new_blkaddr, &dst_sector);
 
@@ -4087,7 +4097,7 @@ static void do_write_page(struct f2fs_summary *sum,
 	 */
 
 	ret = f2fs_allocate_data_block(sbi,
-			fio->page,                  /* FIXED: changed fio->page to folio */
+			fio->page,                  
 			fio->old_blkaddr,
 			&fio->new_blkaddr,
 			sum,
@@ -4112,9 +4122,8 @@ static void do_write_page(struct f2fs_summary *sum,
 
 		folio_end_writeback(folio);
 
-		/* FIXED: removed sbi argument */
 		if (f2fs_in_warm_node_list(sbi, folio))
-			f2fs_del_fsync_node_entry(sbi, fio->page); /* FIXED: changed fio->page to folio */
+			f2fs_del_fsync_node_entry(sbi, fio->page); 
 
 		goto out;
 	}
