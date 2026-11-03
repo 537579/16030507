@@ -148,7 +148,7 @@ static void blkdev_req_op_copy_done(struct bio *bio)
 			params->end_io(params);
 		break;
 	case BLKDEV_COPY_DONE:
-		pr_info("TSIP: %s: %d: BLKDEV_COPY_DONE\n", __func__, __LINE__);
+//		pr_info("TSIP: %s: %d: BLKDEV_COPY_DONE\n", __func__, __LINE__);
 		break;
 	}
 }
@@ -231,6 +231,9 @@ struct blkdev_copy_sync_ctx {
 static void blkdev_end_copy_sync(const struct blk_copy_params *params)
 {
 	struct blkdev_copy_sync_ctx *ctx = params->private;
+
+	/* Propagate the copy status; it was previously always lost (reported 0). */
+	ctx->status = params->status;
 
 	complete(&ctx->compl);
 }
@@ -404,9 +407,9 @@ int blkdev_copy_offload(struct blk_copy_params *params)
 
 	params->len = len;
 
-    pr_info("[BLK_COPY] max_copy in=%u out=%u || Current data length=%lu\n", 
-        bdev_max_copy_sectors(params->in_bdev),
-        bdev_max_copy_sectors(params->out_bdev), params->len);
+    // pr_info("[BLK_COPY] max_copy in=%u out=%u || Current data length=%lld\n", 
+    //     bdev_max_copy_sectors(params->in_bdev),
+    //     bdev_max_copy_sectors(params->out_bdev), params->len);
 
 	max_chunk = (u64)min(bdev_max_copy_sectors(params->in_bdev),
 			     bdev_max_copy_sectors(params->out_bdev))
@@ -417,7 +420,15 @@ int blkdev_copy_offload(struct blk_copy_params *params)
 	for (loff_t offset = 0; offset < len; offset += chunk) {
 		chunk = min(len - offset, max_chunk);
 		chunk = blkdev_copy_chunk(params, &in_idx, &out_idx, &in_offset,
-					  &out_offset, chunk);
+				&out_offset, chunk);
+
+		if (chunk < 0) {
+			/* Do not advance by a negative errno; report it via params->status. */
+			scoped_guard(spinlock_irqsave, &params->lock)
+				if (!params->status)
+					params->status = errno_to_blk_status(chunk);
+			break;
+		}
 	}
 
 	if (atomic_dec_and_test(&params->copy_ctx_count))
