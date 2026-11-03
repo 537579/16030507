@@ -1,1067 +1,361 @@
-PS D:\anees\tasks\f2fs_gc_test_suite\f2fs_gc_suite_v01> .\run_on_device.ps1
->>> Initializing ADB connection...
->>> Preparing directories on device...
->>> Pushing files and test suite to device...
-.\lib\: 1 file pushed. 0.3 MB/s (6921 bytes in 0.026s)
-.\tests\: 2 files pushed. 0.4 MB/s (11457 bytes in 0.025s)
-.\run_all.sh: 1 file pushed. 0.2 MB/s (1589 bytes in 0.008s)
-.\gcload: 1 file pushed.
->>> Adjusting file permissions on device...
->>> Launching test suite on target device...
->>> Routing benchmark adjustments to active sysfs target node: sda11
-################ MODE=offload_off ################
-[19:40:02] WARN: no copy_offload control found (export COPY_OFFLOAD_CTL=...); run is only labelled 'offload_off'
-[19:40:02] === fg_append_full [offload_off] ===
-files=96
-used_pct=90.33
-enospc=0
-elapsed_ms=748
-mb_s=1027.3
-deleted=9
-remaining=87
-[19:40:16]   append_mb_s = 1650.7 MB/s
-[19:40:16]   append_elapsed_ms = 93 ms
-[19:40:16]   append_enospc = 0 flag
-[19:40:16]   append_write_p50_us = 23 us
-[19:40:16]   append_write_p99_us = 65 us
-[19:40:16]   append_write_p999_us = 87 us
-[19:40:16]   append_write_max_us = 95 us
-[19:40:16]   expected fg_gc_calls > 0 but got 0
-[19:40:16]   duration_ms = 482 ms
-[19:40:16]   gc_calls = 0 count
-[19:40:16]   gc_bg = 0 count
-[19:40:16]   moved = 0 count
-[19:40:16]   moved_bg = 0 count
-[19:40:16]   cp_calls = 2 count
-[19:40:16]   cp_bg = 1 count
-[19:40:16]   gc_fg = 0 count
-[19:40:16]   status = INCONCLUSIVE -
-[19:40:17] === fg_append_full: INCONCLUSIVE ===
-[19:40:17] === fg_random_overwrite [offload_off] ===
-files=96
-used_pct=90.33
-enospc=0
-elapsed_ms=722
-mb_s=1063.1
-deleted=0
-remaining=96
-[19:40:36]   churn_iops = 858116 ops/s
-[19:40:36]   churn_mb_s = 3352.0 MB/s
-[19:40:36]   churn_enospc = 0 flag
-[19:40:36]   churn_write_p50_us = 0 us
-[19:40:36]   churn_write_p99_us = 1 us
-[19:40:36]   churn_write_p999_us = 2 us
-[19:40:36]   churn_write_max_us = 100 us
-[19:40:36]   expected fg_gc_calls > 0 but got 0
-[19:40:36]   duration_ms = -1907 ms
-[19:40:36]   gc_calls = 0 count
-[19:40:36]   gc_bg = 0 count
-[19:40:36]   moved = 0 count
-[19:40:36]   moved_bg = 0 count
-[19:40:36]   cp_calls = 1 count
-[19:40:37]   cp_bg = 0 count
-[19:40:37]   gc_fg = 0 count
-[19:40:37]   status = INCONCLUSIVE -
-[19:40:37] === fg_random_overwrite: INCONCLUSIVE ===
-[19:40:37] === fg_fsync_pressure [offload_off] ===
-files=94
-used_pct=88.76
-enospc=0
-elapsed_ms=695
-mb_s=1082.3
-deleted=7
-remaining=87
-[19:40:45]   fsyncappend_mb_s = 95.0 MB/s
-[19:40:45]   fsyncappend_elapsed_ms = 894 ms
-[19:40:45]   fsyncappend_enospc = 0 flag
-[19:40:45]   fsyncappend_write_p50_us = 4 us
-[19:40:45]   fsyncappend_write_p99_us = 6 us
-[19:40:45]   fsyncappend_write_p999_us = 46 us
-[19:40:45]   fsyncappend_write_max_us = 62 us
-[19:40:45]   expected fg_gc_calls > 0 but got 0
-[19:40:45]   duration_ms = -344 ms
-[19:40:45]   gc_calls = 0 count
-[19:40:45]   gc_bg = 0 count
-[19:40:45]   moved = 0 count
-[19:40:45]   moved_bg = 0 count
-[19:40:45]   cp_calls = 1 count
-[19:40:45]   cp_bg = 0 count
-[19:40:46]   gc_fg = 0 count
-[19:40:46]   status = INCONCLUSIVE -
-[19:40:46] === fg_fsync_pressure: INCONCLUSIVE ===
-[19:40:46] === fg_parallel_writers [offload_off] ===
-files=96
-used_pct=90.33
-enospc=0
-elapsed_ms=758
-mb_s=1012.9
-deleted=11
-remaining=85
-[19:40:53]   par_aggregate_mb_s = 3643.5 MB/s
-[19:40:53]   par_worst_write_p99_us = 408 us
-[19:40:53]   par_worst_write_max_us = 868 us
-[19:40:53]   par_enospc_writers = 0 count
-[19:40:53]   expected fg_gc_calls > 0 but got 0
-[19:40:53]   duration_ms = -1189 ms
-[19:40:53]   gc_calls = 0 count
-[19:40:53]   gc_bg = 0 count
-[19:40:53]   moved = 0 count
-[19:40:53]   moved_bg = 0 count
-[19:40:53]   cp_calls = 3 count
-[19:40:54]   cp_bg = 1 count
-[19:40:54]   gc_fg = 0 count
-[19:40:54]   status = INCONCLUSIVE -
-[19:40:54] === fg_parallel_writers: INCONCLUSIVE ===
-[19:40:54] === fg_ioctl_sync_gc [offload_off] ===
-files=90
-used_pct=85.62
-enospc=0
-elapsed_ms=631
-mb_s=1141.2
-deleted=15
-remaining=75
-[19:41:01]   ioctl_calls = 2 count
-[19:41:01]   ioctl_ok = 1 count
-[19:41:01]   ioctl_busy = 0 count
-[19:41:01]   ioctl_last_errno = 61 errno
-[19:41:01]   ioctl_elapsed_ms = 0 ms
-[19:41:01]   ioctl_gc_call_p50_us = 45 us
-[19:41:01]   ioctl_gc_call_p99_us = 45 us
-[19:41:01]   ioctl_gc_call_max_us = 45 us
-[19:41:01]   duration_ms = -1368 ms
-[19:41:01]   gc_calls = 2 count
-[19:41:01]   gc_bg = 0 count
-[19:41:01]   moved = 1 count
-[19:41:01]   moved_bg = 0 count
-[19:41:01]   cp_calls = 2 count
-[19:41:01]   cp_bg = 1 count
-[19:41:01]   gc_fg = 2 count
-[19:41:01]   status = PASS -
-[19:41:02] === fg_ioctl_sync_gc: PASS ===
-[19:41:02] === fg_ioctl_gc_range [offload_off] ===
-files=90
-used_pct=85.62
-enospc=0
-elapsed_ms=675
-mb_s=1067.1
-deleted=15
-remaining=75
-[19:41:09]   range_ret = -1 rc
-[19:41:09]   range_errno = 22 errno
-[19:41:09]   range_elapsed_ms = 0.0 ms
-[19:41:09]   expected fg_gc_calls > 0 but got 0
-[19:41:09]   duration_ms = 2903 ms
-[19:41:09]   gc_calls = 0 count
-[19:41:09]   gc_bg = 0 count
-[19:41:09]   moved = 0 count
-[19:41:09]   moved_bg = 0 count
-[19:41:09]   cp_calls = 2 count
-[19:41:09]   cp_bg = 1 count
-[19:41:09]   gc_fg = 0 count
-[19:41:09]   status = INCONCLUSIVE -
-[19:41:09] === fg_ioctl_gc_range: INCONCLUSIVE ===
-[19:41:09] === fg_enospc_recovery [offload_off] ===
-write: Success
-[19:41:14]   recover_mb_s = 1419.1 MB/s
-[19:41:14]   recover_elapsed_ms = 70 ms
-[19:41:14]   recover_enospc = 0 flag
-[19:41:14]   recover_write_p50_us = 36 us
-[19:41:14]   recover_write_p99_us = 88 us
-[19:41:14]   recover_write_p999_us = 118 us
-[19:41:14]   recover_write_max_us = 118 us
-[19:41:14]   expected fg_gc_calls > 0 but got 0
-[19:41:14]   duration_ms = 47 ms
-[19:41:14]   gc_calls = 0 count
-[19:41:14]   gc_bg = 0 count
-[19:41:14]   moved = 0 count
-[19:41:14]   moved_bg = 0 count
-[19:41:14]   cp_calls = 2 count
-[19:41:14]   cp_bg = 1 count
-[19:41:14]   gc_fg = 0 count
-[19:41:14]   status = INCONCLUSIVE -
-[19:41:14] === fg_enospc_recovery: INCONCLUSIVE ===
-[19:41:15] WARN: no copy_offload control found (export COPY_OFFLOAD_CTL=...); run is only labelled 'offload_off'
-[19:41:15] === bg_default_idle [offload_off] ===
-files=90
-used_pct=85.62
-enospc=0
-elapsed_ms=686
-mb_s=1049.6
-deleted=12
-remaining=78
-[19:41:54]   idle_elapsed_ms = 54 ms
-[19:41:54]   idle_free_seg_gain = 0 segs
-[19:41:54]   idle_dirty_seg_delta = 0 segs
-[19:41:54]   idle_bg_gc_calls = 0 count
-[19:41:54]   idle_bg_blocks_moved = 0 blocks
-[19:41:54]   idle_bg_moved_mb_s = 0.00 MB/s
-[19:41:54]   idle_gc_thread_cpu_ms = 0 ms
-[19:41:54]   expected bg_gc_calls > 0 but got 0
-[19:41:54]   duration_ms = 894 ms
-[19:41:54]   gc_calls = 0 count
-[19:41:54]   gc_bg = 0 count
-[19:41:54]   moved = 0 count
-[19:41:54]   moved_bg = 0 count
-[19:41:54]   cp_calls = 2 count
-[19:41:55]   cp_bg = 1 count
-[19:41:55]   gc_fg = 0 count
-[19:41:55]   status = INCONCLUSIVE -
-[19:41:55] === bg_default_idle: INCONCLUSIVE ===
-[19:41:55] === bg_urgent_high [offload_off] ===
-files=90
-used_pct=85.62
-enospc=0
-elapsed_ms=749
-mb_s=960.9
-deleted=12
-remaining=78
-[19:42:17]   urgent_high_elapsed_ms = -774 ms
-[19:42:17]   urgent_high_free_seg_gain = 0 segs
-[19:42:17]   urgent_high_dirty_seg_delta = 0 segs
-[19:42:17]   urgent_high_bg_gc_calls = 23 count
-[19:42:17]   urgent_high_bg_blocks_moved = 5961 blocks
-[19:42:17]   urgent_high_bg_moved_mb_s = -30.08 MB/s
-[19:42:17]   urgent_high_gc_thread_cpu_ms = 0 ms
-[19:42:17]   duration_ms = 77 ms
-[19:42:17]   gc_calls = 25 count
-[19:42:17]   gc_bg = 25 count
-[19:42:17]   moved = 5962 count
-[19:42:17]   moved_bg = 5962 count
-[19:42:17]   cp_calls = 2 count
-[19:42:17]   cp_bg = 1 count
-[19:42:17]   gc_fg = 0 count
-[19:42:17]   status = PASS -
-[19:42:17] === bg_urgent_high: PASS ===
-[19:42:17] === bg_urgent_low [offload_off] ===
-files=90
-used_pct=85.62
-enospc=0
-elapsed_ms=676
-mb_s=1065.7
-deleted=12
-remaining=78
-[19:42:39]   urgent_low_elapsed_ms = 3517 ms
-[19:42:39]   urgent_low_free_seg_gain = 0 segs
-[19:42:39]   urgent_low_dirty_seg_delta = 0 segs
-[19:42:39]   urgent_low_bg_gc_calls = 0 count
-[19:42:39]   urgent_low_bg_blocks_moved = 0 blocks
-[19:42:39]   urgent_low_bg_moved_mb_s = 0.00 MB/s
-[19:42:39]   urgent_low_gc_thread_cpu_ms = 0 ms
-[19:42:39]   expected bg_gc_calls > 0 but got 0
-[19:42:39]   duration_ms = 42 ms
-[19:42:39]   gc_calls = 0 count
-[19:42:39]   gc_bg = 0 count
-[19:42:39]   moved = 0 count
-[19:42:39]   moved_bg = 0 count
-[19:42:39]   cp_calls = 2 count
-[19:42:39]   cp_bg = 1 count
-[19:42:39]   gc_fg = 0 count
-[19:42:39]   status = INCONCLUSIVE -
-[19:42:39] === bg_urgent_low: INCONCLUSIVE ===
-[19:42:39] === bg_idle_cost_benefit [offload_off] ===
-files=90
-used_pct=85.62
-enospc=0
-elapsed_ms=670
-mb_s=1075.1
-deleted=12
-remaining=78
-[19:43:01]   costben_elapsed_ms = -774 ms
-[19:43:01]   costben_free_seg_gain = 0 segs
-[19:43:01]   costben_dirty_seg_delta = 0 segs
-[19:43:01]   costben_bg_gc_calls = 0 count
-[19:43:01]   costben_bg_blocks_moved = 0 blocks
-[19:43:01]   costben_bg_moved_mb_s = 0.00 MB/s
-[19:43:01]   costben_gc_thread_cpu_ms = 0 ms
-[19:43:01]   expected bg_gc_calls > 0 but got 0
-[19:43:01]   duration_ms = 19 ms
-[19:43:01]   gc_calls = 0 count
-[19:43:01]   gc_bg = 0 count
-[19:43:01]   moved = 0 count
-[19:43:01]   moved_bg = 0 count
-[19:43:01]   cp_calls = 2 count
-[19:43:01]   cp_bg = 1 count
-[19:43:02]   gc_fg = 0 count
-[19:43:02]   status = INCONCLUSIVE -
-[19:43:02] === bg_idle_cost_benefit: INCONCLUSIVE ===
-[19:43:02] === bg_idle_greedy [offload_off] ===
-files=90
-used_pct=85.62
-enospc=0
-elapsed_ms=716
-mb_s=1004.9
-deleted=12
-remaining=78
-[19:43:23]   greedy_elapsed_ms = -773 ms
-[19:43:23]   greedy_free_seg_gain = 0 segs
-[19:43:23]   greedy_dirty_seg_delta = 0 segs
-[19:43:23]   greedy_bg_gc_calls = 0 count
-[19:43:23]   greedy_bg_blocks_moved = 0 blocks
-[19:43:23]   greedy_bg_moved_mb_s = 0.00 MB/s
-[19:43:23]   greedy_gc_thread_cpu_ms = 0 ms
-[19:43:23]   expected bg_gc_calls > 0 but got 0
-[19:43:23]   duration_ms = 79 ms
-[19:43:23]   gc_calls = 0 count
-[19:43:23]   gc_bg = 0 count
-[19:43:24]   moved = 0 count
-[19:43:24]   moved_bg = 0 count
-[19:43:24]   cp_calls = 2 count
-[19:43:24]   cp_bg = 1 count
-[19:43:24]   gc_fg = 0 count
-[19:43:24]   status = INCONCLUSIVE -
-[19:43:24] === bg_idle_greedy: INCONCLUSIVE ===
-[19:43:24] === bg_with_foreground_io [offload_off] ===
-files=90
-used_pct=85.62
-enospc=0
-elapsed_ms=661
-mb_s=1089.3
-deleted=12
-remaining=78
-[19:43:39]   base_iops = 877741 ops/s
-[19:43:39]   base_mb_s = 3428.7 MB/s
-[19:43:39]   base_write_p50_us = 0 us
-[19:43:39]   base_write_p99_us = 1 us
-[19:43:39]   base_write_p999_us = 4 us
-[19:43:39]   base_write_max_us = 98 us
-[19:43:46]   bgon_iops = 843566 ops/s
-[19:43:46]   bgon_mb_s = 3295.2 MB/s
-[19:43:46]   bgon_write_p50_us = 0 us
-[19:43:46]   bgon_write_p99_us = 1 us
-[19:43:46]   bgon_write_p999_us = 3 us
-[19:43:46]   bgon_write_max_us = 101 us
-[19:43:46]   iops_drop_pct = 3.9 %
-[19:43:46]   expected bg_gc_calls > 0 but got 0
-[19:43:46]   duration_ms = 376 ms
-[19:43:46]   gc_calls = 0 count
-[19:43:46]   gc_bg = 0 count
-[19:43:46]   moved = 0 count
-[19:43:46]   moved_bg = 0 count
-[19:43:46]   cp_calls = 2 count
-[19:43:46]   cp_bg = 1 count
-[19:43:46]   gc_fg = 0 count
-[19:43:46]   status = INCONCLUSIVE -
-[19:43:46] === bg_with_foreground_io: INCONCLUSIVE ===
-[19:43:46] === bg_reclaim_after_delete [offload_off] ===
-[19:44:11]   time_to_stable_s = -1344 ms
-[19:44:11]   free_seg_gain = 0 segs
-[19:44:11]   bg_blocks_moved = 0 blocks
-[19:44:11]   expected bg_gc_calls > 0 but got 0
-[19:44:11]   duration_ms = -1387 ms
-[19:44:11]   gc_calls = 0 count
-[19:44:11]   gc_bg = 0 count
-[19:44:11]   moved = 0 count
-[19:44:11]   moved_bg = 0 count
-[19:44:11]   cp_calls = 2 count
-[19:44:11]   cp_bg = 1 count
-[19:44:11]   gc_fg = 0 count
-[19:44:11]   status = INCONCLUSIVE -
-[19:44:11] === bg_reclaim_after_delete: INCONCLUSIVE ===
-[19:44:11] === bg_fsync_workload [offload_off] ===
-files=90
-used_pct=85.62
-enospc=0
-elapsed_ms=663
-mb_s=1086.7
-deleted=12
-remaining=78
-[19:44:27]   base_iops = 8507 ops/s
-[19:44:27]   base_mb_s = 33.2 MB/s
-[19:44:27]   base_write_p50_us = 1 us
-[19:44:27]   base_write_p99_us = 4 us
-[19:44:27]   base_write_p999_us = 8 us
-[19:44:27]   base_write_max_us = 19 us
-[19:44:27]   base_fsync_p99_us = 146 us
-[19:44:27]   base_fsync_max_us = 3455 us
-[19:44:33]   bgon_iops = 8550 ops/s
-[19:44:33]   bgon_mb_s = 33.4 MB/s
-[19:44:33]   bgon_write_p50_us = 1 us
-[19:44:33]   bgon_write_p99_us = 2 us
-[19:44:33]   bgon_write_p999_us = 5 us
-[19:44:33]   bgon_write_max_us = 20 us
-[19:44:33]   bgon_fsync_p99_us = 128 us
-[19:44:33]   bgon_fsync_max_us = 4458 us
-[19:44:33]   iops_drop_pct = -0.5 %
-[19:44:33]   expected bg_gc_calls > 0 but got 0
-[19:44:33]   duration_ms = -46 ms
-[19:44:33]   gc_calls = 0 count
-[19:44:33]   gc_bg = 0 count
-[19:44:33]   moved = 0 count
-[19:44:33]   moved_bg = 0 count
-[19:44:33]   cp_calls = 2 count
-[19:44:33]   cp_bg = 1 count
-[19:44:33]   gc_fg = 0 count
-[19:44:33]   status = INCONCLUSIVE -
-[19:44:34] === bg_fsync_workload: INCONCLUSIVE ===
-[19:44:34] === bg_waf_soak [offload_off] ===
-files=90
-used_pct=85.62
-enospc=0
-elapsed_ms=681
-mb_s=1057.8
-deleted=9
-remaining=81
-[19:45:05]   soak_iops = 857818 ops/s
-[19:45:05]   soak_mb_s = 3350.9 MB/s
-[19:45:05]   soak_write_p50_us = 0 us
-[19:45:05]   soak_write_p99_us = 1 us
-[19:45:05]   soak_write_p999_us = 3 us
-[19:45:05]   soak_write_max_us = 117 us
-[19:45:05]   gc_blocks_moved_total = 0 blocks
-[19:45:05]   gc_blocks_moved_bg = 0 blocks
-[19:45:05]   gc_waf = 1.000 ratio
-[19:45:05]   expected bg_gc_calls > 0 but got 0
-[19:45:05]   duration_ms = 1232 ms
-[19:45:05]   gc_calls = 0 count
-[19:45:05]   gc_bg = 0 count
-[19:45:05]   moved = 0 count
-[19:45:05]   moved_bg = 0 count
-[19:45:05]   cp_calls = 2 count
-[19:45:05]   cp_bg = 1 count
-[19:45:05]   gc_fg = 0 count
-[19:45:05]   status = INCONCLUSIVE -
-[19:45:06] === bg_waf_soak: INCONCLUSIVE ===
-[19:45:06] === bg_idle_maint [offload_off] ===
-files=90
-used_pct=85.62
-enospc=0
-elapsed_ms=676
-mb_s=1065.5
-deleted=12
-remaining=78
-[19:45:45]   maint_elapsed_ms = 44 ms
-[19:45:45]   maint_free_seg_gain = 0 segs
-[19:45:45]   maint_dirty_seg_delta = 0 segs
-[19:45:45]   maint_bg_gc_calls = 0 count
-[19:45:45]   maint_bg_blocks_moved = 0 blocks
-[19:45:45]   maint_bg_moved_mb_s = 0.00 MB/s
-[19:45:45]   maint_gc_thread_cpu_ms = 0 ms
-[19:45:46]   expected bg_gc_calls > 0 but got 0
-[19:45:46]   duration_ms = 1253 ms
-[19:45:46]   gc_calls = 0 count
-[19:45:46]   gc_bg = 0 count
-[19:45:46]   moved = 0 count
-[19:45:46]   moved_bg = 0 count
-[19:45:46]   cp_calls = 2 count
-[19:45:46]   cp_bg = 1 count
-[19:45:46]   gc_fg = 0 count
-[19:45:46]   status = INCONCLUSIVE -
-[19:45:46] === bg_idle_maint: INCONCLUSIVE ===
-################ MODE=offload_on ################
-[19:45:46] WARN: no copy_offload control found (export COPY_OFFLOAD_CTL=...); run is only labelled 'offload_on'
-[19:45:46] === fg_append_full [offload_on] ===
-files=96
-used_pct=90.33
-enospc=0
-elapsed_ms=686
-mb_s=1119.3
-deleted=9
-remaining=87
-[19:46:00]   append_mb_s = 1830.5 MB/s
-[19:46:00]   append_elapsed_ms = 84 ms
-[19:46:00]   append_enospc = 0 flag
-[19:46:00]   append_write_p50_us = 25 us
-[19:46:00]   append_write_p99_us = 60 us
-[19:46:00]   append_write_p999_us = 76 us
-[19:46:00]   append_write_max_us = 87 us
-[19:46:00]   expected fg_gc_calls > 0 but got 0
-[19:46:00]   duration_ms = 460 ms
-[19:46:00]   gc_calls = 0 count
-[19:46:00]   gc_bg = 0 count
-[19:46:00]   moved = 0 count
-[19:46:00]   moved_bg = 0 count
-[19:46:00]   cp_calls = 2 count
-[19:46:00]   cp_bg = 1 count
-[19:46:00]   gc_fg = 0 count
-[19:46:00]   status = INCONCLUSIVE -
-[19:46:00] === fg_append_full: INCONCLUSIVE ===
-[19:46:00] === fg_random_overwrite [offload_on] ===
-files=96
-used_pct=90.33
-enospc=0
-elapsed_ms=682
-mb_s=1125.7
-deleted=0
-remaining=96
-[19:46:20]   churn_iops = 822217 ops/s
-[19:46:20]   churn_mb_s = 3211.8 MB/s
-[19:46:20]   churn_enospc = 0 flag
-[19:46:20]   churn_write_p50_us = 0 us
-[19:46:20]   churn_write_p99_us = 1 us
-[19:46:20]   churn_write_p999_us = 3 us
-[19:46:20]   churn_write_max_us = 109 us
-[19:46:20]   expected fg_gc_calls > 0 but got 0
-[19:46:20]   duration_ms = -1964 ms
-[19:46:20]   gc_calls = 0 count
-[19:46:20]   gc_bg = 0 count
-[19:46:20]   moved = 0 count
-[19:46:20]   moved_bg = 0 count
-[19:46:20]   cp_calls = 1 count
-[19:46:20]   cp_bg = 0 count
-[19:46:20]   gc_fg = 0 count
-[19:46:20]   status = INCONCLUSIVE -
-[19:46:21] === fg_random_overwrite: INCONCLUSIVE ===
-[19:46:21] === fg_fsync_pressure [offload_on] ===
-files=94
-used_pct=88.76
-enospc=0
-elapsed_ms=671
-mb_s=1120.0
-deleted=7
-remaining=87
-[19:46:29]   fsyncappend_mb_s = 96.0 MB/s
-[19:46:29]   fsyncappend_elapsed_ms = 885 ms
-[19:46:29]   fsyncappend_enospc = 0 flag
-[19:46:29]   fsyncappend_write_p50_us = 4 us
-[19:46:29]   fsyncappend_write_p99_us = 5 us
-[19:46:29]   fsyncappend_write_p999_us = 46 us
-[19:46:29]   fsyncappend_write_max_us = 63 us
-[19:46:29]   expected fg_gc_calls > 0 but got 0
-[19:46:29]   duration_ms = -397 ms
-[19:46:29]   gc_calls = 0 count
-[19:46:29]   gc_bg = 0 count
-[19:46:29]   moved = 0 count
-[19:46:29]   moved_bg = 0 count
-[19:46:29]   cp_calls = 1 count
-[19:46:29]   cp_bg = 0 count
-[19:46:29]   gc_fg = 0 count
-[19:46:29]   status = INCONCLUSIVE -
-[19:46:29] === fg_fsync_pressure: INCONCLUSIVE ===
-[19:46:29] === fg_parallel_writers [offload_on] ===
-files=96
-used_pct=90.33
-enospc=0
-elapsed_ms=669
-mb_s=1147.2
-deleted=11
-remaining=85
-[19:46:37]   par_aggregate_mb_s = 3090.7 MB/s
-[19:46:37]   par_worst_write_p99_us = 125 us
-[19:46:37]   par_worst_write_max_us = 898 us
-[19:46:37]   par_enospc_writers = 0 count
-[19:46:37]   expected fg_gc_calls > 0 but got 0
-[19:46:37]   duration_ms = -1263 ms
-[19:46:37]   gc_calls = 0 count
-[19:46:37]   gc_bg = 0 count
-[19:46:37]   moved = 0 count
-[19:46:37]   moved_bg = 0 count
-[19:46:37]   cp_calls = 3 count
-[19:46:37]   cp_bg = 1 count
-[19:46:37]   gc_fg = 0 count
-[19:46:37]   status = INCONCLUSIVE -
-[19:46:37] === fg_parallel_writers: INCONCLUSIVE ===
-[19:46:37] === fg_ioctl_sync_gc [offload_on] ===
-files=90
-used_pct=85.62
-enospc=0
-elapsed_ms=702
-mb_s=1026.1
-deleted=15
-remaining=75
-[19:46:58]   ioctl_calls = 30 count
-[19:46:58]   ioctl_ok = 29 count
-[19:46:58]   ioctl_busy = 0 count
-[19:46:58]   ioctl_last_errno = 61 errno
-[19:46:58]   ioctl_elapsed_ms = 13529 ms
-[19:46:58]   ioctl_gc_call_p50_us = 482556 us
-[19:46:58]   ioctl_gc_call_p99_us = 492566 us
-[19:46:58]   ioctl_gc_call_max_us = 492566 us
-[19:46:59]   duration_ms = -481 ms
-[19:46:59]   gc_calls = 30 count
-[19:46:59]   gc_bg = 0 count
-[19:46:59]   moved = 7169 count
-[19:46:59]   moved_bg = 0 count
-[19:46:59]   cp_calls = 2 count
-[19:46:59]   cp_bg = 1 count
-[19:46:59]   gc_fg = 30 count
-[19:46:59]   status = PASS -
-[19:46:59] === fg_ioctl_sync_gc: PASS ===
-[19:46:59] === fg_ioctl_gc_range [offload_on] ===
-files=90
-used_pct=85.62
-enospc=0
-elapsed_ms=712
-mb_s=1010.6
-deleted=15
-remaining=75
-[19:47:06]   range_ret = -1 rc
-[19:47:06]   range_errno = 22 errno
-[19:47:06]   range_elapsed_ms = 0.0 ms
-[19:47:06]   expected fg_gc_calls > 0 but got 0
-[19:47:06]   duration_ms = -1367 ms
-[19:47:07]   gc_calls = 0 count
-[19:47:07]   gc_bg = 0 count
-[19:47:07]   moved = 0 count
-[19:47:07]   moved_bg = 0 count
-[19:47:07]   cp_calls = 2 count
-[19:47:07]   cp_bg = 1 count
-[19:47:07]   gc_fg = 0 count
-[19:47:07]   status = INCONCLUSIVE -
-[19:47:07] === fg_ioctl_gc_range: INCONCLUSIVE ===
-[19:47:07] === fg_enospc_recovery [offload_on] ===
-write: Success
-[19:47:11]   recover_mb_s = 1731.7 MB/s
-[19:47:11]   recover_elapsed_ms = 58 ms
-[19:47:11]   recover_enospc = 0 flag
-[19:47:11]   recover_write_p50_us = 24 us
-[19:47:11]   recover_write_p99_us = 77 us
-[19:47:11]   recover_write_p999_us = 91 us
-[19:47:11]   recover_write_max_us = 91 us
-[19:47:11]   expected fg_gc_calls > 0 but got 0
-[19:47:12]   duration_ms = 47 ms
-[19:47:12]   gc_calls = 0 count
-[19:47:12]   gc_bg = 0 count
-[19:47:12]   moved = 0 count
-[19:47:12]   moved_bg = 0 count
-[19:47:12]   cp_calls = 2 count
-[19:47:12]   cp_bg = 1 count
-[19:47:12]   gc_fg = 0 count
-[19:47:12]   status = INCONCLUSIVE -
-[19:47:12] === fg_enospc_recovery: INCONCLUSIVE ===
-[19:47:12] WARN: no copy_offload control found (export COPY_OFFLOAD_CTL=...); run is only labelled 'offload_on'
-[19:47:12] === bg_default_idle [offload_on] ===
-files=90
-used_pct=85.62
-enospc=0
-elapsed_ms=751
-mb_s=959.2
-deleted=12
-remaining=78
-[19:47:52]   idle_elapsed_ms = 45 ms
-[19:47:52]   idle_free_seg_gain = 0 segs
-[19:47:52]   idle_dirty_seg_delta = 0 segs
-[19:47:52]   idle_bg_gc_calls = 1 count
-[19:47:52]   idle_bg_blocks_moved = 1 blocks
-[19:47:52]   idle_bg_moved_mb_s = 0.09 MB/s
-[19:47:52]   idle_gc_thread_cpu_ms = 0 ms
-[19:47:52]   duration_ms = 992 ms
-[19:47:52]   gc_calls = 1 count
-[19:47:52]   gc_bg = 1 count
-[19:47:52]   moved = 1 count
-[19:47:52]   moved_bg = 1 count
-[19:47:52]   cp_calls = 2 count
-[19:47:52]   cp_bg = 1 count
-[19:47:52]   gc_fg = 0 count
-[19:47:52]   status = PASS -
-[19:47:52] === bg_default_idle: PASS ===
-[19:47:52] === bg_urgent_high [offload_on] ===
-files=90
-used_pct=85.62
-enospc=0
-elapsed_ms=641
-mb_s=1124.0
-deleted=12
-remaining=78
-[19:48:14]   urgent_high_elapsed_ms = 3523 ms
-[19:48:14]   urgent_high_free_seg_gain = 0 segs
-[19:48:14]   urgent_high_dirty_seg_delta = 0 segs
-[19:48:14]   urgent_high_bg_gc_calls = 23 count
-[19:48:14]   urgent_high_bg_blocks_moved = 5632 blocks
-[19:48:14]   urgent_high_bg_moved_mb_s = 6.24 MB/s
-[19:48:14]   urgent_high_gc_thread_cpu_ms = 0 ms
-[19:48:14]   duration_ms = 55 ms
-[19:48:14]   gc_calls = 24 count
-[19:48:14]   gc_bg = 24 count
-[19:48:14]   moved = 5705 count
-[19:48:14]   moved_bg = 5705 count
-[19:48:14]   cp_calls = 2 count
-[19:48:14]   cp_bg = 1 count
-[19:48:14]   gc_fg = 0 count
-[19:48:14]   status = PASS -
-[19:48:15] === bg_urgent_high: PASS ===
-[19:48:15] === bg_urgent_low [offload_on] ===
-files=90
-used_pct=85.62
-enospc=0
-elapsed_ms=668
-mb_s=1077.4
-
-
-deleted=12
-remaining=78
-[19:48:36]   urgent_low_elapsed_ms = -770 ms
-[19:48:36]   urgent_low_free_seg_gain = 0 segs
-[19:48:36]   urgent_low_dirty_seg_delta = 0 segs
-[19:48:36]   urgent_low_bg_gc_calls = 0 count
-[19:48:36]   urgent_low_bg_blocks_moved = 0 blocks
-[19:48:36]   urgent_low_bg_moved_mb_s = 0.00 MB/s
-[19:48:36]   urgent_low_gc_thread_cpu_ms = 0 ms
-[19:48:36]   expected bg_gc_calls > 0 but got 0
-[19:48:36]   duration_ms = 160 ms
-[19:48:36]   gc_calls = 0 count
-[19:48:37]   gc_bg = 0 count
-[19:48:37]   moved = 0 count
-[19:48:37]   moved_bg = 0 count
-[19:48:37]   cp_calls = 2 count
-[19:48:37]   cp_bg = 1 count
-[19:48:37]   gc_fg = 0 count
-[19:48:37]   status = INCONCLUSIVE -
-[19:48:37] === bg_urgent_low: INCONCLUSIVE ===
-[19:48:37] === bg_idle_cost_benefit [offload_on] ===
-files=90
-used_pct=85.62
-enospc=0
-elapsed_ms=657
-mb_s=1095.6
-deleted=12
-remaining=78
-[19:48:58]   costben_elapsed_ms = -773 ms
-[19:48:58]   costben_free_seg_gain = 0 segs
-[19:48:58]   costben_dirty_seg_delta = 0 segs
-[19:48:59]   costben_bg_gc_calls = 0 count
-[19:48:59]   costben_bg_blocks_moved = 0 blocks
-[19:48:59]   costben_bg_moved_mb_s = 0.00 MB/s
-[19:48:59]   costben_gc_thread_cpu_ms = 0 ms
-[19:48:59]   expected bg_gc_calls > 0 but got 0
-[19:48:59]   duration_ms = 93 ms
-[19:48:59]   gc_calls = 0 count
-[19:48:59]   gc_bg = 0 count
-[19:48:59]   moved = 0 count
-[19:48:59]   moved_bg = 0 count
-[19:48:59]   cp_calls = 2 count
-[19:48:59]   cp_bg = 1 count
-[19:48:59]   gc_fg = 0 count
-[19:48:59]   status = INCONCLUSIVE -
-[19:49:00] === bg_idle_cost_benefit: INCONCLUSIVE ===
-[19:49:00] === bg_idle_greedy [offload_on] ===
-files=90
-used_pct=85.62
-enospc=0
-elapsed_ms=689
-mb_s=1045.0
-deleted=12
-remaining=78
-[19:49:21]   greedy_elapsed_ms = -772 ms
-[19:49:21]   greedy_free_seg_gain = 0 segs
-[19:49:21]   greedy_dirty_seg_delta = 0 segs
-[19:49:21]   greedy_bg_gc_calls = 0 count
-[19:49:21]   greedy_bg_blocks_moved = 0 blocks
-[19:49:21]   greedy_bg_moved_mb_s = 0.00 MB/s
-[19:49:21]   greedy_gc_thread_cpu_ms = 0 ms
-[19:49:21]   expected bg_gc_calls > 0 but got 0
-[19:49:22]   duration_ms = 61 ms
-[19:49:22]   gc_calls = 0 count
-[19:49:22]   gc_bg = 0 count
-[19:49:22]   moved = 0 count
-[19:49:22]   moved_bg = 0 count
-[19:49:22]   cp_calls = 2 count
-[19:49:22]   cp_bg = 1 count
-[19:49:22]   gc_fg = 0 count
-[19:49:22]   status = INCONCLUSIVE -
-[19:49:22] === bg_idle_greedy: INCONCLUSIVE ===
-[19:49:22] === bg_with_foreground_io [offload_on] ===
-files=90
-used_pct=85.62
-enospc=0
-elapsed_ms=639
-mb_s=1126.0
-deleted=12
-remaining=78
-[19:49:37]   base_iops = 845361 ops/s
-[19:49:37]   base_mb_s = 3302.2 MB/s
-[19:49:37]   base_write_p50_us = 0 us
-[19:49:37]   base_write_p99_us = 1 us
-[19:49:37]   base_write_p999_us = 4 us
-[19:49:37]   base_write_max_us = 101 us
-[19:49:44]   bgon_iops = 804551 ops/s
-[19:49:44]   bgon_mb_s = 3142.8 MB/s
-[19:49:44]   bgon_write_p50_us = 0 us
-[19:49:44]   bgon_write_p99_us = 1 us
-[19:49:44]   bgon_write_p999_us = 3 us
-[19:49:44]   bgon_write_max_us = 93 us
-[19:49:44]   iops_drop_pct = 4.8 %
-[19:49:44]   expected bg_gc_calls > 0 but got 0
-[19:49:44]   duration_ms = 361 ms
-[19:49:44]   gc_calls = 0 count
-[19:49:44]   gc_bg = 0 count
-[19:49:44]   moved = 0 count
-[19:49:44]   moved_bg = 0 count
-[19:49:44]   cp_calls = 2 count
-[19:49:44]   cp_bg = 1 count
-[19:49:44]   gc_fg = 0 count
-[19:49:44]   status = INCONCLUSIVE -
-[19:49:45] === bg_with_foreground_io: INCONCLUSIVE ===
-[19:49:45] === bg_reclaim_after_delete [offload_on] ===
-[19:50:09]   time_to_stable_s = -1347 ms
-[19:50:09]   free_seg_gain = 0 segs
-[19:50:09]   bg_blocks_moved = 0 blocks
-[19:50:09]   expected bg_gc_calls > 0 but got 0
-[19:50:09]   duration_ms = 2851 ms
-[19:50:09]   gc_calls = 0 count
-[19:50:09]   gc_bg = 0 count
-[19:50:09]   moved = 0 count
-[19:50:09]   moved_bg = 0 count
-[19:50:09]   cp_calls = 2 count
-[19:50:09]   cp_bg = 1 count
-[19:50:09]   gc_fg = 0 count
-[19:50:09]   status = INCONCLUSIVE -
-[19:50:09] === bg_reclaim_after_delete: INCONCLUSIVE ===
-[19:50:10] === bg_fsync_workload [offload_on] ===
-files=90
-used_pct=85.62
-enospc=0
-elapsed_ms=735
-mb_s=979.7
-deleted=12
-remaining=78
-[19:50:25]   base_iops = 8225 ops/s
-[19:50:25]   base_mb_s = 32.1 MB/s
-[19:50:25]   base_write_p50_us = 1 us
-[19:50:25]   base_write_p99_us = 6 us
-[19:50:25]   base_write_p999_us = 8 us
-[19:50:25]   base_write_max_us = 21 us
-[19:50:25]   base_fsync_p99_us = 168 us
-[19:50:25]   base_fsync_max_us = 4881 us
-[19:50:31]   bgon_iops = 8470 ops/s
-[19:50:31]   bgon_mb_s = 33.1 MB/s
-[19:50:31]   bgon_write_p50_us = 1 us
-[19:50:31]   bgon_write_p99_us = 5 us
-[19:50:31]   bgon_write_p999_us = 7 us
-[19:50:31]   bgon_write_max_us = 15 us
-[19:50:31]   bgon_fsync_p99_us = 153 us
-[19:50:31]   bgon_fsync_max_us = 4139 us
-[19:50:31]   iops_drop_pct = -3.0 %
-[19:50:31]   expected bg_gc_calls > 0 but got 0
-[19:50:31]   duration_ms = 79 ms
-[19:50:31]   gc_calls = 0 count
-[19:50:31]   gc_bg = 0 count
-[19:50:31]   moved = 0 count
-[19:50:31]   moved_bg = 0 count
-[19:50:31]   cp_calls = 2 count
-[19:50:31]   cp_bg = 1 count
-[19:50:32]   gc_fg = 0 count
-[19:50:32]   status = INCONCLUSIVE -
-[19:50:32] === bg_fsync_workload: INCONCLUSIVE ===
-[19:50:32] === bg_waf_soak [offload_on] ===
-files=90
-used_pct=85.62
-enospc=0
-elapsed_ms=776
-mb_s=927.6
-deleted=9
-remaining=81
-[19:51:03]   soak_iops = 841251 ops/s
-[19:51:03]   soak_mb_s = 3286.1 MB/s
-[19:51:03]   soak_write_p50_us = 0 us
-[19:51:03]   soak_write_p99_us = 1 us
-[19:51:03]   soak_write_p999_us = 3 us
-[19:51:03]   soak_write_max_us = 133 us
-[19:51:03]   gc_blocks_moved_total = 0 blocks
-[19:51:03]   gc_blocks_moved_bg = 0 blocks
-[19:51:03]   gc_waf = 1.000 ratio
-[19:51:03]   expected bg_gc_calls > 0 but got 0
-[19:51:03]   duration_ms = 1322 ms
-[19:51:03]   gc_calls = 0 count
-[19:51:03]   gc_bg = 0 count
-[19:51:03]   moved = 0 count
-[19:51:03]   moved_bg = 0 count
-[19:51:03]   cp_calls = 2 count
-[19:51:04]   cp_bg = 1 count
-[19:51:04]   gc_fg = 0 count
-[19:51:04]   status = INCONCLUSIVE -
-[19:51:04] === bg_waf_soak: INCONCLUSIVE ===
-[19:51:04] === bg_idle_maint [offload_on] ===
-files=90
-used_pct=85.62
-enospc=0
-elapsed_ms=698
-mb_s=1032.1
-deleted=12
-remaining=78
-
-[19:51:43]   maint_elapsed_ms = 46 ms
-[19:51:43]   maint_free_seg_gain = 0 segs
-[19:51:43]   maint_dirty_seg_delta = 0 segs
-[19:51:44]   maint_bg_gc_calls = 0 count
-[19:51:44]   maint_bg_blocks_moved = 0 blocks
-[19:51:44]   maint_bg_moved_mb_s = 0.00 MB/s
-[19:51:44]   maint_gc_thread_cpu_ms = 0 ms
-[19:51:44]   expected bg_gc_calls > 0 but got 0
-[19:51:44]   duration_ms = 1326 ms
-[19:51:44]   gc_calls = 0 count
-[19:51:44]   gc_bg = 0 count
-[19:51:44]   moved = 0 count
-[19:51:44]   moved_bg = 0 count
-[19:51:44]   cp_calls = 2 count
-[19:51:44]   cp_bg = 1 count
-[19:51:44]   gc_fg = 0 count
-[19:51:44]   status = INCONCLUSIVE -
-[19:51:44] === bg_idle_maint: INCONCLUSIVE ===
-done. results in /data/local/tmp/f2fs_gc_suite/results/
->>> Pulling test logs from device...
-/data/local/tmp/f2fs_gc_suite/results/./: 18 files pulled. 0.9 MB/s (39941 bytes in 0.044s)
-Results saved successfully to .\results\20261023_175900
->>> Executing data comparison script via py launcher...
-| test | metric | off | on | change | verdict |
-|---|---|---:|---:|---:|---|
-| fg_append_full | append_mb_s | 1,650.7 | 1,830.5 | +10.9% | better |
-|  | append_elapsed_ms | 93 | 84 | -9.7% | better |
-|  | append_write_p50_us | 23 | 25 | +8.7% | worse |
-|  | append_write_p99_us | 65 | 60 | -7.7% | better |
-|  | append_write_p999_us | 87 | 76 | -12.6% | better |
-|  | append_write_max_us | 95 | 87 | -8.4% | better |
-|  | duration_ms | 482 | 460 | -4.6% | ~same |
-|  | gc_bg | 0 | 0 |  |  |
-|  | gc_fg | 0 | 0 |  |  |
-| fg_random_overwrite | churn_iops | 858,116 | 822,217 | -4.2% | ~same |
-|  | churn_mb_s | 3,352 | 3,211.8 | -4.2% | ~same |
-|  | churn_write_p50_us | 0 | 0 |  |  |
-|  | churn_write_p99_us | 1 | 1 | +0.0% | ~same |
-|  | churn_write_p999_us | 2 | 3 | +50.0% | worse |
-|  | churn_write_max_us | 100 | 109 | +9.0% | worse |
-|  | duration_ms | -1,907 | -1,964 | -3.0% | ~same |
-|  | gc_bg | 0 | 0 |  |  |
-|  | gc_fg | 0 | 0 |  |  |
-| fg_fsync_pressure | fsyncappend_mb_s | 95 | 96 | +1.1% | ~same |
-|  | fsyncappend_elapsed_ms | 894 | 885 | -1.0% | ~same |
-|  | fsyncappend_write_p50_us | 4 | 4 | +0.0% | ~same |
-|  | fsyncappend_write_p99_us | 6 | 5 | -16.7% | better |
-|  | fsyncappend_write_p999_us | 46 | 46 | +0.0% | ~same |
-|  | fsyncappend_write_max_us | 62 | 63 | +1.6% | ~same |
-|  | duration_ms | -344 | -397 | -15.4% | better |
-|  | gc_bg | 0 | 0 |  |  |
-|  | gc_fg | 0 | 0 |  |  |
-| fg_parallel_writers | par_aggregate_mb_s | 3,643.5 | 3,090.7 | -15.2% | worse |
-|  | par_worst_write_p99_us | 408 | 125 | -69.4% | better |
-|  | par_worst_write_max_us | 868 | 898 | +3.5% | ~same |
-|  | duration_ms | -1,189 | -1,263 | -6.2% | better |
-|  | gc_bg | 0 | 0 |  |  |
-|  | gc_fg | 0 | 0 |  |  |
-| fg_ioctl_sync_gc | ioctl_elapsed_ms | 0 | 13,529 |  |  |
-|  | ioctl_gc_call_p50_us | 45 | 482,556 | +1072246.7% | worse |
-|  | ioctl_gc_call_p99_us | 45 | 492,566 | +1094491.1% | worse |
-|  | ioctl_gc_call_max_us | 45 | 492,566 | +1094491.1% | worse |
-|  | duration_ms | -1,368 | -481 | +64.8% | worse |
-|  | gc_bg | 0 | 0 |  |  |
-|  | gc_fg | 2 | 30 | +1400.0% |  |
-| fg_ioctl_gc_range | range_elapsed_ms | 0 | 0 |  |  |
-|  | duration_ms | 2,903 | -1,367 | -147.1% | better |
-|  | gc_bg | 0 | 0 |  |  |
-|  | gc_fg | 0 | 0 |  |  |
-| fg_enospc_recovery | recover_mb_s | 1,419.1 | 1,731.7 | +22.0% | better |
-|  | recover_elapsed_ms | 70 | 58 | -17.1% | better |
-|  | recover_write_p50_us | 36 | 24 | -33.3% | better |
-|  | recover_write_p99_us | 88 | 77 | -12.5% | better |
-|  | recover_write_p999_us | 118 | 91 | -22.9% | better |
-|  | recover_write_max_us | 118 | 91 | -22.9% | better |
-|  | duration_ms | 47 | 47 | +0.0% | ~same |
-|  | gc_bg | 0 | 0 |  |  |
-|  | gc_fg | 0 | 0 |  |  |
-| bg_default_idle | idle_elapsed_ms | 54 | 45 | -16.7% | better |
-|  | idle_free_seg_gain | 0 | 0 |  |  |
-|  | idle_bg_moved_mb_s | 0 | 0.09 |  |  |
-|  | idle_gc_thread_cpu_ms | 0 | 0 |  |  |
-|  | duration_ms | 894 | 992 | +11.0% | worse |
-|  | gc_bg | 0 | 1 |  |  |
-|  | gc_fg | 0 | 0 |  |  |
-| bg_urgent_high | urgent_high_elapsed_ms | -774 | 3,523 | +555.2% | worse |
-|  | urgent_high_free_seg_gain | 0 | 0 |  |  |
-|  | urgent_high_bg_moved_mb_s | -30.08 | 6.24 | +120.7% | better |
-|  | urgent_high_gc_thread_cpu_ms | 0 | 0 |  |  |
-|  | duration_ms | 77 | 55 | -28.6% | better |
-|  | gc_bg | 25 | 24 | -4.0% |  |
-|  | gc_fg | 0 | 0 |  |  |
-| bg_urgent_low | urgent_low_elapsed_ms | 3,517 | -770 | -121.9% | better |
-|  | urgent_low_free_seg_gain | 0 | 0 |  |  |
-|  | urgent_low_bg_moved_mb_s | 0 | 0 |  |  |
-|  | urgent_low_gc_thread_cpu_ms | 0 | 0 |  |  |
-|  | duration_ms | 42 | 160 | +281.0% | worse |
-|  | gc_bg | 0 | 0 |  |  |
-|  | gc_fg | 0 | 0 |  |  |
-| bg_idle_cost_benefit | costben_elapsed_ms | -774 | -773 | +0.1% | ~same |
-|  | costben_free_seg_gain | 0 | 0 |  |  |
-|  | costben_bg_moved_mb_s | 0 | 0 |  |  |
-|  | costben_gc_thread_cpu_ms | 0 | 0 |  |  |
-|  | duration_ms | 19 | 93 | +389.5% | worse |
-|  | gc_bg | 0 | 0 |  |  |
-|  | gc_fg | 0 | 0 |  |  |
-| bg_idle_greedy | greedy_elapsed_ms | -773 | -772 | +0.1% | ~same |
-|  | greedy_free_seg_gain | 0 | 0 |  |  |
-|  | greedy_bg_moved_mb_s | 0 | 0 |  |  |
-|  | greedy_gc_thread_cpu_ms | 0 | 0 |  |  |
-|  | duration_ms | 79 | 61 | -22.8% | better |
-|  | gc_bg | 0 | 0 |  |  |
-|  | gc_fg | 0 | 0 |  |  |
-| bg_with_foreground_io | base_iops | 877,741 | 845,361 | -3.7% | ~same |
-|  | base_mb_s | 3,428.7 | 3,302.2 | -3.7% | ~same |
-|  | base_write_p50_us | 0 | 0 |  |  |
-|  | base_write_p99_us | 1 | 1 | +0.0% | ~same |
-|  | base_write_p999_us | 4 | 4 | +0.0% | ~same |
-|  | base_write_max_us | 98 | 101 | +3.1% | ~same |
-|  | bgon_iops | 843,566 | 804,551 | -4.6% | ~same |
-|  | bgon_mb_s | 3,295.2 | 3,142.8 | -4.6% | ~same |
-|  | bgon_write_p50_us | 0 | 0 |  |  |
-|  | bgon_write_p99_us | 1 | 1 | +0.0% | ~same |
-|  | bgon_write_p999_us | 3 | 3 | +0.0% | ~same |
-|  | bgon_write_max_us | 101 | 93 | -7.9% | better |
-|  | iops_drop_pct | 3.9 | 4.8 | +23.1% | worse |
-|  | duration_ms | 376 | 361 | -4.0% | ~same |
-|  | gc_bg | 0 | 0 |  |  |
-|  | gc_fg | 0 | 0 |  |  |
-| bg_reclaim_after_delete | time_to_stable_s | -1,344 | -1,347 | -0.2% | ~same |
-|  | free_seg_gain | 0 | 0 |  |  |
-|  | duration_ms | -1,387 | 2,851 | +305.6% | worse |
-|  | gc_bg | 0 | 0 |  |  |
-|  | gc_fg | 0 | 0 |  |  |
-| bg_fsync_workload | base_iops | 8,507 | 8,225 | -3.3% | ~same |
-|  | base_mb_s | 33.2 | 32.1 | -3.3% | ~same |
-|  | base_write_p50_us | 1 | 1 | +0.0% | ~same |
-|  | base_write_p99_us | 4 | 6 | +50.0% | worse |
-|  | base_write_p999_us | 8 | 8 | +0.0% | ~same |
-|  | base_write_max_us | 19 | 21 | +10.5% | worse |
-|  | base_fsync_p99_us | 146 | 168 | +15.1% | worse |
-|  | base_fsync_max_us | 3,455 | 4,881 | +41.3% | worse |
-|  | bgon_iops | 8,550 | 8,470 | -0.9% | ~same |
-|  | bgon_mb_s | 33.4 | 33.1 | -0.9% | ~same |
-|  | bgon_write_p50_us | 1 | 1 | +0.0% | ~same |
-|  | bgon_write_p99_us | 2 | 5 | +150.0% | worse |
-|  | bgon_write_p999_us | 5 | 7 | +40.0% | worse |
-|  | bgon_write_max_us | 20 | 15 | -25.0% | better |
-|  | bgon_fsync_p99_us | 128 | 153 | +19.5% | worse |
-|  | bgon_fsync_max_us | 4,458 | 4,139 | -7.2% | better |
-|  | iops_drop_pct | -0.5 | -3 | -500.0% | better |
-|  | duration_ms | -46 | 79 | +271.7% | worse |
-|  | gc_bg | 0 | 0 |  |  |
-|  | gc_fg | 0 | 0 |  |  |
-| bg_waf_soak | soak_iops | 857,818 | 841,251 | -1.9% | ~same |
-|  | soak_mb_s | 3,350.9 | 3,286.1 | -1.9% | ~same |
-|  | soak_write_p50_us | 0 | 0 |  |  |
-|  | soak_write_p99_us | 1 | 1 | +0.0% | ~same |
-|  | soak_write_p999_us | 3 | 3 | +0.0% | ~same |
-|  | soak_write_max_us | 117 | 133 | +13.7% | worse |
-|  | gc_waf | 1 | 1 | +0.0% | ~same |
-|  | duration_ms | 1,232 | 1,322 | +7.3% | worse |
-|  | gc_bg | 0 | 0 |  |  |
-|  | gc_fg | 0 | 0 |  |  |
-| bg_idle_maint | maint_elapsed_ms | 44 | 46 | +4.5% | ~same |
-|  | maint_free_seg_gain | 0 | 0 |  |  |
-|  | maint_bg_moved_mb_s | 0 | 0 |  |  |
-|  | maint_gc_thread_cpu_ms | 0 | 0 |  |  |
-|  | duration_ms | 1,253 | 1,326 | +5.8% | worse |
-|  | gc_bg | 0 | 0 |  |  |
-|  | gc_fg | 0 | 0 |  |  |
-
-Scenario validity (GC type the test targets actually ran):
-
-| test | off | on |
-|---|---|---|
-| fg_append_full | INCONCLUSIVE | INCONCLUSIVE |
-| fg_random_overwrite | INCONCLUSIVE | INCONCLUSIVE |
-| fg_fsync_pressure | INCONCLUSIVE | INCONCLUSIVE |
-| fg_parallel_writers | INCONCLUSIVE | INCONCLUSIVE |
-| fg_ioctl_sync_gc | PASS | PASS |
-| fg_ioctl_gc_range | INCONCLUSIVE | INCONCLUSIVE |
-| fg_enospc_recovery | INCONCLUSIVE | INCONCLUSIVE |
-| bg_default_idle | INCONCLUSIVE | PASS |
-| bg_urgent_high | PASS | PASS |
-| bg_urgent_low | INCONCLUSIVE | INCONCLUSIVE |
-| bg_idle_cost_benefit | INCONCLUSIVE | INCONCLUSIVE |
-| bg_idle_greedy | INCONCLUSIVE | INCONCLUSIVE |
-| bg_with_foreground_io | INCONCLUSIVE | INCONCLUSIVE |
-| bg_reclaim_after_delete | INCONCLUSIVE | INCONCLUSIVE |
-| bg_fsync_workload | INCONCLUSIVE | INCONCLUSIVE |
-| bg_waf_soak | INCONCLUSIVE | INCONCLUSIVE |
-| bg_idle_maint | INCONCLUSIVE | INCONCLUSIVE |
-
-Treat INCONCLUSIVE/UNVERIFIED rows as not comparable; a 'better'/'worse' tag needs >=5% change and is not a significance test (repeat runs and compare the spread).
-PS D:\anees\tasks\f2fs_gc_test_suite\f2fs_gc_suite_v01>
+[  146.278064] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000000900000000] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x2600 FIRST_DST_PBA=0x10c00 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.283201] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000000900000000] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x2600 FIRST_DST_PBA=0x10c00 BLKS=128 METHOD=DEVICE_COPY DUR_US=5119
+[  146.283395] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000000900000000] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=5476 TOTAL_DEVICE_BLKS=221 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=1
+[  146.283477] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000000900000080] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x2680 FIRST_DST_PBA=0x10c80 BLKS=18 LEN=73728 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.285386] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000000900000080] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x2680 FIRST_DST_PBA=0x10c80 BLKS=18 METHOD=DEVICE_COPY DUR_US=1900
+[  146.285419] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000000900000080] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=18 ALLOCATED=18 COPIED=18 COMMITTED=18 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=1964 TOTAL_DEVICE_BLKS=239 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=2
+[  146.285434] F2FS-fs (sdg): GC_TIMING: duration_us=7962
+[  146.286029] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000001500000000] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x3e00 FIRST_DST_PBA=0x10c92 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.287945] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000001500000000] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x3e00 FIRST_DST_PBA=0x10c92 BLKS=128 METHOD=DEVICE_COPY DUR_US=1908
+[  146.288127] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000001500000000] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2237 TOTAL_DEVICE_BLKS=367 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=3
+[  146.288201] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000001500000080] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x3e80 FIRST_DST_PBA=0x10d12 BLKS=18 LEN=73728 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.290041] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000001500000080] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x3e80 FIRST_DST_PBA=0x10d12 BLKS=18 METHOD=DEVICE_COPY DUR_US=1833
+[  146.290071] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000001500000080] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=18 ALLOCATED=18 COPIED=18 COMMITTED=18 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=1890 TOTAL_DEVICE_BLKS=385 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=4
+[  146.290082] F2FS-fs (sdg): GC_TIMING: duration_us=4622
+[  146.290722] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000001d00000000] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x4e00 FIRST_DST_PBA=0x10d24 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.292640] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000001d00000000] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x4e00 FIRST_DST_PBA=0x10d24 BLKS=128 METHOD=DEVICE_COPY DUR_US=1911
+[  146.292819] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000001d00000000] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2237 TOTAL_DEVICE_BLKS=513 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=5
+[  146.292892] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000001d00000080] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x4e80 FIRST_DST_PBA=0x10da4 BLKS=18 LEN=73728 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.294735] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000001d00000080] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x4e80 FIRST_DST_PBA=0x10da4 BLKS=18 METHOD=DEVICE_COPY DUR_US=1836
+[  146.294779] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000001d00000080] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=18 ALLOCATED=18 COPIED=18 COMMITTED=18 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=1907 TOTAL_DEVICE_BLKS=531 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=6
+[  146.294795] F2FS-fs (sdg): GC_TIMING: duration_us=4705
+[  146.295410] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000002500000000] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x5e00 FIRST_DST_PBA=0x10db6 BLKS=74 LEN=303104 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.297295] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000002500000000] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x5e00 FIRST_DST_PBA=0x10db6 BLKS=74 METHOD=DEVICE_COPY DUR_US=1875
+[  146.297303] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000250000004a] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x5e4a FIRST_DST_PBA=0x2a00 BLKS=54 LEN=221184 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.299165] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000250000004a] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x5e4a FIRST_DST_PBA=0x2a00 BLKS=54 METHOD=DEVICE_COPY DUR_US=1855
+[  146.299351] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000002500000000] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=2 CMDS_FAILED=0 DUR_US=4098 TOTAL_DEVICE_BLKS=659 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=8
+[  146.299427] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000002500000080] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x5e80 FIRST_DST_PBA=0x2a36 BLKS=18 LEN=73728 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.301270] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000002500000080] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x5e80 FIRST_DST_PBA=0x2a36 BLKS=18 METHOD=DEVICE_COPY DUR_US=1835
+[  146.301300] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000002500000080] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=18 ALLOCATED=18 COPIED=18 COMMITTED=18 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=1894 TOTAL_DEVICE_BLKS=677 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=9
+[  146.301311] F2FS-fs (sdg): GC_TIMING: duration_us=6502
+[  146.301896] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000003100000000] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x7600 FIRST_DST_PBA=0x2a48 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.303819] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000003100000000] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x7600 FIRST_DST_PBA=0x2a48 BLKS=128 METHOD=DEVICE_COPY DUR_US=1916
+[  146.304001] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000003100000000] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2256 TOTAL_DEVICE_BLKS=805 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=10
+[  146.304077] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000003100000080] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x7680 FIRST_DST_PBA=0x2ac8 BLKS=18 LEN=73728 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.305917] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000003100000080] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x7680 FIRST_DST_PBA=0x2ac8 BLKS=18 METHOD=DEVICE_COPY DUR_US=1834
+[  146.305947] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000003100000080] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=18 ALLOCATED=18 COPIED=18 COMMITTED=18 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=1892 TOTAL_DEVICE_BLKS=823 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=11
+[  146.305957] F2FS-fs (sdg): GC_TIMING: duration_us=4638
+[  146.306612] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000004d00000000] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0xae00 FIRST_DST_PBA=0x2ada BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.308537] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000004d00000000] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0xae00 FIRST_DST_PBA=0x2ada BLKS=128 METHOD=DEVICE_COPY DUR_US=1918
+[  146.308720] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000004d00000000] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2332 TOTAL_DEVICE_BLKS=951 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=12
+[  146.308796] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000004d00000080] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0xae80 FIRST_DST_PBA=0x2b5a BLKS=18 LEN=73728 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.310645] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000004d00000080] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0xae80 FIRST_DST_PBA=0x2b5a BLKS=18 METHOD=DEVICE_COPY DUR_US=1843
+[  146.310675] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000004d00000080] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=18 ALLOCATED=18 COPIED=18 COMMITTED=18 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=1901 TOTAL_DEVICE_BLKS=969 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=13
+[  146.310684] F2FS-fs (sdg): GC_TIMING: duration_us=4721
+[  146.311264] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000007e00000000] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x11000 FIRST_DST_PBA=0x2b6c BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.313181] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000007e00000000] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x11000 FIRST_DST_PBA=0x2b6c BLKS=128 METHOD=DEVICE_COPY DUR_US=1910
+[  146.313365] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000007e00000000] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2251 TOTAL_DEVICE_BLKS=1097 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=14
+[  146.313439] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000007e00000080] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x11080 FIRST_DST_PBA=0x2bec BLKS=18 LEN=73728 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.315285] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000007e00000080] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x11080 FIRST_DST_PBA=0x2bec BLKS=18 METHOD=DEVICE_COPY DUR_US=1839
+[  146.315315] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000007e00000080] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=18 ALLOCATED=18 COPIED=18 COMMITTED=18 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=1897 TOTAL_DEVICE_BLKS=1115 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=15
+[  146.315324] F2FS-fs (sdg): GC_TIMING: duration_us=4633
+[  146.315907] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000b200000000] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x17800 FIRST_DST_PBA=0x2bfe BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.317822] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000b200000000] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x17800 FIRST_DST_PBA=0x2bfe BLKS=128 METHOD=DEVICE_COPY DUR_US=1908
+[  146.318004] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=000000b200000000] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2250 TOTAL_DEVICE_BLKS=1243 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=16
+[  146.318078] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000b200000080] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x17880 FIRST_DST_PBA=0x2c7e BLKS=18 LEN=73728 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.319934] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000b200000080] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x17880 FIRST_DST_PBA=0x2c7e BLKS=18 METHOD=DEVICE_COPY DUR_US=1850
+[  146.319964] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=000000b200000080] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=18 ALLOCATED=18 COPIED=18 COMMITTED=18 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=1908 TOTAL_DEVICE_BLKS=1261 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=17
+[  146.319973] F2FS-fs (sdg): GC_TIMING: duration_us=4643
+[  146.320554] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000e200000000] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x1d800 FIRST_DST_PBA=0x2c90 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.322471] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000e200000000] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x1d800 FIRST_DST_PBA=0x2c90 BLKS=128 METHOD=DEVICE_COPY DUR_US=1911
+[  146.322684] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=000000e200000000] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2280 TOTAL_DEVICE_BLKS=1389 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=18
+[  146.322759] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000e200000080] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x1d880 FIRST_DST_PBA=0x2d10 BLKS=18 LEN=73728 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.324593] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000e200000080] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x1d880 FIRST_DST_PBA=0x2d10 BLKS=18 METHOD=DEVICE_COPY DUR_US=1828
+[  146.324624] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=000000e200000080] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=18 ALLOCATED=18 COPIED=18 COMMITTED=18 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=1886 TOTAL_DEVICE_BLKS=1407 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=19
+[  146.324634] F2FS-fs (sdg): GC_TIMING: duration_us=4654
+[  146.325213] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000f200000000] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x1f800 FIRST_DST_PBA=0x2d22 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.327160] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000f200000000] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x1f800 FIRST_DST_PBA=0x2d22 BLKS=128 METHOD=DEVICE_COPY DUR_US=1940
+[  146.327342] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=000000f200000000] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2279 TOTAL_DEVICE_BLKS=1535 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=20
+[  146.327417] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000f200000080] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x1f880 FIRST_DST_PBA=0x2da2 BLKS=18 LEN=73728 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.329259] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000f200000080] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x1f880 FIRST_DST_PBA=0x2da2 BLKS=18 METHOD=DEVICE_COPY DUR_US=1836
+[  146.329289] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=000000f200000080] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=18 ALLOCATED=18 COPIED=18 COMMITTED=18 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=1894 TOTAL_DEVICE_BLKS=1553 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=21
+[  146.329298] F2FS-fs (sdg): GC_TIMING: duration_us=4657
+[  146.329879] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000010700000000] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x22200 FIRST_DST_PBA=0x2db4 BLKS=76 LEN=311296 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.331708] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000010700000000] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x22200 FIRST_DST_PBA=0x2db4 BLKS=76 METHOD=DEVICE_COPY DUR_US=1822
+[  146.331716] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000001070000004c] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x2224c FIRST_DST_PBA=0x4000 BLKS=52 LEN=212992 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.333578] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000001070000004c] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x2224c FIRST_DST_PBA=0x4000 BLKS=52 METHOD=DEVICE_COPY DUR_US=1856
+[  146.333759] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000010700000000] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=2 CMDS_FAILED=0 DUR_US=4031 TOTAL_DEVICE_BLKS=1681 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=23
+[  146.333834] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000010700000080] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x22280 FIRST_DST_PBA=0x4034 BLKS=18 LEN=73728 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.335670] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000010700000080] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x22280 FIRST_DST_PBA=0x4034 BLKS=18 METHOD=DEVICE_COPY DUR_US=1830
+[  146.335700] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000010700000080] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=18 ALLOCATED=18 COPIED=18 COMMITTED=18 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=1888 TOTAL_DEVICE_BLKS=1699 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=24
+[  146.335709] F2FS-fs (sdg): GC_TIMING: duration_us=6405
+[  146.336291] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000015800000000] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x2c400 FIRST_DST_PBA=0x4046 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.338211] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000015800000000] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x2c400 FIRST_DST_PBA=0x4046 BLKS=128 METHOD=DEVICE_COPY DUR_US=1913
+[  146.338393] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000015800000000] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2252 TOTAL_DEVICE_BLKS=1827 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=25
+[  146.338467] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000015800000080] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x2c480 FIRST_DST_PBA=0x40c6 BLKS=18 LEN=73728 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.340374] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000015800000080] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x2c480 FIRST_DST_PBA=0x40c6 BLKS=18 METHOD=DEVICE_COPY DUR_US=1900
+[  146.340404] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000015800000080] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=18 ALLOCATED=18 COPIED=18 COMMITTED=18 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=1958 TOTAL_DEVICE_BLKS=1845 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=26
+[  146.340413] F2FS-fs (sdg): GC_TIMING: duration_us=4698
+[  146.340994] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000016000000000] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x2d400 FIRST_DST_PBA=0x40d8 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.342913] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000016000000000] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x2d400 FIRST_DST_PBA=0x40d8 BLKS=128 METHOD=DEVICE_COPY DUR_US=1913
+[  146.343096] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000016000000000] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2252 TOTAL_DEVICE_BLKS=1973 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=27
+[  146.343170] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000016000000080] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x2d480 FIRST_DST_PBA=0x4158 BLKS=18 LEN=73728 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.345013] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000016000000080] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x2d480 FIRST_DST_PBA=0x4158 BLKS=18 METHOD=DEVICE_COPY DUR_US=1837
+[  146.345044] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000016000000080] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=18 ALLOCATED=18 COPIED=18 COMMITTED=18 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=1895 TOTAL_DEVICE_BLKS=1991 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=28
+[  146.345052] F2FS-fs (sdg): GC_TIMING: duration_us=4631
+[  146.345929] F2FS-fs (sdg): GC_TIMING: duration_us=869
+[  146.346687] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000000d00000092] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x2e92 FIRST_DST_PBA=0x416a BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.348850] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000000d00000092] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x2e92 FIRST_DST_PBA=0x416a BLKS=128 METHOD=DEVICE_COPY DUR_US=2155
+[  146.349013] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000000d00000092] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2454 TOTAL_DEVICE_BLKS=2119 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=29
+[  146.349267] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000000d00000112] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x2f12 FIRST_DST_PBA=0x41ea BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.351191] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000000d00000112] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x2f12 FIRST_DST_PBA=0x41ea BLKS=128 METHOD=DEVICE_COPY DUR_US=1917
+[  146.351351] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000000d00000112] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2214 TOTAL_DEVICE_BLKS=2247 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=30
+[  146.351568] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000000d00000192] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x2f92 FIRST_DST_PBA=0x426a BLKS=110 LEN=450560 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.353487] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000000d00000192] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x2f92 FIRST_DST_PBA=0x426a BLKS=110 METHOD=DEVICE_COPY DUR_US=1913
+[  146.353626] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000000d00000192] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=110 ALLOCATED=110 COPIED=110 COMMITTED=110 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2167 TOTAL_DEVICE_BLKS=2357 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=31
+[  146.353635] F2FS-fs (sdg): GC_TIMING: duration_us=7700
+[  146.354343] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000001900000092] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x4692 FIRST_DST_PBA=0x42d8 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.356278] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000001900000092] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x4692 FIRST_DST_PBA=0x42d8 BLKS=128 METHOD=DEVICE_COPY DUR_US=1928
+[  146.356440] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000001900000092] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2225 TOTAL_DEVICE_BLKS=2485 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=32
+[  146.356690] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000001900000112] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x4712 FIRST_DST_PBA=0x4358 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.358618] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000001900000112] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x4712 FIRST_DST_PBA=0x4358 BLKS=128 METHOD=DEVICE_COPY DUR_US=1921
+[  146.358774] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000001900000112] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2211 TOTAL_DEVICE_BLKS=2613 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=33
+[  146.358994] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000001900000192] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x4792 FIRST_DST_PBA=0x43d8 BLKS=110 LEN=450560 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.360901] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000001900000192] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x4792 FIRST_DST_PBA=0x43d8 BLKS=110 METHOD=DEVICE_COPY DUR_US=1900
+[  146.361039] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000001900000192] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=110 ALLOCATED=110 COPIED=110 COMMITTED=110 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2158 TOTAL_DEVICE_BLKS=2723 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=34
+[  146.361048] F2FS-fs (sdg): GC_TIMING: duration_us=7406
+[  146.361756] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000002100000092] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x5692 FIRST_DST_PBA=0x4446 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.363692] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000002100000092] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x5692 FIRST_DST_PBA=0x4446 BLKS=128 METHOD=DEVICE_COPY DUR_US=1930
+[  146.363854] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000002100000092] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2224 TOTAL_DEVICE_BLKS=2851 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=35
+[  146.364103] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000002100000112] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x5712 FIRST_DST_PBA=0x44c6 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.366037] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000002100000112] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x5712 FIRST_DST_PBA=0x44c6 BLKS=128 METHOD=DEVICE_COPY DUR_US=1928
+[  146.366198] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000002100000112] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2221 TOTAL_DEVICE_BLKS=2979 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=36
+[  146.366411] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000002100000192] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x5792 FIRST_DST_PBA=0x4546 BLKS=110 LEN=450560 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.368326] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000002100000192] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x5792 FIRST_DST_PBA=0x4546 BLKS=110 METHOD=DEVICE_COPY DUR_US=1908
+[  146.368463] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000002100000192] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=110 ALLOCATED=110 COPIED=110 COMMITTED=110 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2160 TOTAL_DEVICE_BLKS=3089 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=37
+[  146.368472] F2FS-fs (sdg): GC_TIMING: duration_us=7418
+[  146.369184] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000002900000092] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x6692 FIRST_DST_PBA=0x45b4 BLKS=76 LEN=311296 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.371034] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000002900000092] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x6692 FIRST_DST_PBA=0x45b4 BLKS=76 METHOD=DEVICE_COPY DUR_US=1843
+[  146.371042] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=00000029000000de] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x66de FIRST_DST_PBA=0x5000 BLKS=52 LEN=212992 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.372910] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=00000029000000de] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x66de FIRST_DST_PBA=0x5000 BLKS=52 METHOD=DEVICE_COPY DUR_US=1862
+[  146.373073] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000002900000092] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=2 CMDS_FAILED=0 DUR_US=4016 TOTAL_DEVICE_BLKS=3217 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=39
+[  146.373321] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000002900000112] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x6712 FIRST_DST_PBA=0x5034 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.375241] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000002900000112] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x6712 FIRST_DST_PBA=0x5034 BLKS=128 METHOD=DEVICE_COPY DUR_US=1914
+[  146.375401] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000002900000112] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2206 TOTAL_DEVICE_BLKS=3345 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=40
+[  146.375616] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000002900000192] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x6792 FIRST_DST_PBA=0x50b4 BLKS=110 LEN=450560 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.377527] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000002900000192] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x6792 FIRST_DST_PBA=0x50b4 BLKS=110 METHOD=DEVICE_COPY DUR_US=1905
+[  146.377666] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000002900000192] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=110 ALLOCATED=110 COPIED=110 COMMITTED=110 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2160 TOTAL_DEVICE_BLKS=3455 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=41
+[  146.377675] F2FS-fs (sdg): GC_TIMING: duration_us=9197
+[  146.378382] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000003500000092] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x7e92 FIRST_DST_PBA=0x5122 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.380312] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000003500000092] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x7e92 FIRST_DST_PBA=0x5122 BLKS=128 METHOD=DEVICE_COPY DUR_US=1924
+[  146.380474] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000003500000092] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2219 TOTAL_DEVICE_BLKS=3583 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=42
+[  146.380725] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000003500000112] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x7f12 FIRST_DST_PBA=0x51a2 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.382657] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000003500000112] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x7f12 FIRST_DST_PBA=0x51a2 BLKS=128 METHOD=DEVICE_COPY DUR_US=1926
+[  146.382813] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000003500000112] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2217 TOTAL_DEVICE_BLKS=3711 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=43
+[  146.383027] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000003500000192] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x7f92 FIRST_DST_PBA=0x5222 BLKS=110 LEN=450560 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.384932] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000003500000192] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x7f92 FIRST_DST_PBA=0x5222 BLKS=110 METHOD=DEVICE_COPY DUR_US=1899
+[  146.385072] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000003500000192] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=110 ALLOCATED=110 COPIED=110 COMMITTED=110 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2154 TOTAL_DEVICE_BLKS=3821 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=44
+[  146.385081] F2FS-fs (sdg): GC_TIMING: duration_us=7399
+[  146.385820] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000005500000092] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0xbe92 FIRST_DST_PBA=0x5290 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.387751] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000005500000092] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0xbe92 FIRST_DST_PBA=0x5290 BLKS=128 METHOD=DEVICE_COPY DUR_US=1925
+[  146.387913] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000005500000092] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2220 TOTAL_DEVICE_BLKS=3949 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=45
+[  146.388173] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000005500000112] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0xbf12 FIRST_DST_PBA=0x5310 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.390097] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000005500000112] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0xbf12 FIRST_DST_PBA=0x5310 BLKS=128 METHOD=DEVICE_COPY DUR_US=1918
+[  146.390257] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000005500000112] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2212 TOTAL_DEVICE_BLKS=4077 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=46
+[  146.390480] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000005500000192] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0xbf92 FIRST_DST_PBA=0x5390 BLKS=110 LEN=450560 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.392399] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000005500000192] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0xbf92 FIRST_DST_PBA=0x5390 BLKS=110 METHOD=DEVICE_COPY DUR_US=1885
+[  146.392539] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000005500000192] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=110 ALLOCATED=110 COPIED=110 COMMITTED=110 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2168 TOTAL_DEVICE_BLKS=4187 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=47
+[  146.392548] F2FS-fs (sdg): GC_TIMING: duration_us=7461
+[  146.393296] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000008200000092] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x11892 FIRST_DST_PBA=0x53fe BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.395233] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000008200000092] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x11892 FIRST_DST_PBA=0x53fe BLKS=128 METHOD=DEVICE_COPY DUR_US=1930
+[  146.395395] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000008200000092] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2229 TOTAL_DEVICE_BLKS=4315 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=48
+[  146.395652] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000008200000112] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x11912 FIRST_DST_PBA=0x547e BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.397588] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000008200000112] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x11912 FIRST_DST_PBA=0x547e BLKS=128 METHOD=DEVICE_COPY DUR_US=1930
+[  146.397748] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000008200000112] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2222 TOTAL_DEVICE_BLKS=4443 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=49
+[  146.397971] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000008200000192] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x11992 FIRST_DST_PBA=0x54fe BLKS=110 LEN=450560 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.399878] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000008200000192] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x11992 FIRST_DST_PBA=0x54fe BLKS=110 METHOD=DEVICE_COPY DUR_US=1900
+[  146.400018] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000008200000192] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=110 ALLOCATED=110 COPIED=110 COMMITTED=110 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2156 TOTAL_DEVICE_BLKS=4553 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=50
+[  146.400027] F2FS-fs (sdg): GC_TIMING: duration_us=7471
+[  146.400771] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000ba00000092] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x18892 FIRST_DST_PBA=0x556c BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.402695] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000ba00000092] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x18892 FIRST_DST_PBA=0x556c BLKS=128 METHOD=DEVICE_COPY DUR_US=1917
+[  146.402858] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=000000ba00000092] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2214 TOTAL_DEVICE_BLKS=4681 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=51
+[  146.403116] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000ba00000112] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x18912 FIRST_DST_PBA=0x55ec BLKS=20 LEN=81920 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.404964] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000ba00000112] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x18912 FIRST_DST_PBA=0x55ec BLKS=20 METHOD=DEVICE_COPY DUR_US=1842
+[  146.404974] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000ba00000126] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x18926 FIRST_DST_PBA=0x6000 BLKS=108 LEN=442368 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.406871] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000ba00000126] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x18926 FIRST_DST_PBA=0x6000 BLKS=108 METHOD=DEVICE_COPY DUR_US=1890
+[  146.407032] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=000000ba00000112] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=2 CMDS_FAILED=0 DUR_US=4043 TOTAL_DEVICE_BLKS=4809 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=53
+[  146.407255] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000ba00000192] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x18992 FIRST_DST_PBA=0x606c BLKS=110 LEN=450560 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.409173] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000ba00000192] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x18992 FIRST_DST_PBA=0x606c BLKS=110 METHOD=DEVICE_COPY DUR_US=1911
+[  146.409312] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=000000ba00000192] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=110 ALLOCATED=110 COPIED=110 COMMITTED=110 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2166 TOTAL_DEVICE_BLKS=4919 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=54
+[  146.409322] F2FS-fs (sdg): GC_TIMING: duration_us=9287
+[  146.410072] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000e600000092] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x1e092 FIRST_DST_PBA=0x60da BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.412002] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000e600000092] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x1e092 FIRST_DST_PBA=0x60da BLKS=128 METHOD=DEVICE_COPY DUR_US=1924
+[  146.412165] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=000000e600000092] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2221 TOTAL_DEVICE_BLKS=5047 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=55
+[  146.412423] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000e600000112] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x1e112 FIRST_DST_PBA=0x615a BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.414351] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000e600000112] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x1e112 FIRST_DST_PBA=0x615a BLKS=128 METHOD=DEVICE_COPY DUR_US=1922
+[  146.414548] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=000000e600000112] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2251 TOTAL_DEVICE_BLKS=5175 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=56
+[  146.414787] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000e600000192] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x1e192 FIRST_DST_PBA=0x61da BLKS=110 LEN=450560 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.416686] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000e600000192] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x1e192 FIRST_DST_PBA=0x61da BLKS=110 METHOD=DEVICE_COPY DUR_US=1893
+[  146.416824] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=000000e600000192] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=110 ALLOCATED=110 COPIED=110 COMMITTED=110 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2149 TOTAL_DEVICE_BLKS=5285 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=57
+[  146.416833] F2FS-fs (sdg): GC_TIMING: duration_us=7505
+[  146.417580] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000f600000092] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x20092 FIRST_DST_PBA=0x6248 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.419511] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000f600000092] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x20092 FIRST_DST_PBA=0x6248 BLKS=128 METHOD=DEVICE_COPY DUR_US=1925
+[  146.419668] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=000000f600000092] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2216 TOTAL_DEVICE_BLKS=5413 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=58
+[  146.419927] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000f600000112] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x20112 FIRST_DST_PBA=0x62c8 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.421861] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000f600000112] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x20112 FIRST_DST_PBA=0x62c8 BLKS=128 METHOD=DEVICE_COPY DUR_US=1928
+[  146.422016] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=000000f600000112] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2218 TOTAL_DEVICE_BLKS=5541 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=59
+[  146.422241] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000f600000192] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x20192 FIRST_DST_PBA=0x6348 BLKS=110 LEN=450560 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.424145] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000f600000192] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x20192 FIRST_DST_PBA=0x6348 BLKS=110 METHOD=DEVICE_COPY DUR_US=1898
+[  146.424280] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=000000f600000192] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=110 ALLOCATED=110 COPIED=110 COMMITTED=110 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2149 TOTAL_DEVICE_BLKS=5651 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=60
+[  146.424289] F2FS-fs (sdg): GC_TIMING: duration_us=7449
+[  146.425012] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000f700000092] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x20292 FIRST_DST_PBA=0x63b6 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.426941] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000f700000092] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x20292 FIRST_DST_PBA=0x63b6 BLKS=128 METHOD=DEVICE_COPY DUR_US=1922
+[  146.427099] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=000000f700000092] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2219 TOTAL_DEVICE_BLKS=5779 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=61
+[  146.427360] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000f700000112] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x20312 FIRST_DST_PBA=0x6436 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.429284] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000f700000112] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x20312 FIRST_DST_PBA=0x6436 BLKS=128 METHOD=DEVICE_COPY DUR_US=1918
+[  146.429439] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=000000f700000112] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2208 TOTAL_DEVICE_BLKS=5907 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=62
+[  146.429664] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000f700000192] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x20392 FIRST_DST_PBA=0x64b6 BLKS=110 LEN=450560 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.431574] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000f700000192] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x20392 FIRST_DST_PBA=0x64b6 BLKS=110 METHOD=DEVICE_COPY DUR_US=1904
+[  146.431708] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=000000f700000192] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=110 ALLOCATED=110 COPIED=110 COMMITTED=110 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2154 TOTAL_DEVICE_BLKS=6017 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=63
+[  146.431717] F2FS-fs (sdg): GC_TIMING: duration_us=7421
+[  146.432461] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000010b00000092] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x22a92 FIRST_DST_PBA=0x6524 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.434389] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000010b00000092] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x22a92 FIRST_DST_PBA=0x6524 BLKS=128 METHOD=DEVICE_COPY DUR_US=1921
+[  146.434606] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000010b00000092] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2271 TOTAL_DEVICE_BLKS=6145 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=64
+[  146.434864] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000010b00000112] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x22b12 FIRST_DST_PBA=0x65a4 BLKS=92 LEN=376832 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.436706] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000010b00000112] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x22b12 FIRST_DST_PBA=0x65a4 BLKS=92 METHOD=DEVICE_COPY DUR_US=1835
+[  146.436713] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000010b0000016e] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x22b6e FIRST_DST_PBA=0x7800 BLKS=36 LEN=147456 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.438534] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000010b0000016e] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x22b6e FIRST_DST_PBA=0x7800 BLKS=36 METHOD=DEVICE_COPY DUR_US=1815
+[  146.438704] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000010b00000112] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=2 CMDS_FAILED=0 DUR_US=3967 TOTAL_DEVICE_BLKS=6273 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=66
+[  146.438926] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000010b00000192] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x22b92 FIRST_DST_PBA=0x7824 BLKS=110 LEN=450560 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.440827] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000010b00000192] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x22b92 FIRST_DST_PBA=0x7824 BLKS=110 METHOD=DEVICE_COPY DUR_US=1894
+[  146.440967] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000010b00000192] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=110 ALLOCATED=110 COPIED=110 COMMITTED=110 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2149 TOTAL_DEVICE_BLKS=6383 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=67
+[  146.440976] F2FS-fs (sdg): GC_TIMING: duration_us=9252
+[  146.441719] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000015c00000092] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x2cc92 FIRST_DST_PBA=0x7892 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.443646] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000015c00000092] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x2cc92 FIRST_DST_PBA=0x7892 BLKS=128 METHOD=DEVICE_COPY DUR_US=1921
+[  146.443808] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000015c00000092] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2217 TOTAL_DEVICE_BLKS=6511 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=68
+[  146.444067] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000015c00000112] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x2cd12 FIRST_DST_PBA=0x7912 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.445993] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000015c00000112] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x2cd12 FIRST_DST_PBA=0x7912 BLKS=128 METHOD=DEVICE_COPY DUR_US=1920
+[  146.446154] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000015c00000112] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2214 TOTAL_DEVICE_BLKS=6639 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=69
+[  146.446380] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000015c00000192] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x2cd92 FIRST_DST_PBA=0x7992 BLKS=110 LEN=450560 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.448290] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000015c00000192] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x2cd92 FIRST_DST_PBA=0x7992 BLKS=110 METHOD=DEVICE_COPY DUR_US=1904
+[  146.448429] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000015c00000192] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=110 ALLOCATED=110 COPIED=110 COMMITTED=110 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2162 TOTAL_DEVICE_BLKS=6749 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=70
+[  146.448438] F2FS-fs (sdg): GC_TIMING: duration_us=7455
+[  146.449182] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000016400000092] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x2dc92 FIRST_DST_PBA=0x7a00 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.451117] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000016400000092] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x2dc92 FIRST_DST_PBA=0x7a00 BLKS=128 METHOD=DEVICE_COPY DUR_US=1928
+[  146.451280] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000016400000092] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2225 TOTAL_DEVICE_BLKS=6877 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=71
+[  146.451538] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000016400000112] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x2dd12 FIRST_DST_PBA=0x7a80 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.453471] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000016400000112] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x2dd12 FIRST_DST_PBA=0x7a80 BLKS=128 METHOD=DEVICE_COPY DUR_US=1927
+[  146.453632] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000016400000112] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2222 TOTAL_DEVICE_BLKS=7005 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=72
+[  146.453854] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000016400000192] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x2dd92 FIRST_DST_PBA=0x7b00 BLKS=110 LEN=450560 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  146.455757] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000016400000192] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x2dd92 FIRST_DST_PBA=0x7b00 BLKS=110 METHOD=DEVICE_COPY DUR_US=1896
+[  146.455895] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000016400000192] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=110 ALLOCATED=110 COPIED=110 COMMITTED=110 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2151 TOTAL_DEVICE_BLKS=7115 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=73
+[  146.455905] F2FS-fs (sdg): GC_TIMING: duration_us=7460
+[  146.455912] F2FS-fs (sdg): GC_TIMING: duration_us=0
+[  227.441633] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000000900000000] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x2600 FIRST_DST_PBA=0x7b6e BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  227.444527] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000000900000000] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x2600 FIRST_DST_PBA=0x7b6e BLKS=128 METHOD=DEVICE_COPY DUR_US=2876
+[  227.444724] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000000900000000] COPY_OFFLOAD_FLUSH GC_TYPE=BG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=5158 TOTAL_DEVICE_BLKS=7243 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=74
+[  227.444937] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000000900000080] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x2680 FIRST_DST_PBA=0x7bee BLKS=18 LEN=73728 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  227.446830] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000000900000080] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x2680 FIRST_DST_PBA=0x7bee BLKS=18 METHOD=DEVICE_COPY DUR_US=1883
+[  227.446839] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000000900000092] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x2692 FIRST_DST_PBA=0x3eb8 BLKS=38 LEN=155648 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  227.448674] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000000900000092] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x2692 FIRST_DST_PBA=0x3eb8 BLKS=38 METHOD=DEVICE_COPY DUR_US=1827
+[  227.448768] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000000900000080] COPY_OFFLOAD_FLUSH GC_TYPE=BG QUEUED=56 ALLOCATED=56 COPIED=56 COMMITTED=56 REVERTED=0 HOST_FALLBACK=0 CMDS=2 CMDS_FAILED=0 DUR_US=3906 TOTAL_DEVICE_BLKS=7299 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=76
+[  227.448786] F2FS-fs (sdg): GC_TIMING: duration_us=9894
+[  227.975388] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000330000016e] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x7b6e FIRST_DST_PBA=0x3ede BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  227.978475] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000330000016e] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x7b6e FIRST_DST_PBA=0x3ede BLKS=128 METHOD=DEVICE_COPY DUR_US=3071
+[  227.978717] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=000000330000016e] COPY_OFFLOAD_FLUSH GC_TYPE=BG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=3487 TOTAL_DEVICE_BLKS=7427 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=77
+[  227.978775] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=00000033000001ee] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x7bee FIRST_DST_PBA=0x3f5e BLKS=18 LEN=73728 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  227.980679] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=00000033000001ee] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x7bee FIRST_DST_PBA=0x3f5e BLKS=18 METHOD=DEVICE_COPY DUR_US=1896
+[  227.980711] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=00000033000001ee] COPY_OFFLOAD_FLUSH GC_TYPE=BG QUEUED=18 ALLOCATED=18 COPIED=18 COMMITTED=18 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=1958 TOTAL_DEVICE_BLKS=7445 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=78
+[  227.980725] F2FS-fs (sdg): GC_TIMING: duration_us=6171
+[  228.489534] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000001d00000000] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x4e00 FIRST_DST_PBA=0x3f70 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  228.494238] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000001d00000000] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x4e00 FIRST_DST_PBA=0x3f70 BLKS=128 METHOD=DEVICE_COPY DUR_US=4685
+[  228.494443] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000001d00000000] COPY_OFFLOAD_FLUSH GC_TYPE=BG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=5061 TOTAL_DEVICE_BLKS=7573 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=79
+[  228.495045] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000001d00000080] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x4e80 FIRST_DST_PBA=0x3ff0 BLKS=16 LEN=65536 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  228.496904] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000001d00000080] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x4e80 FIRST_DST_PBA=0x3ff0 BLKS=16 METHOD=DEVICE_COPY DUR_US=1848
+[  228.496912] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000001d00000090] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x4e90 FIRST_DST_PBA=0x5eb8 BLKS=40 LEN=163840 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  228.498794] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000001d00000090] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x4e90 FIRST_DST_PBA=0x5eb8 BLKS=40 METHOD=DEVICE_COPY DUR_US=1874
+[  228.498887] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000001d00000080] COPY_OFFLOAD_FLUSH GC_TYPE=BG QUEUED=56 ALLOCATED=56 COPIED=56 COMMITTED=56 REVERTED=0 HOST_FALLBACK=0 CMDS=2 CMDS_FAILED=0 DUR_US=3917 TOTAL_DEVICE_BLKS=7629 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=81
+[  228.498909] F2FS-fs (sdg): GC_TIMING: duration_us=10201
+[  229.001505] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000003100000000] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x7600 FIRST_DST_PBA=0x5ee0 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  229.009379] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000003100000000] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x7600 FIRST_DST_PBA=0x5ee0 BLKS=128 METHOD=DEVICE_COPY DUR_US=7854
+[  229.009595] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000003100000000] COPY_OFFLOAD_FLUSH GC_TYPE=BG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=8242 TOTAL_DEVICE_BLKS=7757 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=82
+[  229.009806] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000003100000080] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x7680 FIRST_DST_PBA=0x5f60 BLKS=56 LEN=229376 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  229.011675] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000003100000080] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x7680 FIRST_DST_PBA=0x5f60 BLKS=56 METHOD=DEVICE_COPY DUR_US=1860
+[  229.011759] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000003100000080] COPY_OFFLOAD_FLUSH GC_TYPE=BG QUEUED=56 ALLOCATED=56 COPIED=56 COMMITTED=56 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2023 TOTAL_DEVICE_BLKS=7813 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=83
+[  229.011782] F2FS-fs (sdg): GC_TIMING: duration_us=11112
+[  229.513526] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000004e00000000] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0xb000 FIRST_DST_PBA=0x5f98 BLKS=104 LEN=425984 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  229.517808] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000004e00000000] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0xb000 FIRST_DST_PBA=0x5f98 BLKS=104 METHOD=DEVICE_COPY DUR_US=4263
+[  229.517819] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000004e00000068] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0xb068 FIRST_DST_PBA=0x110b8 BLKS=24 LEN=98304 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  229.519660] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000004e00000068] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0xb068 FIRST_DST_PBA=0x110b8 BLKS=24 METHOD=DEVICE_COPY DUR_US=1833
+[  229.519855] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000004e00000000] COPY_OFFLOAD_FLUSH GC_TYPE=BG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=2 CMDS_FAILED=0 DUR_US=6493 TOTAL_DEVICE_BLKS=7941 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=85
+[  229.520157] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000004e00000080] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0xb080 FIRST_DST_PBA=0x110d0 BLKS=56 LEN=229376 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  229.522017] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000004e00000080] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0xb080 FIRST_DST_PBA=0x110d0 BLKS=56 METHOD=DEVICE_COPY DUR_US=1852
+[  229.522100] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000004e00000080] COPY_OFFLOAD_FLUSH GC_TYPE=BG QUEUED=56 ALLOCATED=56 COPIED=56 COMMITTED=56 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2009 TOTAL_DEVICE_BLKS=7997 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=86
+[  229.522120] F2FS-fs (sdg): GC_TIMING: duration_us=9435
+[  230.023438] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000b200000000] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x17800 FIRST_DST_PBA=0x11108 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  230.028105] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000b200000000] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x17800 FIRST_DST_PBA=0x11108 BLKS=128 METHOD=DEVICE_COPY DUR_US=4648
+[  230.028309] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=000000b200000000] COPY_OFFLOAD_FLUSH GC_TYPE=BG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=5024 TOTAL_DEVICE_BLKS=8125 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=87
+[  230.028509] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000b200000080] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x17880 FIRST_DST_PBA=0x11188 BLKS=56 LEN=229376 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  230.030384] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000b200000080] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x17880 FIRST_DST_PBA=0x11188 BLKS=56 METHOD=DEVICE_COPY DUR_US=1866
+[  230.030467] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=000000b200000080] COPY_OFFLOAD_FLUSH GC_TYPE=BG QUEUED=56 ALLOCATED=56 COPIED=56 COMMITTED=56 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2025 TOTAL_DEVICE_BLKS=8181 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=88
+[  230.030850] F2FS-fs (sdg): GC_TIMING: duration_us=8238
+[  230.537496] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000f200000000] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x1f800 FIRST_DST_PBA=0x111c0 BLKS=64 LEN=262144 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  230.542284] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000f200000000] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x1f800 FIRST_DST_PBA=0x111c0 BLKS=64 METHOD=DEVICE_COPY DUR_US=4768
+[  230.542299] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000f200000040] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x1f840 FIRST_DST_PBA=0x2c2b8 BLKS=64 LEN=262144 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  230.544163] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000f200000040] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x1f840 FIRST_DST_PBA=0x2c2b8 BLKS=64 METHOD=DEVICE_COPY DUR_US=1855
+[  230.544361] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=000000f200000000] COPY_OFFLOAD_FLUSH GC_TYPE=BG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=2 CMDS_FAILED=0 DUR_US=7029 TOTAL_DEVICE_BLKS=8309 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=90
+[  230.544619] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000f200000080] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x1f880 FIRST_DST_PBA=0x2c2f8 BLKS=56 LEN=229376 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  230.546587] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=000000f200000080] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x1f880 FIRST_DST_PBA=0x2c2f8 BLKS=56 METHOD=DEVICE_COPY DUR_US=1960
+[  230.546683] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=000000f200000080] COPY_OFFLOAD_FLUSH GC_TYPE=BG QUEUED=56 ALLOCATED=56 COPIED=56 COMMITTED=56 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2132 TOTAL_DEVICE_BLKS=8365 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=91
+[  230.546706] F2FS-fs (sdg): GC_TIMING: duration_us=10048
+[  231.049473] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000015f00000000] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x2d200 FIRST_DST_PBA=0x2c330 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  231.054333] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000015f00000000] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x2d200 FIRST_DST_PBA=0x2c330 BLKS=128 METHOD=DEVICE_COPY DUR_US=4840
+[  231.054900] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000015f00000000] COPY_OFFLOAD_FLUSH GC_TYPE=BG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=5579 TOTAL_DEVICE_BLKS=8493 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=92
+[  231.055101] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000015f00000080] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x2d280 FIRST_DST_PBA=0x2c3b0 BLKS=56 LEN=229376 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  231.056979] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000015f00000080] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x2d280 FIRST_DST_PBA=0x2c3b0 BLKS=56 METHOD=DEVICE_COPY DUR_US=1869
+[  231.057062] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000015f00000080] COPY_OFFLOAD_FLUSH GC_TYPE=BG QUEUED=56 ALLOCATED=56 COPIED=56 COMMITTED=56 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2028 TOTAL_DEVICE_BLKS=8549 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=93
+[  231.057083] F2FS-fs (sdg): GC_TIMING: duration_us=8434
+[  231.561280] F2FS-fs (sdg): GC_TIMING: duration_us=599
+[  232.073493] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000000d000000b8] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x2eb8 FIRST_DST_PBA=0x2c3e8 BLKS=24 LEN=98304 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  232.077901] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000000d000000b8] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x2eb8 FIRST_DST_PBA=0x2c3e8 BLKS=24 METHOD=DEVICE_COPY DUR_US=4391
+[  232.077915] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000000d000000d0] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x2ed0 FIRST_DST_PBA=0x4600 BLKS=104 LEN=425984 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  232.079945] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000000d000000d0] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x2ed0 FIRST_DST_PBA=0x4600 BLKS=104 METHOD=DEVICE_COPY DUR_US=2021
+[  232.080120] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000000d000000b8] COPY_OFFLOAD_FLUSH GC_TYPE=BG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=2 CMDS_FAILED=0 DUR_US=6763 TOTAL_DEVICE_BLKS=8677 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=95
+[  232.080472] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000000d00000138] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x2f38 FIRST_DST_PBA=0x4668 BLKS=80 LEN=327680 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  232.082313] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000000d00000138] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x2f38 FIRST_DST_PBA=0x4668 BLKS=80 METHOD=DEVICE_COPY DUR_US=1833
+[  232.082321] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000000d00000188] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x2f88 FIRST_DST_PBA=0x5600 BLKS=48 LEN=196608 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  232.084156] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000000d00000188] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x2f88 FIRST_DST_PBA=0x5600 BLKS=48 METHOD=DEVICE_COPY DUR_US=1829
+[  232.084320] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000000d00000138] COPY_OFFLOAD_FLUSH GC_TYPE=BG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=2 CMDS_FAILED=0 DUR_US=3978 TOTAL_DEVICE_BLKS=8805 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=97
+[  232.084479] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000000d000001b8] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x2fb8 FIRST_DST_PBA=0x5630 BLKS=72 LEN=294912 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  232.086327] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000000d000001b8] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x2fb8 FIRST_DST_PBA=0x5630 BLKS=72 METHOD=DEVICE_COPY DUR_US=1841
+[  232.086420] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000000d000001b8] COPY_OFFLOAD_FLUSH GC_TYPE=BG QUEUED=72 ALLOCATED=72 COPIED=72 COMMITTED=72 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2013 TOTAL_DEVICE_BLKS=8877 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=98
+[  232.086442] F2FS-fs (sdg): GC_TIMING: duration_us=13890
+[  232.617625] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=00000029000000b8] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x66b8 FIRST_DST_PBA=0x5678 BLKS=64 LEN=262144 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  232.622256] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=00000029000000b8] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x66b8 FIRST_DST_PBA=0x5678 BLKS=64 METHOD=DEVICE_COPY DUR_US=4612
+[  232.622271] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=00000029000000f8] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x66f8 FIRST_DST_PBA=0x8000 BLKS=64 LEN=262144 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  232.624132] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=00000029000000f8] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x66f8 FIRST_DST_PBA=0x8000 BLKS=64 METHOD=DEVICE_COPY DUR_US=1852
+[  232.624366] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=00000029000000b8] COPY_OFFLOAD_FLUSH GC_TYPE=BG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=2 CMDS_FAILED=0 DUR_US=6879 TOTAL_DEVICE_BLKS=9005 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=100
+[  232.624650] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000002900000138] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x6738 FIRST_DST_PBA=0x8040 BLKS=120 LEN=491520 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  232.626693] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000002900000138] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x6738 FIRST_DST_PBA=0x8040 BLKS=120 METHOD=DEVICE_COPY DUR_US=2035
+[  232.626707] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=00000029000001b0] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x67b0 FIRST_DST_PBA=0xc000 BLKS=8 LEN=32768 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  232.628597] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=00000029000001b0] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x67b0 FIRST_DST_PBA=0xc000 BLKS=8 METHOD=DEVICE_COPY DUR_US=1882
+[  232.628854] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000002900000138] COPY_OFFLOAD_FLUSH GC_TYPE=BG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=2 CMDS_FAILED=0 DUR_US=4244 TOTAL_DEVICE_BLKS=9133 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=102
+[  232.629014] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=00000029000001b8] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x67b8 FIRST_DST_PBA=0xc008 BLKS=72 LEN=294912 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  232.630870] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=00000029000001b8] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x67b8 FIRST_DST_PBA=0xc008 BLKS=72 METHOD=DEVICE_COPY DUR_US=1849
+[  232.630963] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=00000029000001b8] COPY_OFFLOAD_FLUSH GC_TYPE=BG QUEUED=72 ALLOCATED=72 COPIED=72 COMMITTED=72 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2020 TOTAL_DEVICE_BLKS=9205 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=103
+[  232.630983] F2FS-fs (sdg): GC_TIMING: duration_us=14301
+[  233.161618] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=00000082000000b8] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x118b8 FIRST_DST_PBA=0xc050 BLKS=104 LEN=425984 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  233.165959] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=00000082000000b8] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x118b8 FIRST_DST_PBA=0xc050 BLKS=104 METHOD=DEVICE_COPY DUR_US=4322
+[  233.165970] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000008200000120] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x11920 FIRST_DST_PBA=0x18000 BLKS=24 LEN=98304 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  233.167881] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000008200000120] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x11920 FIRST_DST_PBA=0x18000 BLKS=24 METHOD=DEVICE_COPY DUR_US=1903
+[  233.168126] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=00000082000000b8] COPY_OFFLOAD_FLUSH GC_TYPE=BG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=2 CMDS_FAILED=0 DUR_US=6648 TOTAL_DEVICE_BLKS=9333 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=105
+[  233.168397] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000008200000138] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x11938 FIRST_DST_PBA=0x18018 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  233.170316] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000008200000138] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x11938 FIRST_DST_PBA=0x18018 BLKS=128 METHOD=DEVICE_COPY DUR_US=1911
+[  233.170478] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000008200000138] COPY_OFFLOAD_FLUSH GC_TYPE=BG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2206 TOTAL_DEVICE_BLKS=9461 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=106
+[  233.170772] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=00000082000001b8] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x119b8 FIRST_DST_PBA=0x18098 BLKS=32 LEN=131072 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  233.172662] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=00000082000001b8] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x119b8 FIRST_DST_PBA=0x18098 BLKS=32 METHOD=DEVICE_COPY DUR_US=1876
+[  233.172670] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=00000082000001d8] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x119d8 FIRST_DST_PBA=0x20200 BLKS=40 LEN=163840 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  233.174637] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=00000082000001d8] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x119d8 FIRST_DST_PBA=0x20200 BLKS=40 METHOD=DEVICE_COPY DUR_US=1959
+[  233.174746] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=00000082000001b8] COPY_OFFLOAD_FLUSH GC_TYPE=BG QUEUED=72 ALLOCATED=72 COPIED=72 COMMITTED=72 REVERTED=0 HOST_FALLBACK=0 CMDS=2 CMDS_FAILED=0 DUR_US=4058 TOTAL_DEVICE_BLKS=9533 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=108
+[  233.174770] F2FS-fs (sdg): GC_TIMING: duration_us=14092
+[  233.705630] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000015b000000b8] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x2cab8 FIRST_DST_PBA=0x20228 BLKS=128 LEN=524288 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  233.710022] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000015b000000b8] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x2cab8 FIRST_DST_PBA=0x20228 BLKS=128 METHOD=DEVICE_COPY DUR_US=4373
+[  233.710201] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000015b000000b8] COPY_OFFLOAD_FLUSH GC_TYPE=BG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=4699 TOTAL_DEVICE_BLKS=9661 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=109
+[  233.710519] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000015b00000138] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x2cb38 FIRST_DST_PBA=0x202a8 BLKS=16 LEN=65536 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  233.712367] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000015b00000138] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x2cb38 FIRST_DST_PBA=0x202a8 BLKS=16 METHOD=DEVICE_COPY DUR_US=1839
+[  233.712378] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000015b00000148] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x2cb48 FIRST_DST_PBA=0x2da00 BLKS=112 LEN=458752 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  233.714366] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000015b00000148] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x2cb48 FIRST_DST_PBA=0x2da00 BLKS=112 METHOD=DEVICE_COPY DUR_US=1887
+[  233.714656] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000015b00000138] COPY_OFFLOAD_FLUSH GC_TYPE=BG QUEUED=128 ALLOCATED=128 COPIED=128 COMMITTED=128 REVERTED=0 HOST_FALLBACK=0 CMDS=2 CMDS_FAILED=0 DUR_US=4295 TOTAL_DEVICE_BLKS=9789 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=111
+[  233.714839] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000015b000001b8] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x2cbb8 FIRST_DST_PBA=0x2da70 BLKS=72 LEN=294912 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[  233.716745] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000015b000001b8] COPY_OFFLOAD_SUCCESS FIRST_SRC_PBA=0x2cbb8 FIRST_DST_PBA=0x2da70 BLKS=72 METHOD=DEVICE_COPY DUR_US=1897
+[  233.716840] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000015b000001b8] COPY_OFFLOAD_FLUSH GC_TYPE=BG QUEUED=72 ALLOCATED=72 COPIED=72 COMMITTED=72 REVERTED=0 HOST_FALLBACK=0 CMDS=1 CMDS_FAILED=0 DUR_US=2083 TOTAL_DEVICE_BLKS=9861 TOTAL_FALLBACK_BLKS=0 COPY_OFFLOAD_CALLS=112
