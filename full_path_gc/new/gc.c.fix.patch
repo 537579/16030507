@@ -1,0 +1,38 @@
+--- a/fs/f2fs/gc.c
++++ b/fs/f2fs/gc.c
+@@ -1881,6 +1881,22 @@
+  */
+ #define F2FS_GC_CPOFF_BATCH	128
+ 
++/*
++ * Bring-up knobs.
++ *  F2FS_GC_CPOFF_MULTISEG   0: one source + one destination segment per device
++ *                              command (contiguous blocks only).  Keep 0 until
++ *                              blk-copy.c copy_ctx_count fix is in your image.
++ *  F2FS_GC_CPOFF_MAX_CMD_BLKS  cap on blocks per command, 0 = device limit.
++ *                              Use 1 for the very first boot (same command
++ *                              shape as the old per-block implementation).
++ */
++#ifndef F2FS_GC_CPOFF_MULTISEG
++#define F2FS_GC_CPOFF_MULTISEG		0
++#endif
++#ifndef F2FS_GC_CPOFF_MAX_CMD_BLKS
++#define F2FS_GC_CPOFF_MAX_CMD_BLKS	0
++#endif
++
+ static atomic64_t f2fs_gc_cpoff_blocks = ATOMIC64_INIT(0);	/* by device copy */
+ static atomic64_t f2fs_gc_cpoff_fallback = ATOMIC64_INIT(0);	/* by host copy */
+ 
+@@ -2012,6 +2028,12 @@
+ 						(F2FS_BLKSIZE_BITS - SECTOR_SHIFT);
+ 				max_src = sbdev->bd_queue->limits.max_copy_src_segments;
+ 				max_dst = dbdev->bd_queue->limits.max_copy_dst_segments;
++				if (!F2FS_GC_CPOFF_MULTISEG) {
++					max_src = min(max_src, 1U);
++					max_dst = min(max_dst, 1U);
++				}
++				if (F2FS_GC_CPOFF_MAX_CMD_BLKS && max_blks > F2FS_GC_CPOFF_MAX_CMD_BLKS)
++					max_blks = F2FS_GC_CPOFF_MAX_CMD_BLKS;
+ 				if (!max_blks || !max_src || !max_dst) {
+ 					cpoff_dbg(sbi,
+ 						"[F2FS_GC:%s][FLOW=%016llx] "

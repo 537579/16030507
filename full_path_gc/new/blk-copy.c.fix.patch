@@ -1,0 +1,18 @@
+--- a/block/blk-copy.c
++++ b/block/blk-copy.c
+@@ -309,7 +309,14 @@
+ 			else
+ 				goto enomem;
+ 		}
+-		atomic_inc(&params->copy_ctx_count);
++		/*
++		 * copy_ctx_count is dropped exactly once per ctx, in the BLKDEV_COPY
++		 * completion.  Take the reference once per ctx, not once per source
++		 * bio: with more than one source segment per chunk the count never
++		 * reached zero and end_io() (hence blkdev_copy_sync()) hung forever.
++		 */
++		if (remaining_in == chunk)
++			atomic_inc(&params->copy_ctx_count);
+ 		scoped_guard(spinlock_irqsave, &ctx->lock)
+ 			ctx->bio_count++;
+ 		bytes = min(remaining_in, params->in_segs[*in_idx].len -
