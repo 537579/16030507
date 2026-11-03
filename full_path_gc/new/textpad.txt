@@ -1,0 +1,30 @@
+I’ve rebased gc.c.patch on your gc_1.c, keeping your GC_TIMING change, and it applies cleanly. segment.c.patch and blk-copy.c.patch are unchanged and re-attached. Nothing was compiled, because I don’t have your 6.12.38 tree.
+
+copy_offload_enabled
+
+f2fs_gc_try_copy_offload() is still the helper. It now issues one device command for a whole segment list and returns -EOPNOTSUPP if the source or destination queue has copy_offload_enabled == 0.
+The batch is only created when the main device’s copy_offload_enabled is set and bdev_max_copy_sectors() is non-zero. With the node at 0, GC takes the original host-copy path, with no batching and no debug output, so your offload-off runs stay clean.
+The queue is checked again for every command. If you flip the node mid-GC, the remaining blocks fall back to the host copy.
+
+copy_offload_calls
+
+It is incremented with sbi->copy_offload_calls++ once per device copy command, after the enabled check, as before. It is not atomic, as in your version.
+It now counts commands rather than blocks, so expect it to be much lower than before. The flush summary prints it, alongside file-local totals for blocks moved by device copy and by host fallback.
+
+Debug prints, in the same [F2FS_GC:func][FLOW=segno:off] format as before:
+
+Per command:
+COPY_OFFLOAD_ATTEMPT
+COPY_OFFLOAD_SUCCESS (with DUR_US) or COPY_OFFLOAD_FAILED (with ERR and FALLBACK=CPU_COPY)
+COPY_OFFLOAD_DISABLED
+COPY_OFFLOAD_UNSUPPORTED
+Per flush: COPY_OFFLOAD_FLUSH shows the GC type, the counts queued, allocated, copied, committed, reverted and fallen back, and the command and failed-command counts.
+Per block: only with -DF2FS_GC_CPOFF_DEBUG=2. These are the queue, skip, done and revert lines, using names like BLOCK_INVALID_SKIP and MIGRATION_SKIP_PINNED.
+Silencing: -DF2FS_GC_CPOFF_DEBUG=0. The default is level 1.
+Note: the per-command DUR_US should show where the 687 ms per sync GC call was going.
+
+Assumptions
+
+I assumed q->copy_offload_enabled can be tested as a boolean; it is only printed as an int.
+The segment.c patch assumes your segment.c is unchanged. If it has changed, please re-send it.
+With the blk-copy.c fix, a failed command now returns a real error, so you may see COPY_OFFLOAD_FAILED lines that were previously reported as successes.
