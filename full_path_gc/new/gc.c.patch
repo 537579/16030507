@@ -1,0 +1,903 @@
+--- a/fs/f2fs/gc.c
++++ b/fs/f2fs/gc.c
+@@ -16,6 +16,7 @@
+ #include <linux/random.h>
+ #include <linux/sched/mm.h>
+ #include <linux/blkdev.h>
++#include <linux/blk-copy.h>
+ #include <linux/timekeeping.h>
+ 
+ #include "f2fs.h"
+@@ -37,95 +38,129 @@
+ 	((((u64)(segno)) << 32) | (u64)(off))
+ 
+ /*
+- * Copy one physical F2FS block through the block-layer copy-offload API.
+- *
+- * blk_copy_in_seg / blk_copy_out_seg terminology used in the task maps to:
+- *
+- *   in_seg  -> params.in_segs[0]
+- *   out_seg -> params.out_segs[0]
++ * GC copy-offload debug trace.  Same "[F2FS_GC:<func>][FLOW=<segno:off>]"
++ * format as the rest of this file.
++ *   level 1: one line per device copy command and one summary per flush
++ *   level 2: additionally one line per block / skip reason
++ * Build with -DF2FS_GC_CPOFF_DEBUG=0 to silence, =2 for per-block lines.
++ */
++#ifndef F2FS_GC_CPOFF_DEBUG
++#define F2FS_GC_CPOFF_DEBUG	1
++#endif
++#define cpoff_dbg(sbi, fmt, ...)					\
++	do {								\
++		if (F2FS_GC_CPOFF_DEBUG >= 1)				\
++			f2fs_info(sbi, fmt, ##__VA_ARGS__);		\
++	} while (0)
++#define cpoff_dbg2(sbi, fmt, ...)					\
++	do {								\
++		if (F2FS_GC_CPOFF_DEBUG >= 2)				\
++			f2fs_info(sbi, fmt, ##__VA_ARGS__);		\
++	} while (0)
++
++/*
++ * Issue ONE device copy command for already built segment lists
++ * (in_segs[nin] -> out_segs[nout], @nblks 4K blocks in total).
+  *
+- * The block-layer API accepts byte offsets, while f2fs_target_device()
+- * returns device-relative sectors.
++ * The device copy is performed only if the block queue's
++ * copy_offload_enabled node is set; otherwise -EOPNOTSUPP is returned and
++ * the caller uses the host copy path.  Every command that passes that gate
++ * is counted in sbi->copy_offload_calls (the copy_offload_calls sysfs node).
++ * Synchronous: returns after the copy completed.
+  */
+ static int f2fs_gc_try_copy_offload(struct f2fs_sb_info *sbi,
+-				    block_t old_blkaddr,
+-				    block_t new_blkaddr,
++				    struct block_device *src_bdev,
++				    struct block_device *dst_bdev,
++				    struct blk_copy_seg *in_segs,
++				    unsigned int nin,
++				    struct blk_copy_seg *out_segs,
++				    unsigned int nout,
++				    unsigned int nblks,
++				    block_t first_src, block_t first_dst,
+ 				    u64 flow_id)
+ {
+-	struct blk_copy_seg blk_copy_in_seg;
+-	struct blk_copy_seg blk_copy_out_seg;
++	struct request_queue *sq = bdev_get_queue(src_bdev);
++	struct request_queue *dq = bdev_get_queue(dst_bdev);
+ 	struct blk_copy_params params = { };
+-	struct block_device *src_bdev;
+-	struct block_device *dst_bdev;
+-	sector_t src_sector;
+-	sector_t dst_sector;
++	u64 t0, dur_us;
+ 	int ret;
+ 
+-	struct request_queue *q = bdev_get_queue(sbi->sb->s_bdev);
+-
+-	/* 1. Evaluate block layer configuration setting node state */
+-	if (q && q->copy_offload_enabled == 0) {
+-		return -EOPNOTSUPP; 
++	/* 1. Evaluate the block layer copy_offload_enabled node state */
++	if ((sq && sq->copy_offload_enabled == 0) ||
++	    (dq && dq->copy_offload_enabled == 0)) {
++		cpoff_dbg(sbi,
++			"[F2FS_GC:%s][FLOW=%016llx] "
++			"COPY_OFFLOAD_DISABLED "
++			"SRC_ENABLED=%d DST_ENABLED=%d", __func__,
++			(unsigned long long)flow_id,
++			sq ? (int)sq->copy_offload_enabled : -1,
++			dq ? (int)dq->copy_offload_enabled : -1);
++		return -EOPNOTSUPP;
+ 	}
+ 
+-	/* 2. Increment the performance telemetry field counter securely */
++	/* 2. Telemetry: reported by the copy_offload_calls sysfs node */
+ 	sbi->copy_offload_calls++;
+ 
+-	src_bdev = f2fs_target_device(sbi, old_blkaddr, &src_sector);
+-	dst_bdev = f2fs_target_device(sbi, new_blkaddr, &dst_sector);
+-
+-	blk_copy_in_seg.pos =
+-		(loff_t)src_sector << SECTOR_SHIFT;
+-
+-	blk_copy_in_seg.len =
+-		F2FS_BLKSIZE;
+-
+-	blk_copy_out_seg.pos =
+-		(loff_t)dst_sector << SECTOR_SHIFT;
+-
+-	blk_copy_out_seg.len =
+-		F2FS_BLKSIZE;
+-
+-	params.in_bdev = src_bdev;
+-	params.in_segs = &blk_copy_in_seg;
+-	params.in_nseg = 1;
+-
+-	params.out_bdev = dst_bdev;
+-	params.out_segs = &blk_copy_out_seg;
+-	params.out_nseg = 1;
+-
+-	/*
+-	 * Synchronous operation.
+-	 */
+-	params.end_io = NULL;
+-	params.private = NULL;
+-
+ 	if (!bdev_max_copy_sectors(src_bdev) ||
+ 	    !bdev_max_copy_sectors(dst_bdev)) {
+-
+-		f2fs_info(sbi,
++		cpoff_dbg(sbi,
+ 			"[F2FS_GC:%s][FLOW=%016llx] "
+ 			"COPY_OFFLOAD_UNSUPPORTED "
+ 			"SRC_MAX_COPY=%u DST_MAX_COPY=%u", __func__,
+ 			(unsigned long long)flow_id,
+ 			bdev_max_copy_sectors(src_bdev),
+ 			bdev_max_copy_sectors(dst_bdev));
+-
+ 		return -EOPNOTSUPP;
+ 	}
+ 
+-#if 1
+-	f2fs_info(sbi,
++	params.in_bdev = src_bdev;
++	params.in_segs = in_segs;
++	params.in_nseg = nin;
++	params.out_bdev = dst_bdev;
++	params.out_segs = out_segs;
++	params.out_nseg = nout;
++	params.end_io = NULL;		/* synchronous */
++	params.private = NULL;
++
++	cpoff_dbg(sbi,
+ 		"[F2FS_GC:%s][FLOW=%016llx] "
+ 		"COPY_OFFLOAD_ATTEMPT "
+-		"SRC_PBA=0x%llx DST_PBA=0x%llx "
+-		"LEN=%lu", __func__,
++		"FIRST_SRC_PBA=0x%llx FIRST_DST_PBA=0x%llx "
++		"BLKS=%u LEN=%llu SRC_SEGS=%u DST_SEGS=%u "
++		"SRC_MAX_COPY=%u DST_MAX_COPY=%u", __func__,
+ 		(unsigned long long)flow_id,
+-		(unsigned long long)old_blkaddr,
+-		(unsigned long long)new_blkaddr,
+-		F2FS_BLKSIZE);
+-#endif
++		(unsigned long long)first_src,
++		(unsigned long long)first_dst,
++		nblks, (unsigned long long)nblks * F2FS_BLKSIZE,
++		nin, nout,
++		bdev_max_copy_sectors(src_bdev),
++		bdev_max_copy_sectors(dst_bdev));
++
++	t0 = ktime_get_ns();
+ 	ret = blkdev_copy_offload(&params);
++	dur_us = (ktime_get_ns() - t0) / 1000;
++
++	if (!ret)
++		cpoff_dbg(sbi,
++			"[F2FS_GC:%s][FLOW=%016llx] "
++			"COPY_OFFLOAD_SUCCESS "
++			"FIRST_SRC_PBA=0x%llx FIRST_DST_PBA=0x%llx "
++			"BLKS=%u METHOD=DEVICE_COPY DUR_US=%llu", __func__,
++			(unsigned long long)flow_id,
++			(unsigned long long)first_src,
++			(unsigned long long)first_dst,
++			nblks, (unsigned long long)dur_us);
++	else
++		cpoff_dbg(sbi,
++			"[F2FS_GC:%s][FLOW=%016llx] "
++			"COPY_OFFLOAD_FAILED "
++			"FIRST_SRC_PBA=0x%llx FIRST_DST_PBA=0x%llx "
++			"BLKS=%u ERR=%d DUR_US=%llu "
++			"FALLBACK=CPU_COPY", __func__,
++			(unsigned long long)flow_id,
++			(unsigned long long)first_src,
++			(unsigned long long)first_dst,
++			nblks, ret, (unsigned long long)dur_us);
+ 
+ 	return ret;
+ }
+@@ -1426,7 +1461,6 @@
+ 	block_t newaddr;
+ 	int err = 0;
+ 	bool lfs_mode = f2fs_lfs_mode(fio.sbi);
+-	bool copy_offloaded = false;
+ 	u64 flow_id;
+ 
+ 	int type = fio.sbi->am.atgc_enabled &&
+@@ -1647,104 +1681,6 @@
+ 	fio.new_blkaddr = newaddr;
+ 
+ 	/*
+-	 * ============================================================
+-	 * STEP 3: TRY NATIVE COPY OFFLOAD
+-	 * ============================================================
+-	 *
+-	 * The helper should:
+-	 *
+-	 *   - resolve F2FS PBA → block device + sector
+-	 *   - construct blk_copy_seg input/output
+-	 *   - check max_copy_sectors
+-	 *   - call blkdev_copy_offload()
+-	 *
+-	 * Success:
+-	 *      destination block already contains source data
+-	 *
+-	 * Failure:
+-	 *      continue existing CPU copy path
+-	 */
+-	err = f2fs_gc_try_copy_offload(fio.sbi,
+-				fio.old_blkaddr,
+-				newaddr,
+-				flow_id);
+-
+-	if (!err) {
+-
+-		copy_offloaded = true;
+-
+-		f2fs_info(fio.sbi,
+-			"[F2FS_GC:%s][FLOW=%016llx] "
+-			"COPY_OFFLOAD_SUCCESS "
+-			"SRC_PBA=0x%llx "
+-			"DST_PBA=0x%llx "
+-			"METHOD=DEVICE_COPY", __func__,
+-			(unsigned long long)flow_id,
+-			(unsigned long long)fio.old_blkaddr,
+-			(unsigned long long)newaddr);
+-
+-	} else {
+-
+-		f2fs_info(fio.sbi,
+-			"[F2FS_GC:%s][FLOW=%016llx] "
+-			"COPY_OFFLOAD_FAILED "
+-			"SRC_PBA=0x%llx "
+-			"DST_PBA=0x%llx "
+-			"ERR=%d "
+-			"FALLBACK=CPU_COPY", __func__,
+-			(unsigned long long)flow_id,
+-			(unsigned long long)fio.old_blkaddr,
+-			(unsigned long long)newaddr,
+-			err);
+-
+-		/*
+-		 * Do not propagate copy-offload errors.
+-		 *
+-		 * Existing CPU migration remains the fallback.
+-		 */
+-		err = 0;
+-	}
+-
+-	/*
+-	 * STEP 4A: NATIVE COPY SUCCESS
+-	 */
+-	if (copy_offloaded) {
+-
+-		/*
+-		 * Source data has already been copied to newaddr.
+-		 *
+-		 * No need to:
+-		 *
+-		 *   - allocate efolio
+-		 *   - memcpy()
+-		 *   - submit REQ_OP_WRITE
+-		 */
+-		f2fs_folio_put(mfolio, true);
+-
+-		/*
+-		 * Maintain F2FS cache coherency.
+-		 */
+-		f2fs_invalidate_internal_cache(fio.sbi,
+-						fio.old_blkaddr,
+-						1);
+-
+-		/*
+-		 * Commit new physical mapping.
+-		 */
+-		f2fs_update_data_blkaddr(&dn,
+-					 newaddr);
+-
+-		set_inode_flag(inode,
+-			       FI_APPEND_WRITE);
+-
+-		f2fs_update_iostat(fio.sbi,
+-					NULL,
+-					FS_GC_DATA_IO,
+-					F2FS_BLKSIZE);
+-		goto put_out;
+-	}
+-
+-	/*
+ 	 * STEP 4B: ORIGINAL CPU COPY FALLBACK
+ 	 * Create destination folio.
+ 	 */
+@@ -1925,15 +1861,525 @@
+ }
+ 
+ /*
++ * ---------------------------------------------------------------------------
++ * Batched GC copy offload.
++ *
++ * Every data-GC path (BG GC thread, FG GC, F2FS_IOC_GARBAGE_COLLECT[_RANGE])
++ * goes through gc_data_segment(), so the hook lives there and not in the
++ * write path.  Valid blocks of one victim segment are queued, then moved with
++ * as few device copy commands as possible: one command can gather many
++ * scattered source runs into contiguous destination runs (multi-segment
++ * blk_copy_params).  Node blocks are deliberately not offloaded: their footer
++ * (cp_ver / next_blkaddr) is regenerated at write time.
++ *
++ * Offload is used only while the block queue's copy_offload_enabled node is
++ * set (checked when the batch is created and again for every command in
++ * f2fs_gc_try_copy_offload()).  sbi->copy_offload_calls counts device copy
++ * commands.  The two counters below are debug totals printed in the flush
++ * summary line.
++ * ---------------------------------------------------------------------------
++ */
++#define F2FS_GC_CPOFF_BATCH	128
++
++static atomic64_t f2fs_gc_cpoff_blocks = ATOMIC64_INIT(0);	/* by device copy */
++static atomic64_t f2fs_gc_cpoff_fallback = ATOMIC64_INIT(0);	/* by host copy */
++
++enum {
++	CPOFF_LEGACY,		/* caller must use the legacy move path */
++	CPOFF_HANDLED,		/* queued, or nothing to do (counted as moved) */
++	CPOFF_SKIPPED,		/* inode lock busy, same as legacy "continue" */
++};
++
++enum {
++	CPOFF_NONE,
++	CPOFF_ALLOCATED,	/* destination allocated, copy pending */
++	CPOFF_COPIED,		/* device copy done, mapping not switched yet */
++	CPOFF_DONE,		/* mapping switched */
++	CPOFF_REVERTED,		/* allocation undone, needs host copy */
++};
++
++struct f2fs_gc_cpoff_ent {
++	struct inode *inode;
++	block_t bidx;
++	block_t src;
++	block_t dst;
++	unsigned int segno;
++	int off;
++	u8 state;
++	struct f2fs_summary sum;
++};
++
++struct f2fs_gc_cpoff_batch {
++	struct f2fs_sb_info *sbi;
++	int gc_type;
++	int submitted;
++	unsigned int nr;
++	unsigned int nr_locked;
++	unsigned int cmds;		/* device commands issued in this flush */
++	unsigned int cmds_failed;
++	struct inode *locked[F2FS_GC_CPOFF_BATCH];
++	struct f2fs_gc_cpoff_ent e[F2FS_GC_CPOFF_BATCH];
++	struct blk_copy_seg in_segs[F2FS_GC_CPOFF_BATCH];
++	struct blk_copy_seg out_segs[F2FS_GC_CPOFF_BATCH];
++};
++
++static struct f2fs_gc_cpoff_batch *f2fs_gc_cpoff_alloc(struct f2fs_sb_info *sbi,
++						       int gc_type)
++{
++	struct f2fs_gc_cpoff_batch *b;
++	struct request_queue *q;
++	struct block_device *bdev;
++	sector_t sector;
++
++	if (f2fs_sb_has_blkzoned(sbi) || f2fs_readonly(sbi->sb))
++		return NULL;
++
++	/* copy_offload_enabled == 0 (or no device support) => legacy path */
++	bdev = f2fs_target_device(sbi, MAIN_BLKADDR(sbi), &sector);
++	if (!bdev)
++		return NULL;
++	q = bdev_get_queue(bdev);
++	if (!q || !q->copy_offload_enabled || !bdev_max_copy_sectors(bdev))
++		return NULL;
++
++	b = kvzalloc(sizeof(*b), GFP_NOFS);
++	if (b) {
++		b->sbi = sbi;
++		b->gc_type = gc_type;
++	}
++	return b;
++}
++
++static bool cpoff_inode_locked(struct f2fs_gc_cpoff_batch *b,
++			       struct inode *inode)
++{
++	unsigned int i;
++
++	for (i = 0; i < b->nr_locked; i++)
++		if (b->locked[i] == inode)
++			return true;
++	return false;
++}
++
++static void cpoff_unlock_inode(struct inode *inode)
++{
++	struct f2fs_inode_info *fi = F2FS_I(inode);
++
++	f2fs_up_write(&fi->i_gc_rwsem[READ]);
++	f2fs_up_write(&fi->i_gc_rwsem[WRITE]);
++}
++
++/*
++ * Issue device copy commands for all CPOFF_ALLOCATED entries.  Entries whose
++ * command succeeds become CPOFF_COPIED; anything else stays CPOFF_ALLOCATED
++ * and is rolled back to the host path by the caller.  One command covers many
++ * entries: contiguous blocks are merged into one segment, and several
++ * segments are sent together up to the device's segment/size limits.
++ */
++static void f2fs_gc_cpoff_run(struct f2fs_gc_cpoff_batch *b)
++{
++	struct f2fs_sb_info *sbi = b->sbi;
++	unsigned int i = 0;
++
++	while (i < b->nr) {
++		struct block_device *sbdev = NULL, *dbdev = NULL;
++		unsigned int max_blks = 0, max_src = 0, max_dst = 0;
++		unsigned int nsrc = 0, ndst = 0, cnt = 0;
++		block_t last_src = 0, last_dst = 0;
++		block_t first_src = 0, first_dst = 0;
++		u64 flow_id = 0;
++		unsigned int j, k;
++		int err;
++
++		for (j = i; j < b->nr; j++) {
++			struct f2fs_gc_cpoff_ent *e = &b->e[j];
++			struct block_device *sb_, *db_;
++			sector_t ss, ds;
++			bool new_src, new_dst;
++
++			if (e->state != CPOFF_ALLOCATED)
++				continue;
++
++			sb_ = f2fs_target_device(sbi, e->src, &ss);
++			db_ = f2fs_target_device(sbi, e->dst, &ds);
++			if (!sb_ || !db_)
++				return;
++			if (!sbdev) {
++				sbdev = sb_;
++				dbdev = db_;
++				max_blks = min(bdev_max_copy_sectors(sbdev),
++					       bdev_max_copy_sectors(dbdev)) >>
++						(F2FS_BLKSIZE_BITS - SECTOR_SHIFT);
++				max_src = sbdev->bd_queue->limits.max_copy_src_segments;
++				max_dst = dbdev->bd_queue->limits.max_copy_dst_segments;
++				if (!max_blks || !max_src || !max_dst) {
++					cpoff_dbg(sbi,
++						"[F2FS_GC:%s][FLOW=%016llx] "
++						"COPY_OFFLOAD_UNSUPPORTED "
++						"MAX_BLKS=%u MAX_SRC_SEGS=%u MAX_DST_SEGS=%u",
++						__func__,
++						(unsigned long long)F2FS_GC_FLOW_ID(e->segno, e->off),
++						max_blks, max_src, max_dst);
++					return;	/* rest falls back to host copy */
++				}
++				first_src = e->src;
++				first_dst = e->dst;
++				flow_id = F2FS_GC_FLOW_ID(e->segno, e->off);
++			} else if (sb_ != sbdev || db_ != dbdev) {
++				break;
++			}
++
++			new_src = !nsrc || e->src != last_src + 1;
++			new_dst = !ndst || e->dst != last_dst + 1;
++			if (cnt >= max_blks || nsrc + new_src > max_src ||
++			    ndst + new_dst > max_dst)
++				break;
++
++			if (new_src) {
++				b->in_segs[nsrc].pos = (loff_t)ss << SECTOR_SHIFT;
++				b->in_segs[nsrc].len = F2FS_BLKSIZE;
++				nsrc++;
++			} else {
++				b->in_segs[nsrc - 1].len += F2FS_BLKSIZE;
++			}
++			if (new_dst) {
++				b->out_segs[ndst].pos = (loff_t)ds << SECTOR_SHIFT;
++				b->out_segs[ndst].len = F2FS_BLKSIZE;
++				ndst++;
++			} else {
++				b->out_segs[ndst - 1].len += F2FS_BLKSIZE;
++			}
++			last_src = e->src;
++			last_dst = e->dst;
++			cnt++;
++		}
++
++		if (!cnt)
++			return;
++
++		b->cmds++;
++		err = f2fs_gc_try_copy_offload(sbi, sbdev, dbdev,
++					       b->in_segs, nsrc,
++					       b->out_segs, ndst, cnt,
++					       first_src, first_dst, flow_id);
++		if (err) {
++			b->cmds_failed++;
++			if (err == -EOPNOTSUPP)
++				return;		/* disabled/unsupported: stop trying */
++		} else {
++			atomic64_add(cnt, &f2fs_gc_cpoff_blocks);
++			for (k = i; k < j; k++)
++				if (b->e[k].state == CPOFF_ALLOCATED)
++					b->e[k].state = CPOFF_COPIED;
++		}
++		i = j;
++	}
++}
++
++/*
++ * Commit the queued blocks, then drop all inode locks:
++ *   1. under the dnode, re-check the block still maps to the source and
++ *      allocate the destination;
++ *   2. device copy;
++ *   3. switch the mapping (copied) or undo the allocation (not copied);
++ *   4. undone blocks go through the legacy host copy path.
++ * f2fs_lock_op() keeps a checkpoint from landing between "SIT: dst valid,
++ * src invalid" and "dnode points at dst".  All waits on writeback were done at
++ * queue time; nothing in the locked region waits on writeback.
++ */
++static void f2fs_gc_cpoff_flush(struct f2fs_gc_cpoff_batch *b)
++{
++	struct f2fs_sb_info *sbi = b->sbi;
++	int type = (sbi->am.atgc_enabled && b->gc_type == BG_GC &&
++		    sbi->gc_mode != GC_URGENT_HIGH) ?
++			CURSEG_ALL_DATA_ATGC : CURSEG_COLD_DATA;
++	unsigned int i, queued = b->nr, allocated = 0, copied = 0;
++	unsigned int committed = 0, reverted = 0, fallback = 0;
++	u64 flow_id = 0, t0 = 0;
++
++	if (!b->nr)
++		goto unlock;
++
++	flow_id = F2FS_GC_FLOW_ID(b->e[0].segno, b->e[0].off);
++	t0 = ktime_get_ns();
++	b->cmds = 0;
++	b->cmds_failed = 0;
++
++	f2fs_lock_op(sbi);
++
++	for (i = 0; i < b->nr; i++) {
++		struct f2fs_gc_cpoff_ent *e = &b->e[i];
++		struct dnode_of_data dn;
++
++		set_new_dnode(&dn, e->inode, NULL, NULL, 0);
++		if (f2fs_get_dnode_of_data(&dn, e->bidx, LOOKUP_NODE)) {
++			cpoff_dbg2(sbi,
++				"[F2FS_GC:%s][FLOW=%016llx] "
++				"BLOCK_MAPPING_LOOKUP_FAILED SRC_PBA=0x%llx",
++				__func__,
++				(unsigned long long)F2FS_GC_FLOW_ID(e->segno, e->off),
++				(unsigned long long)e->src);
++			continue;
++		}
++		if (dn.data_blkaddr == e->src &&
++		    !f2fs_allocate_data_block(sbi, NULL, e->src, &e->dst,
++					      &e->sum, type, NULL)) {
++			e->state = CPOFF_ALLOCATED;
++			allocated++;
++		} else {
++			cpoff_dbg2(sbi,
++				"[F2FS_GC:%s][FLOW=%016llx] "
++				"BLOCK_REMAPPED_SKIP SRC_PBA=0x%llx CUR_PBA=0x%llx",
++				__func__,
++				(unsigned long long)F2FS_GC_FLOW_ID(e->segno, e->off),
++				(unsigned long long)e->src,
++				(unsigned long long)dn.data_blkaddr);
++		}
++		f2fs_put_dnode(&dn);
++	}
++
++	f2fs_gc_cpoff_run(b);
++
++	for (i = 0; i < b->nr; i++) {
++		struct f2fs_gc_cpoff_ent *e = &b->e[i];
++		struct dnode_of_data dn;
++		u64 fid = F2FS_GC_FLOW_ID(e->segno, e->off);
++
++		if (e->state != CPOFF_ALLOCATED && e->state != CPOFF_COPIED)
++			continue;
++
++		if (e->state == CPOFF_COPIED) {
++			copied++;
++			set_new_dnode(&dn, e->inode, NULL, NULL, 0);
++			if (!f2fs_get_dnode_of_data(&dn, e->bidx, LOOKUP_NODE)) {
++				f2fs_invalidate_internal_cache(sbi, e->src, 1);
++				f2fs_invalidate_internal_cache(sbi, e->dst, 1);
++				f2fs_update_data_blkaddr(&dn, e->dst);
++				set_inode_flag(e->inode, FI_APPEND_WRITE);
++				f2fs_put_dnode(&dn);
++				f2fs_update_device_state(sbi, e->inode->i_ino,
++							 e->dst, 1);
++				f2fs_update_iostat(sbi, NULL, FS_GC_DATA_IO,
++						   F2FS_BLKSIZE);
++				e->state = CPOFF_DONE;
++				committed++;
++				cpoff_dbg2(sbi,
++					"[F2FS_GC:%s][FLOW=%016llx] "
++					"COPY_OFFLOAD_BLOCK_DONE "
++					"SRC_PBA=0x%llx DST_PBA=0x%llx "
++					"METHOD=DEVICE_COPY", __func__,
++					(unsigned long long)fid,
++					(unsigned long long)e->src,
++					(unsigned long long)e->dst);
++				continue;
++			}
++		}
++		/* not copied (or mapping vanished): undo the allocation */
++		f2fs_do_replace_block(sbi, &e->sum, e->dst, e->src,
++				      true, true, true);
++		e->state = CPOFF_REVERTED;
++		reverted++;
++		cpoff_dbg2(sbi,
++			"[F2FS_GC:%s][FLOW=%016llx] "
++			"COPY_OFFLOAD_BLOCK_REVERT "
++			"SRC_PBA=0x%llx DST_PBA=0x%llx FALLBACK=CPU_COPY",
++			__func__, (unsigned long long)fid,
++			(unsigned long long)e->src,
++			(unsigned long long)e->dst);
++	}
++
++	f2fs_unlock_op(sbi);
++
++	/* Host copy for the rest; inode locks are still held as legacy expects. */
++	for (i = 0; i < b->nr; i++) {
++		struct f2fs_gc_cpoff_ent *e = &b->e[i];
++		int err;
++
++		if (e->state != CPOFF_REVERTED)
++			continue;
++		fallback++;
++		atomic64_inc(&f2fs_gc_cpoff_fallback);
++		if (f2fs_meta_inode_gc_required(e->inode))
++			err = move_data_block(e->inode, e->bidx, b->gc_type,
++					      e->segno, e->off);
++		else
++			err = move_data_page(e->inode, e->bidx, b->gc_type,
++					     e->segno, e->off);
++		if (!err && (b->gc_type == FG_GC ||
++			     f2fs_meta_inode_gc_required(e->inode)))
++			b->submitted++;
++	}
++
++	cpoff_dbg(sbi,
++		"[F2FS_GC:%s][FLOW=%016llx] "
++		"COPY_OFFLOAD_FLUSH GC_TYPE=%s QUEUED=%u ALLOCATED=%u "
++		"COPIED=%u COMMITTED=%u REVERTED=%u HOST_FALLBACK=%u "
++		"CMDS=%u CMDS_FAILED=%u DUR_US=%llu "
++		"TOTAL_DEVICE_BLKS=%lld TOTAL_FALLBACK_BLKS=%lld "
++		"COPY_OFFLOAD_CALLS=%llu", __func__,
++		(unsigned long long)flow_id,
++		b->gc_type == BG_GC ? "BG" : "FG",
++		queued, allocated, copied, committed, reverted, fallback,
++		b->cmds, b->cmds_failed,
++		(unsigned long long)((ktime_get_ns() - t0) / 1000),
++		(long long)atomic64_read(&f2fs_gc_cpoff_blocks),
++		(long long)atomic64_read(&f2fs_gc_cpoff_fallback),
++		(unsigned long long)sbi->copy_offload_calls);
++
++unlock:
++	while (b->nr_locked)
++		cpoff_unlock_inode(b->locked[--b->nr_locked]);
++	memset(b->e, 0, sizeof(b->e[0]) * b->nr);
++	b->nr = 0;
++}
++
++/*
++ * Queue one victim block.  Mirrors the checks of move_data_block() but never
++ * reads the source and never allocates: both happen in the flush.
++ */
++static int f2fs_gc_cpoff_queue(struct f2fs_gc_cpoff_batch *b,
++			       struct inode *inode, block_t bidx,
++			       unsigned int segno, int off)
++{
++	struct f2fs_sb_info *sbi = b->sbi;
++	struct f2fs_inode_info *fi = F2FS_I(inode);
++	struct f2fs_gc_cpoff_ent *e;
++	struct dnode_of_data dn;
++	struct node_info ni;
++	struct folio *folio;
++	u64 flow_id = F2FS_GC_FLOW_ID(segno, off);
++	bool newly = false, queued = false;
++	int ret = CPOFF_HANDLED;
++	int err;
++
++	if (!S_ISREG(inode->i_mode) || f2fs_is_cow_file(inode))
++		return CPOFF_LEGACY;
++
++	if (b->nr >= F2FS_GC_CPOFF_BATCH)
++		f2fs_gc_cpoff_flush(b);
++
++	if (!cpoff_inode_locked(b, inode)) {
++		/* same lock order and contract as the legacy phase-4 code */
++		if (!f2fs_down_write_trylock(&fi->i_gc_rwsem[WRITE])) {
++			sbi->skipped_gc_rwsem++;
++			cpoff_dbg2(sbi,
++				"[F2FS_GC:%s][FLOW=%016llx] "
++				"MIGRATION_SKIP_LOCK_BUSY ino=%lu", __func__,
++				(unsigned long long)flow_id, inode->i_ino);
++			return CPOFF_SKIPPED;
++		}
++		if (!f2fs_down_write_trylock(&fi->i_gc_rwsem[READ])) {
++			sbi->skipped_gc_rwsem++;
++			f2fs_up_write(&fi->i_gc_rwsem[WRITE]);
++			cpoff_dbg2(sbi,
++				"[F2FS_GC:%s][FLOW=%016llx] "
++				"MIGRATION_SKIP_LOCK_BUSY ino=%lu", __func__,
++				(unsigned long long)flow_id, inode->i_ino);
++			return CPOFF_SKIPPED;
++		}
++		inode_dio_wait(inode);
++		b->locked[b->nr_locked++] = inode;
++		newly = true;
++	}
++
++	/* "do not read out": only used to wait for writeback of this offset */
++	folio = f2fs_grab_cache_folio(inode->i_mapping, bidx, false);
++	if (IS_ERR(folio)) {
++		ret = CPOFF_LEGACY;
++		goto unlock;
++	}
++	if (!check_valid_map(sbi, segno, off)) {
++		cpoff_dbg2(sbi,
++			"[F2FS_GC:%s][FLOW=%016llx] "
++			"BLOCK_INVALID_SKIP victim_seg=%u off=%d", __func__,
++			(unsigned long long)flow_id, segno, off);
++		goto put_folio;
++	}
++	err = f2fs_gc_pinned_control(inode, b->gc_type, segno);
++	if (err) {
++		cpoff_dbg2(sbi,
++			"[F2FS_GC:%s][FLOW=%016llx] "
++			"MIGRATION_SKIP_PINNED err=%d", __func__,
++			(unsigned long long)flow_id, err);
++		goto put_folio;
++	}
++
++	set_new_dnode(&dn, inode, NULL, NULL, 0);
++	if (f2fs_get_dnode_of_data(&dn, bidx, LOOKUP_NODE))
++		goto put_folio;
++	if (dn.data_blkaddr == NULL_ADDR) {
++		cpoff_dbg2(sbi,
++			"[F2FS_GC:%s][FLOW=%016llx] "
++			"BLOCK_MAPPING_INVALID", __func__,
++			(unsigned long long)flow_id);
++		f2fs_put_dnode(&dn);
++		goto put_folio;
++	}
++	if (!__is_valid_data_blkaddr(dn.data_blkaddr)) {  /* NEW/COMPRESS_ADDR */
++		cpoff_dbg2(sbi,
++			"[F2FS_GC:%s][FLOW=%016llx] "
++			"COPY_OFFLOAD_INELIGIBLE blkaddr=0x%llx FALLBACK=CPU_COPY",
++			__func__, (unsigned long long)flow_id,
++			(unsigned long long)dn.data_blkaddr);
++		f2fs_put_dnode(&dn);
++		ret = CPOFF_LEGACY;
++		goto put_folio;
++	}
++
++	/* the source block must be fully on media before the device copies it */
++	f2fs_folio_wait_writeback(folio, DATA, true, true);
++	f2fs_wait_on_block_writeback(inode, dn.data_blkaddr);
++
++	if (f2fs_get_node_info(sbi, dn.nid, &ni, false)) {
++		f2fs_put_dnode(&dn);
++		goto put_folio;
++	}
++
++	e = &b->e[b->nr++];
++	e->inode = inode;
++	e->bidx = bidx;
++	e->src = dn.data_blkaddr;
++	e->dst = NULL_ADDR;
++	e->segno = segno;
++	e->off = off;
++	e->state = CPOFF_NONE;
++	set_summary(&e->sum, dn.nid, dn.ofs_in_node, ni.version);
++	f2fs_put_dnode(&dn);
++	queued = true;
++	cpoff_dbg2(sbi,
++		"[F2FS_GC:%s][FLOW=%016llx] "
++		"COPY_OFFLOAD_QUEUED ino=%lu SRC_PBA=0x%llx", __func__,
++		(unsigned long long)flow_id, inode->i_ino,
++		(unsigned long long)e->src);
++
++put_folio:
++	f2fs_folio_put(folio, true);
++unlock:
++	if (ret == CPOFF_LEGACY) {
++		/* legacy path takes the inode locks itself */
++		if (newly) {
++			b->nr_locked--;
++			cpoff_unlock_inode(inode);
++		} else {
++			f2fs_gc_cpoff_flush(b);
++		}
++	} else if (newly && !queued) {
++		b->nr_locked--;
++		cpoff_unlock_inode(inode);
++	}
++	return ret;
++}
++
++/*
+  * This function tries to get parent node of victim data block, and identifies
+  * data block validity. If the block is valid, copy that with cold status and
+  * modify parent node.
+  * If the parent node is not valid or the data block address is different,
+  * the victim data block is ignored.
+  */
+-static int gc_data_segment(struct f2fs_sb_info *sbi, struct f2fs_summary *sum,
++static int __gc_data_segment(struct f2fs_sb_info *sbi, struct f2fs_summary *sum,
+ 		struct gc_inode_list *gc_list, unsigned int segno, int gc_type,
+-		bool force_migrate)
++		bool force_migrate, struct f2fs_gc_cpoff_batch *cpb)
+ {
+ 	struct super_block *sb = sbi->sb;
+ 	struct f2fs_summary *entry;
+@@ -2020,6 +2466,15 @@
+ 				return submitted;
+ 			}
+ 
++			/*
++			 * The offload path copies on the device: reading the source
++			 * into the page/meta cache here would be a wasted host read.
++			 */
++			if (cpb && S_ISREG(inode->i_mode) && !f2fs_is_cow_file(inode)) {
++				add_gc_inode(gc_list, inode);
++				continue;
++			}
++
+ 			if (!f2fs_down_write_trylock(
+ 				&F2FS_I(inode)->i_gc_rwsem[WRITE])) {
+ 				iput(inode);
+@@ -2062,6 +2517,18 @@
+ 			bool locked = false;
+ 			int err;
+ 
++			if (cpb) {
++				int q = f2fs_gc_cpoff_queue(cpb, inode,
++						f2fs_start_bidx_of_node(nofs, inode) +
++						ofs_in_node, segno, off);
++
++				if (q != CPOFF_LEGACY) {
++					if (q == CPOFF_HANDLED)
++						stat_inc_data_blk_count(sbi, 1, gc_type);
++					continue;
++				}
++			}
++
+ 			if (S_ISREG(inode->i_mode)) {
+ 				if (!f2fs_down_write_trylock(&fi->i_gc_rwsem[WRITE])) {
+ 					sbi->skipped_gc_rwsem++;
+@@ -2107,6 +2574,24 @@
+ 	return submitted;
+ }
+ 
++static int gc_data_segment(struct f2fs_sb_info *sbi, struct f2fs_summary *sum,
++		struct gc_inode_list *gc_list, unsigned int segno, int gc_type,
++		bool force_migrate)
++{
++	struct f2fs_gc_cpoff_batch *cpb = f2fs_gc_cpoff_alloc(sbi, gc_type);
++	int submitted;
++
++	submitted = __gc_data_segment(sbi, sum, gc_list, segno, gc_type,
++				      force_migrate, cpb);
++	/* single exit point: also covers every early return in the body */
++	if (cpb) {
++		f2fs_gc_cpoff_flush(cpb);
++		submitted += cpb->submitted;
++		kvfree(cpb);
++	}
++	return submitted;
++}
++
+ static int __get_victim(struct f2fs_sb_info *sbi, unsigned int *victim,
+ 			int gc_type, bool one_time)
+ {
