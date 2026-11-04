@@ -1,1 +1,1418 @@
+PS D:\anees\tasks\1634_f2fs_gc_test_suite\f2fs_gc_suite_v01> .\run_on_device.ps1
+>>> Initializing ADB connection...
+>>> Preparing directories on device...
+>>> Pushing files and test suite to device...
+.\lib\: 1 file pushed. 1.0 MB/s (9400 bytes in 0.009s)
+.\tests\: 2 files pushed. 1.4 MB/s (13184 bytes in 0.009s)
+.\run_all.sh: 1 file pushed. 0.4 MB/s (1732 bytes in 0.004s)
+.\gcload: 1 file pushed. 79.6 MB/s (670944 bytes in 0.008s)
+.\ufs_cmd_log: 1 file pushed. 10.7 MB/s (51448 bytes in 0.005s)
+.\required_bins\: 4 files pushed. 189.4 MB/s (14971408 bytes in 0.075s)
+>>> Adjusting file permissions on device...
+>>> Setting up file system on /mnt/test...
 
+    F2FS-tools: mkfs.f2fs Ver: 1.15.0 (2022-05-26)
+
+Info: Disable heap-based policy
+Info: Debug level = 0
+Info: Trim is enabled
+Info: [/dev/block/sdg] Disk Model: THGJFMT2E46BATVB
+Info: Segments per section = 1
+Info: Sections per zone = 1
+Info: sector size = 4096
+Info: total sectors = 262144 (1024 MB)
+Info: zone aligned segment0 blkaddr: 512
+Info: format version with
+  "Linux version 6.12.38-android16-5-maybe-dirty-4k (kleaf@build-host) (Android (14043575, +pgo, +bolt, +lto, +mlgo, based on r536225) clang version 19.0.1 (https://android.googlesource.com/toolchain/llvm-project b3a530ec6537146650e42be89f1089e9a3588460),"
+Info: [/dev/block/sdg] Discarding device
+Info: This device doesn't support BLKSECDISCARD
+Info: Discarded 1024 MB
+Info: Overprovision ratio = 6.360%
+Info: Overprovision segments = 68 (GC reserved = 39)
+Info: format successful
+>>> Launching test suite on target device...
+>>> Routing benchmark adjustments to active sysfs target node: sdg
+################ MODE=offload_on ################
+[15:14:31] copy offload 'on': wrote 1 to /sys/block/sdg/queue/copy_offload
+[15:14:31] === fg_append_full [offload_on] ===
+files=102
+used_pct=95.03
+enospc=0
+elapsed_ms=815
+mb_s=1001.4
+deleted=8
+remaining=94
+[15:16:33] Clearing UFS Ramlog buffer: fg_append_full
+LOG CLEAR
+[15:16:33] Starting UFS Ramlog capture in background
+[15:16:34]   append_mb_s = 712.1 MB/s
+[15:16:34]   append_elapsed_ms = 161 ms
+[15:16:34]   append_enospc = 1 flag
+[15:16:34]   append_write_p50_us = 83 us
+[15:16:34]   append_write_p99_us = 176 us
+[15:16:34]   append_write_p999_us = 299 us
+[15:16:34]   append_write_max_us = 299 us
+[15:16:34] Stopping UFS Ramlog capture
+[15:16:34] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/fg_append_full
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/fg_append_full.rl5 (len 5864)
+[15:16:34] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/fg_append_full
+[15:16:34]   [Copy Offload Status] F2FS GC Copy Offload called 0 times during workload execution
+[15:16:34]   expected fg_gc_calls > 0 but got 0
+[15:16:34]   duration_ms = 122800 ms
+[15:16:34]   gc_calls = 0 count
+[15:16:34]   gc_bg = 0 count
+[15:16:34]   moved = 0 count
+[15:16:34]   moved_bg = 0 count
+[15:16:34]   cp_calls = 3 count
+[15:16:34]   cp_bg = 2 count
+[15:16:35]   co_calls = 0 count
+[15:16:35]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 0 times
+[15:16:35]   gc_fg = 0 count
+[15:16:35]   status = INCONCLUSIVE -
+[15:16:35] === fg_append_full: INCONCLUSIVE ===
+[15:16:35] === fg_random_overwrite [offload_on] ===
+files=102
+used_pct=95.03
+enospc=0
+elapsed_ms=791
+mb_s=1031.2
+deleted=0
+remaining=102
+[15:18:36] Clearing UFS Ramlog buffer: fg_random_overwrite
+LOG CLEAR
+[15:18:36] Starting UFS Ramlog capture in background
+[15:23:37]   churn_iops = 969466 ops/s
+[15:23:37]   churn_mb_s = 3787.0 MB/s
+[15:23:37]   churn_enospc = 0 flag
+[15:23:38]   churn_write_p50_us = 0 us
+[15:23:38]   churn_write_p99_us = 1 us
+[15:23:38]   churn_write_p999_us = 4 us
+[15:23:38]   churn_write_max_us = 19531 us
+[15:23:38] Stopping UFS Ramlog capture
+[15:23:38] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/fg_random_overwrite
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/fg_random_overwrite.rl5 (len 369700)
+[15:23:38] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/fg_random_overwrite
+[15:23:38]   [Copy Offload Status] F2FS GC Copy Offload called 0 times during workload execution
+[15:23:38]   expected fg_gc_calls > 0 but got 0
+[15:23:38]   duration_ms = 422830 ms
+[15:23:38]   gc_calls = 0 count
+[15:23:38]   gc_bg = 0 count
+[15:23:38]   moved = 0 count
+[15:23:38]   moved_bg = 0 count
+[15:23:38]   cp_calls = 2 count
+[15:23:38]   cp_bg = 1 count
+[15:23:38]   co_calls = 0 count
+[15:23:38]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 0 times
+[15:23:38]   gc_fg = 0 count
+[15:23:38]   status = INCONCLUSIVE -
+[15:23:38] === fg_random_overwrite: INCONCLUSIVE ===
+[15:23:38] === fg_fsync_pressure [offload_on] ===
+files=102
+used_pct=95.03
+enospc=0
+elapsed_ms=892
+mb_s=914.5
+deleted=8
+remaining=94
+[15:25:40] Clearing UFS Ramlog buffer: fg_fsync_pressure
+LOG CLEAR
+[15:25:40] Starting UFS Ramlog capture in background
+[15:25:42]   fsyncappend_mb_s = 93.9 MB/s
+[15:25:42]   fsyncappend_elapsed_ms = 1221 ms
+[15:25:42]   fsyncappend_enospc = 1 flag
+[15:25:42]   fsyncappend_write_p50_us = 3 us
+[15:25:42]   fsyncappend_write_p99_us = 17 us
+[15:25:42]   fsyncappend_write_p999_us = 31 us
+[15:25:42]   fsyncappend_write_max_us = 73 us
+[15:25:42] Stopping UFS Ramlog capture
+[15:25:42] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/fg_fsync_pressure
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/fg_fsync_pressure.rl5 (len 931544)
+[15:25:42] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/fg_fsync_pressure
+[15:25:43]   [Copy Offload Status] F2FS GC Copy Offload called 0 times during workload execution
+[15:25:43]   duration_ms = 123940 ms
+[15:25:43]   gc_calls = 1 count
+[15:25:43]   gc_bg = 0 count
+[15:25:43]   moved = 1 count
+[15:25:43]   moved_bg = 0 count
+[15:25:43]   cp_calls = 3 count
+[15:25:43]   cp_bg = 1 count
+[15:25:43]   co_calls = 0 count
+[15:25:43]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 0 times
+[15:25:43]   gc_fg = 1 count
+[15:25:43]   status = PASS -
+[15:25:43] === fg_fsync_pressure: PASS ===
+[15:25:43] === fg_parallel_writers [offload_on] ===
+files=96
+used_pct=90.33
+enospc=0
+elapsed_ms=750
+mb_s=1023.9
+deleted=11
+remaining=85
+[15:26:45] Clearing UFS Ramlog buffer: fg_parallel_writers
+LOG CLEAR
+[15:26:45] Starting UFS Ramlog capture in background
+[15:26:46] Stopping UFS Ramlog capture
+[15:26:46] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/fg_parallel_writers
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/fg_parallel_writers.rl5 (len 8400)
+[15:26:46] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/fg_parallel_writers
+[15:26:46]   par_aggregate_mb_s = 1645.3 MB/s
+[15:26:46]   par_worst_write_p99_us = 798 us
+[15:26:46]   par_worst_write_max_us = 1070 us
+[15:26:46]   par_enospc_writers = 0 count
+[15:26:46]   [Copy Offload Status] F2FS GC Copy Offload called 0 times during workload execution
+[15:26:46]   expected fg_gc_calls > 0 but got 0
+[15:26:46]   duration_ms = 62760 ms
+[15:26:46]   gc_calls = 0 count
+[15:26:46]   gc_bg = 0 count
+[15:26:46]   moved = 0 count
+[15:26:46]   moved_bg = 0 count
+[15:26:46]   cp_calls = 3 count
+[15:26:46]   cp_bg = 1 count
+[15:26:46]   co_calls = 0 count
+[15:26:46]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 0 times
+[15:26:47]   gc_fg = 0 count
+[15:26:47]   status = INCONCLUSIVE -
+[15:26:47] === fg_parallel_writers: INCONCLUSIVE ===
+[15:26:47] === fg_ioctl_sync_gc [offload_on] ===
+files=90
+used_pct=85.62
+enospc=0
+elapsed_ms=720
+mb_s=999.4
+deleted=15
+remaining=75
+[15:27:48] Clearing UFS Ramlog buffer: fg_ioctl_sync_gc
+LOG CLEAR
+[15:27:48] Starting UFS Ramlog capture in background
+[15:27:49]   ioctl_calls = 29 count
+[15:27:49]   ioctl_ok = 28 count
+[15:27:49]   ioctl_busy = 0 count
+[15:27:49]   ioctl_last_errno = 61 errno
+[15:27:49]   ioctl_elapsed_ms = 145 ms
+[15:27:49]   ioctl_gc_call_p50_us = 5329 us
+[15:27:49]   ioctl_gc_call_p99_us = 11669 us
+[15:27:49]   ioctl_gc_call_max_us = 11669 us
+[15:27:49] Stopping UFS Ramlog capture
+[15:27:49] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/fg_ioctl_sync_gc
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/fg_ioctl_sync_gc.rl5 (len 2520)
+[15:27:49] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/fg_ioctl_sync_gc
+[15:27:50]   [Copy Offload Status] F2FS GC Copy Offload called 27 times during workload execution
+[15:27:50]   duration_ms = 62810 ms
+[15:27:50]   gc_calls = 29 count
+[15:27:50]   gc_bg = 0 count
+[15:27:50]   moved = 7179 count
+[15:27:50]   moved_bg = 0 count
+[15:27:50]   cp_calls = 2 count
+[15:27:50]   cp_bg = 1 count
+[15:27:50]   co_calls = 27 count
+[15:27:50]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 27 times
+[15:27:50]   gc_fg = 29 count
+[15:27:50]   status = PASS -
+[15:27:50] === fg_ioctl_sync_gc: PASS ===
+[15:27:50] === fg_ioctl_gc_range [offload_on] ===
+files=90
+used_pct=85.62
+enospc=0
+elapsed_ms=805
+mb_s=894.3
+deleted=15
+remaining=75
+[15:28:52] Clearing UFS Ramlog buffer: fg_ioctl_gc_range
+LOG CLEAR
+[15:28:52] Starting UFS Ramlog capture in background
+[15:28:53]   range_ret = -1 rc
+[15:28:53]   range_errno = 22 errno
+[15:28:53]   range_elapsed_ms = 0.0 ms
+[15:28:53] Stopping UFS Ramlog capture
+[15:28:53] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/fg_ioctl_gc_range
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/fg_ioctl_gc_range.rl5 (len 462)
+[15:28:53] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/fg_ioctl_gc_range
+[15:28:53]   [Copy Offload Status] F2FS GC Copy Offload called 0 times during workload execution
+[15:28:53]   duration_ms = 62660 ms
+[15:28:53]   gc_calls = 0 count
+[15:28:53]   gc_bg = 0 count
+[15:28:53]   moved = 0 count
+[15:28:53]   moved_bg = 0 count
+[15:28:53]   cp_calls = 2 count
+[15:28:53]   cp_bg = 1 count
+[15:28:53]   co_calls = 0 count
+[15:28:54]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 0 times
+[15:28:54]   gc_fg = 0 count
+[15:28:54]   status = FAIL -
+[15:28:54] === fg_ioctl_gc_range: FAIL ===
+[15:28:54] === fg_enospc_recovery [offload_on] ===
+[15:28:55]   fill_files = 109 count
+[15:28:55]   fill_used_pct = 100.00 %
+[15:28:55]   fill_enospc = 1 flag
+[15:28:55]   fill_mb_s = 892.0 MB/s
+[15:29:25] Clearing UFS Ramlog buffer: fg_enospc_recovery
+LOG CLEAR
+[15:29:25] Starting UFS Ramlog capture in background
+[15:29:27]   recover_mb_s = 851.1 MB/s
+[15:29:27]   recover_elapsed_ms = 117 ms
+[15:29:27]   recover_enospc = 0 flag
+[15:29:27]   recover_write_p50_us = 75 us
+[15:29:27]   recover_write_p99_us = 212 us
+[15:29:27]   recover_write_p999_us = 327 us
+[15:29:27]   recover_write_max_us = 327 us
+[15:29:27] Stopping UFS Ramlog capture
+[15:29:27] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/fg_enospc_recovery
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/fg_enospc_recovery.rl5 (len 5402)
+[15:29:27] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/fg_enospc_recovery
+[15:29:27]   [Copy Offload Status] F2FS GC Copy Offload called 0 times during workload execution
+[15:29:27]   expected fg_gc_calls > 0 but got 0
+[15:29:27]   duration_ms = 33050 ms
+[15:29:27]   gc_calls = 0 count
+[15:29:27]   gc_bg = 0 count
+[15:29:27]   moved = 0 count
+[15:29:27]   moved_bg = 0 count
+[15:29:27]   cp_calls = 2 count
+[15:29:27]   cp_bg = 1 count
+[15:29:27]   co_calls = 0 count
+[15:29:27]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 0 times
+[15:29:27]   gc_fg = 0 count
+[15:29:27]   status = INCONCLUSIVE -
+[15:29:28] === fg_enospc_recovery: INCONCLUSIVE ===
+[15:29:28] copy offload 'on': wrote 1 to /sys/block/sdg/queue/copy_offload
+[15:29:28] === bg_fsync_workload [offload_on] ===
+files=102
+used_pct=95.03
+enospc=0
+elapsed_ms=778
+mb_s=1048.5
+deleted=16
+remaining=86
+[15:30:41]   base_iops = 8436 ops/s
+[15:30:41]   base_mb_s = 33.0 MB/s
+[15:30:41]   base_write_p50_us = 1 us
+[15:30:41]   base_write_p99_us = 5 us
+[15:30:41]   base_write_p999_us = 7 us
+[15:30:41]   base_write_max_us = 33 us
+[15:30:41]   base_fsync_p99_us = 168 us
+[15:30:41]   base_fsync_max_us = 3859 us
+[15:30:51]   bgon_iops = 8557 ops/s
+[15:30:51]   bgon_mb_s = 33.4 MB/s
+[15:30:51]   bgon_write_p50_us = 1 us
+[15:30:51]   bgon_write_p99_us = 5 us
+[15:30:51]   bgon_write_p999_us = 6 us
+[15:30:51]   bgon_write_max_us = 30 us
+[15:30:51]   bgon_fsync_p99_us = 164 us
+[15:30:51]   bgon_fsync_max_us = 4065 us
+[15:30:51]   iops_drop_pct = -1.4 %
+[15:30:51]   expected bg_gc_calls > 0 but got 0
+[15:30:52]   duration_ms = 83700 ms
+[15:30:52]   gc_calls = 0 count
+[15:30:52]   gc_bg = 0 count
+[15:30:52]   moved = 0 count
+[15:30:52]   moved_bg = 0 count
+[15:30:52]   cp_calls = 2 count
+[15:30:52]   cp_bg = 1 count
+[15:30:52]   co_calls = 0 count
+[15:30:52]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 0 times
+[15:30:52]   gc_fg = 0 count
+[15:30:52]   status = INCONCLUSIVE -
+[15:30:52] === bg_fsync_workload: INCONCLUSIVE ===
+[15:30:52] === bg_default_idle [offload_on] ===
+files=102
+used_pct=95.03
+enospc=0
+elapsed_ms=850
+mb_s=960.2
+deleted=16
+remaining=86
+[15:31:56] Clearing UFS Ramlog buffer: bg_default_idle
+LOG CLEAR
+[15:31:56] Starting UFS Ramlog capture in background
+[15:36:57]   idle_elapsed_ms = 300130 ms
+[15:36:57]   idle_bg_gc_calls = 2 count
+[15:36:57]   idle_bg_blocks_moved = 364 blocks
+[15:36:57]   idle_copy_offload_calls = 2 count
+[15:36:57]   [Copy Offload Status] Background thread invoked Copy Offload 2 times
+[15:36:57]   idle_bg_moved_mb_s = 0.00 MB/s
+[15:36:57]   idle_gc_thread_cpu_ms = 0 ms
+[15:36:57] Stopping UFS Ramlog capture
+[15:36:57] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/bg_default_idle
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/bg_default_idle.rl5 (len 13364)
+[15:36:57] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/bg_default_idle
+[15:36:57]   duration_ms = 365000 ms
+[15:36:57]   gc_calls = 2 count
+[15:36:57]   gc_bg = 2 count
+[15:36:57]   moved = 364 count
+[15:36:57]   moved_bg = 364 count
+[15:36:57]   cp_calls = 4 count
+[15:36:58]   cp_bg = 3 count
+[15:36:58]   co_calls = 2 count
+[15:36:58]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 2 times
+[15:36:58]   gc_fg = 0 count
+[15:36:58]   status = PASS -
+[15:36:58] === bg_default_idle: PASS ===
+[15:36:58] === bg_urgent_high [offload_on] ===
+files=102
+used_pct=95.03
+enospc=0
+elapsed_ms=806
+mb_s=1011.9
+deleted=16
+remaining=86
+[15:38:01] Clearing UFS Ramlog buffer: bg_urgent_high
+LOG CLEAR
+[15:38:01] Starting UFS Ramlog capture in background
+[15:40:03]   urgent_high_elapsed_ms = 120130 ms
+[15:40:03]   urgent_high_bg_gc_calls = 17 count
+[15:40:03]   urgent_high_bg_blocks_moved = 3717 blocks
+[15:40:03]   urgent_high_copy_offload_calls = 15 count
+[15:40:03]   [Copy Offload Status] Background thread invoked Copy Offload 15 times
+[15:40:03]   urgent_high_bg_moved_mb_s = 0.12 MB/s
+[15:40:03]   urgent_high_gc_thread_cpu_ms = 0 ms
+[15:40:03] Stopping UFS Ramlog capture
+[15:40:03] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/bg_urgent_high
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/bg_urgent_high.rl5 (len 19404)
+[15:40:03] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/bg_urgent_high
+[15:40:03]   duration_ms = 184900 ms
+[15:40:03]   gc_calls = 18 count
+[15:40:03]   gc_bg = 18 count
+[15:40:03]   moved = 3899 count
+[15:40:03]   moved_bg = 3899 count
+[15:40:03]   cp_calls = 3 count
+[15:40:03]   cp_bg = 2 count
+[15:40:03]   co_calls = 16 count
+[15:40:03]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 16 times
+[15:40:03]   gc_fg = 0 count
+[15:40:03]   status = PASS -
+[15:40:04] === bg_urgent_high: PASS ===
+[15:40:04] === bg_urgent_low [offload_on] ===
+files=102
+used_pct=95.03
+enospc=0
+elapsed_ms=769
+mb_s=1060.4
+deleted=16
+remaining=86
+[15:41:07] Clearing UFS Ramlog buffer: bg_urgent_low
+LOG CLEAR
+[15:41:07] Starting UFS Ramlog capture in background
+[15:43:08]   urgent_low_elapsed_ms = 120130 ms
+[15:43:08]   urgent_low_bg_gc_calls = 0 count
+[15:43:08]   urgent_low_bg_blocks_moved = 0 blocks
+[15:43:08]   urgent_low_copy_offload_calls = 0 count
+[15:43:08]   [Copy Offload Status] Background thread invoked Copy Offload 0 times
+[15:43:08]   urgent_low_bg_moved_mb_s = 0.00 MB/s
+[15:43:08]   urgent_low_gc_thread_cpu_ms = 0 ms
+[15:43:08] Stopping UFS Ramlog capture
+[15:43:08] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/bg_urgent_low
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/bg_urgent_low.rl5 (len 8056)
+[15:43:08] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/bg_urgent_low
+[15:43:09]   expected bg_gc_calls > 0 but got 0
+[15:43:09]   duration_ms = 184900 ms
+[15:43:09]   gc_calls = 0 count
+[15:43:09]   gc_bg = 0 count
+[15:43:09]   moved = 0 count
+[15:43:09]   moved_bg = 0 count
+[15:43:09]   cp_calls = 2 count
+[15:43:09]   cp_bg = 1 count
+[15:43:09]   co_calls = 0 count
+[15:43:09]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 0 times
+[15:43:09]   gc_fg = 0 count
+[15:43:09]   status = INCONCLUSIVE -
+[15:43:09] === bg_urgent_low: INCONCLUSIVE ===
+[15:43:09] === bg_idle_cost_benefit [offload_on] ===
+files=102
+used_pct=95.03
+enospc=0
+elapsed_ms=778
+mb_s=1049.4
+deleted=16
+remaining=86
+[15:44:13] Clearing UFS Ramlog buffer: bg_idle_cost_benefit
+LOG CLEAR
+[15:44:13] Starting UFS Ramlog capture in background
+[15:46:14]   costben_elapsed_ms = 120120 ms
+[15:46:14]   costben_bg_gc_calls = 0 count
+[15:46:14]   costben_bg_blocks_moved = 0 blocks
+[15:46:14]   costben_copy_offload_calls = 0 count
+[15:46:14]   [Copy Offload Status] Background thread invoked Copy Offload 0 times
+[15:46:14]   costben_bg_moved_mb_s = 0.00 MB/s
+[15:46:14]   costben_gc_thread_cpu_ms = 0 ms
+[15:46:14] Stopping UFS Ramlog capture
+[15:46:14] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/bg_idle_cost_benefit
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/bg_idle_cost_benefit.rl5 (len 9684)
+[15:46:14] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/bg_idle_cost_benefit
+[15:46:14]   expected bg_gc_calls > 0 but got 0
+[15:46:14]   duration_ms = 184890 ms
+[15:46:14]   gc_calls = 0 count
+[15:46:14]   gc_bg = 0 count
+[15:46:14]   moved = 0 count
+[15:46:14]   moved_bg = 0 count
+[15:46:14]   cp_calls = 2 count
+[15:46:15]   cp_bg = 1 count
+[15:46:15]   co_calls = 0 count
+[15:46:15]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 0 times
+[15:46:15]   gc_fg = 0 count
+[15:46:15]   status = INCONCLUSIVE -
+[15:46:15] === bg_idle_cost_benefit: INCONCLUSIVE ===
+[15:46:15] === bg_idle_greedy [offload_on] ===
+files=102
+used_pct=95.03
+enospc=0
+elapsed_ms=853
+mb_s=956.8
+deleted=16
+remaining=86
+[15:47:18] Clearing UFS Ramlog buffer: bg_idle_greedy
+LOG CLEAR
+[15:47:18] Starting UFS Ramlog capture in background
+[15:49:20]   greedy_elapsed_ms = 120110 ms
+[15:49:20]   greedy_bg_gc_calls = 91 count
+[15:49:20]   greedy_bg_blocks_moved = 7856 blocks
+[15:49:20]   greedy_copy_offload_calls = 30 count
+[15:49:20]   [Copy Offload Status] Background thread invoked Copy Offload 30 times
+[15:49:20]   greedy_bg_moved_mb_s = 0.26 MB/s
+[15:49:20]   greedy_gc_thread_cpu_ms = 0 ms
+[15:49:20] Stopping UFS Ramlog capture
+[15:49:20] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/bg_idle_greedy
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/bg_idle_greedy.rl5 (len 27180)
+[15:49:20] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/bg_idle_greedy
+[15:49:20]   duration_ms = 184940 ms
+[15:49:20]   gc_calls = 92 count
+[15:49:20]   gc_bg = 92 count
+[15:49:20]   moved = 7856 count
+[15:49:20]   moved_bg = 7856 count
+[15:49:20]   cp_calls = 4 count
+[15:49:20]   cp_bg = 3 count
+[15:49:20]   co_calls = 30 count
+[15:49:20]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 30 times
+[15:49:20]   gc_fg = 0 count
+[15:49:20]   status = PASS -
+[15:49:21] === bg_idle_greedy: PASS ===
+[15:49:21] === bg_with_foreground_io [offload_on] ===
+files=102
+used_pct=95.03
+enospc=0
+elapsed_ms=742
+mb_s=1100.2
+deleted=16
+remaining=86
+[15:51:24]   base_iops = 1022768 ops/s
+[15:51:24]   base_mb_s = 3995.2 MB/s
+[15:51:24]   base_write_p50_us = 0 us
+[15:51:24]   base_write_p99_us = 1 us
+[15:51:24]   base_write_p999_us = 4 us
+[15:51:24]   base_write_max_us = 27357 us
+[15:51:24] Clearing UFS Ramlog buffer: bg_with_foreground_io
+LOG CLEAR
+[15:51:24] Starting UFS Ramlog capture in background
+[15:52:25]   bgon_iops = 1017598 ops/s
+[15:52:25]   bgon_mb_s = 3975.0 MB/s
+[15:52:26]   bgon_write_p50_us = 0 us
+[15:52:26]   bgon_write_p99_us = 1 us
+[15:52:26]   bgon_write_p999_us = 4 us
+[15:52:26]   bgon_write_max_us = 22980 us
+[15:52:26]   iops_drop_pct = 0.5 %
+[15:52:26] Stopping UFS Ramlog capture
+[15:52:26] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/bg_with_foreground_io
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/bg_with_foreground_io.rl5 (len 78856)
+[15:52:26] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/bg_with_foreground_io
+[15:52:26]   expected bg_gc_calls > 0 but got 0
+[15:52:26]   duration_ms = 185120 ms
+[15:52:26]   gc_calls = 0 count
+[15:52:26]   gc_bg = 0 count
+[15:52:26]   moved = 0 count
+[15:52:26]   moved_bg = 0 count
+[15:52:26]   cp_calls = 2 count
+[15:52:26]   cp_bg = 1 count
+[15:52:26]   co_calls = 0 count
+[15:52:26]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 0 times
+[15:52:26]   gc_fg = 0 count
+[15:52:26]   status = INCONCLUSIVE -
+[15:52:26] === bg_with_foreground_io: INCONCLUSIVE ===
+[15:52:26] === bg_reclaim_after_delete [offload_on] ===
+[15:52:58] Clearing UFS Ramlog buffer: bg_reclaim_after_delete
+LOG CLEAR
+[15:52:58] Starting UFS Ramlog capture in background
+[15:53:19]   time_to_stable_s = 20120 ms
+[15:53:19]   free_seg_gain = 0 segs
+[15:53:19]   bg_blocks_moved = 0 blocks
+[15:53:19] Stopping UFS Ramlog capture
+[15:53:19] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/bg_reclaim_after_delete
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/bg_reclaim_after_delete.rl5 (len 7732)
+[15:53:19] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/bg_reclaim_after_delete
+[15:53:19]   expected bg_gc_calls > 0 but got 0
+[15:53:19]   duration_ms = 52720 ms
+[15:53:19]   gc_calls = 0 count
+[15:53:19]   gc_bg = 0 count
+[15:53:19]   moved = 0 count
+[15:53:20]   moved_bg = 0 count
+[15:53:20]   cp_calls = 2 count
+[15:53:20]   cp_bg = 1 count
+[15:53:20]   co_calls = 0 count
+[15:53:20]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 0 times
+[15:53:20]   gc_fg = 0 count
+[15:53:20]   status = INCONCLUSIVE -
+[15:53:20] === bg_reclaim_after_delete: INCONCLUSIVE ===
+[15:53:20] === bg_waf_soak [offload_on] ===
+files=102
+used_pct=95.03
+enospc=0
+elapsed_ms=709
+mb_s=1150.9
+deleted=13
+remaining=89
+[15:53:21] Clearing UFS Ramlog buffer: bg_waf_soak
+LOG CLEAR
+[15:53:21] Starting UFS Ramlog capture in background
+[15:58:22]   soak_iops = 970171 ops/s
+[15:58:22]   soak_mb_s = 3789.7 MB/s
+[15:58:22]   soak_write_p50_us = 0 us
+[15:58:22]   soak_write_p99_us = 1 us
+[15:58:22]   soak_write_p999_us = 3 us
+[15:58:22]   soak_write_max_us = 24196 us
+[15:58:22]   gc_blocks_moved_total = 0 blocks
+[15:58:22]   gc_blocks_moved_bg = 0 blocks
+[15:58:22]   gc_waf = 1.000 ratio
+[15:58:22] Stopping UFS Ramlog capture
+[15:58:22] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/bg_waf_soak
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/bg_waf_soak.rl5 (len 333308)
+[15:58:22] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/bg_waf_soak
+[15:58:23]   expected bg_gc_calls > 0 but got 0
+[15:58:23]   duration_ms = 302490 ms
+[15:58:23]   gc_calls = 0 count
+[15:58:23]   gc_bg = 0 count
+[15:58:23]   moved = 0 count
+[15:58:23]   moved_bg = 0 count
+[15:58:23]   cp_calls = 2 count
+[15:58:23]   cp_bg = 1 count
+[15:58:23]   co_calls = 0 count
+[15:58:23]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 0 times
+[15:58:23]   gc_fg = 0 count
+[15:58:23]   status = INCONCLUSIVE -
+[15:58:23] === bg_waf_soak: INCONCLUSIVE ===
+[15:58:23] === bg_idle_maint [offload_on] ===
+files=102
+used_pct=95.03
+enospc=0
+elapsed_ms=845
+mb_s=966.2
+deleted=16
+remaining=86
+[15:59:27] Clearing UFS Ramlog buffer: bg_idle_maint
+LOG CLEAR
+[15:59:27] Starting UFS Ramlog capture in background
+[16:04:28]   maint_elapsed_ms = 300130 ms
+[16:04:28]   maint_bg_gc_calls = 4 count
+[16:04:28]   maint_bg_blocks_moved = 574 blocks
+[16:04:28]   maint_copy_offload_calls = 3 count
+[16:04:28]   [Copy Offload Status] Background thread invoked Copy Offload 3 times
+[16:04:28]   maint_bg_moved_mb_s = 0.01 MB/s
+[16:04:28]   maint_gc_thread_cpu_ms = 0 ms
+[16:04:28] Stopping UFS Ramlog capture
+[16:04:28] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/bg_idle_maint
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/bg_idle_maint.rl5 (len 19646)
+[16:04:28] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_on/ramlogs/bg_idle_maint
+[16:04:29]   duration_ms = 365370 ms
+[16:04:29]   gc_calls = 4 count
+[16:04:29]   gc_bg = 4 count
+[16:04:29]   moved = 574 count
+[16:04:29]   moved_bg = 574 count
+[16:04:29]   cp_calls = 6 count
+[16:04:29]   cp_bg = 5 count
+[16:04:29]   co_calls = 3 count
+[16:04:29]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 3 times
+[16:04:29]   gc_fg = 0 count
+[16:04:29]   status = PASS -
+[16:04:29] === bg_idle_maint: PASS ===
+################ MODE=offload_off ################
+[16:04:30] copy offload 'off': wrote 0 to /sys/block/sdg/queue/copy_offload
+[16:04:30] === fg_append_full [offload_off] ===
+files=102
+used_pct=95.03
+enospc=0
+elapsed_ms=816
+mb_s=999.8
+deleted=8
+remaining=94
+[16:06:31] Clearing UFS Ramlog buffer: fg_append_full
+LOG CLEAR
+[16:06:31] Starting UFS Ramlog capture in background
+[16:06:33]   append_mb_s = 774.5 MB/s
+[16:06:33]   append_elapsed_ms = 148 ms
+[16:06:33]   append_enospc = 1 flag
+[16:06:33]   append_write_p50_us = 84 us
+[16:06:33]   append_write_p99_us = 182 us
+[16:06:33]   append_write_p999_us = 316 us
+[16:06:33]   append_write_max_us = 316 us
+[16:06:33] Stopping UFS Ramlog capture
+[16:06:33] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/fg_append_full
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/fg_append_full.rl5 (len 6284)
+[16:06:33] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/fg_append_full
+[16:06:33]   [Copy Offload Status] F2FS GC Copy Offload called 0 times during workload execution
+[16:06:33]   expected fg_gc_calls > 0 but got 0
+[16:06:33]   duration_ms = 122790 ms
+[16:06:33]   gc_calls = 0 count
+[16:06:33]   gc_bg = 0 count
+[16:06:33]   moved = 0 count
+[16:06:33]   moved_bg = 0 count
+[16:06:33]   cp_calls = 2 count
+[16:06:33]   cp_bg = 1 count
+[16:06:33]   co_calls = 0 count
+[16:06:33]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 0 times
+[16:06:33]   gc_fg = 0 count
+[16:06:33]   status = INCONCLUSIVE -
+[16:06:34] === fg_append_full: INCONCLUSIVE ===
+[16:06:34] === fg_random_overwrite [offload_off] ===
+files=102
+used_pct=95.03
+enospc=0
+elapsed_ms=724
+mb_s=1126.5
+deleted=0
+remaining=102
+[16:08:35] Clearing UFS Ramlog buffer: fg_random_overwrite
+LOG CLEAR
+[16:08:35] Starting UFS Ramlog capture in background
+[16:13:36]   churn_iops = 938321 ops/s
+[16:13:36]   churn_mb_s = 3665.3 MB/s
+[16:13:36]   churn_enospc = 0 flag
+[16:13:36]   churn_write_p50_us = 0 us
+[16:13:36]   churn_write_p99_us = 1 us
+[16:13:36]   churn_write_p999_us = 4 us
+[16:13:36]   churn_write_max_us = 31702 us
+[16:13:36] Stopping UFS Ramlog capture
+[16:13:36] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/fg_random_overwrite
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/fg_random_overwrite.rl5 (len 372220)
+[16:13:36] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/fg_random_overwrite
+[16:13:36]   [Copy Offload Status] F2FS GC Copy Offload called 0 times during workload execution
+[16:13:36]   expected fg_gc_calls > 0 but got 0
+[16:13:37]   duration_ms = 422760 ms
+[16:13:37]   gc_calls = 0 count
+[16:13:37]   gc_bg = 0 count
+[16:13:37]   moved = 0 count
+[16:13:37]   moved_bg = 0 count
+[16:13:37]   cp_calls = 2 count
+[16:13:37]   cp_bg = 1 count
+[16:13:37]   co_calls = 0 count
+[16:13:37]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 0 times
+[16:13:37]   gc_fg = 0 count
+[16:13:37]   status = INCONCLUSIVE -
+[16:13:37] === fg_random_overwrite: INCONCLUSIVE ===
+[16:13:37] === fg_fsync_pressure [offload_off] ===
+files=102
+used_pct=95.03
+enospc=0
+elapsed_ms=749
+mb_s=1089.8
+deleted=8
+remaining=94
+[16:15:39] Clearing UFS Ramlog buffer: fg_fsync_pressure
+LOG CLEAR
+[16:15:39] Starting UFS Ramlog capture in background
+[16:15:41]   fsyncappend_mb_s = 81.4 MB/s
+[16:15:41]   fsyncappend_elapsed_ms = 1409 ms
+[16:15:41]   fsyncappend_enospc = 1 flag
+[16:15:41]   fsyncappend_write_p50_us = 4 us
+[16:15:41]   fsyncappend_write_p99_us = 19 us
+[16:15:41]   fsyncappend_write_p999_us = 58 us
+[16:15:41]   fsyncappend_write_max_us = 153 us
+[16:15:41] Stopping UFS Ramlog capture
+[16:15:41] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/fg_fsync_pressure
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/fg_fsync_pressure.rl5 (len 931880)
+[16:15:41] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/fg_fsync_pressure
+[16:15:41]   [Copy Offload Status] F2FS GC Copy Offload called 0 times during workload execution
+[16:15:41]   duration_ms = 124030 ms
+[16:15:41]   gc_calls = 1 count
+[16:15:41]   gc_bg = 0 count
+[16:15:41]   moved = 1 count
+[16:15:41]   moved_bg = 0 count
+[16:15:42]   cp_calls = 3 count
+[16:15:42]   cp_bg = 1 count
+[16:15:42]   co_calls = 0 count
+[16:15:42]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 0 times
+[16:15:42]   gc_fg = 1 count
+[16:15:42]   status = PASS -
+[16:15:42] === fg_fsync_pressure: PASS ===
+[16:15:42] === fg_parallel_writers [offload_off] ===
+files=96
+used_pct=90.33
+enospc=0
+elapsed_ms=789
+mb_s=973.4
+deleted=11
+remaining=85
+[16:16:43] Clearing UFS Ramlog buffer: fg_parallel_writers
+LOG CLEAR
+[16:16:43] Starting UFS Ramlog capture in background
+[16:16:45] Stopping UFS Ramlog capture
+[16:16:45] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/fg_parallel_writers
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/fg_parallel_writers.rl5 (len 8358)
+[16:16:45] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/fg_parallel_writers
+[16:16:45]   par_aggregate_mb_s = 1847.5 MB/s
+[16:16:45]   par_worst_write_p99_us = 946 us
+[16:16:45]   par_worst_write_max_us = 1212 us
+[16:16:45]   par_enospc_writers = 0 count
+[16:16:45]   [Copy Offload Status] F2FS GC Copy Offload called 0 times during workload execution
+[16:16:45]   expected fg_gc_calls > 0 but got 0
+[16:16:45]   duration_ms = 62770 ms
+[16:16:45]   gc_calls = 0 count
+[16:16:45]   gc_bg = 0 count
+[16:16:45]   moved = 0 count
+[16:16:45]   moved_bg = 0 count
+[16:16:45]   cp_calls = 3 count
+[16:16:45]   cp_bg = 1 count
+[16:16:45]   co_calls = 0 count
+[16:16:45]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 0 times
+[16:16:45]   gc_fg = 0 count
+[16:16:45]   status = INCONCLUSIVE -
+[16:16:45] === fg_parallel_writers: INCONCLUSIVE ===
+[16:16:45] === fg_ioctl_sync_gc [offload_off] ===
+files=90
+used_pct=85.62
+enospc=0
+elapsed_ms=672
+mb_s=1071.7
+deleted=15
+remaining=75
+[16:17:47] Clearing UFS Ramlog buffer: fg_ioctl_sync_gc
+LOG CLEAR
+[16:17:47] Starting UFS Ramlog capture in background
+[16:17:48]   ioctl_calls = 30 count
+[16:17:48]   ioctl_ok = 29 count
+[16:17:48]   ioctl_busy = 0 count
+[16:17:48]   ioctl_last_errno = 61 errno
+[16:17:48]   ioctl_elapsed_ms = 50 ms
+[16:17:48]   ioctl_gc_call_p50_us = 2029 us
+[16:17:48]   ioctl_gc_call_p99_us = 2435 us
+[16:17:48]   ioctl_gc_call_max_us = 2435 us
+[16:17:48] Stopping UFS Ramlog capture
+[16:17:48] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/fg_ioctl_sync_gc
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/fg_ioctl_sync_gc.rl5 (len 3244)
+[16:17:48] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/fg_ioctl_sync_gc
+[16:17:48]   [Copy Offload Status] F2FS GC Copy Offload called 0 times during workload execution
+[16:17:48]   duration_ms = 62680 ms
+[16:17:48]   gc_calls = 30 count
+[16:17:48]   gc_bg = 0 count
+[16:17:48]   moved = 7606 count
+[16:17:49]   moved_bg = 0 count
+[16:17:49]   cp_calls = 2 count
+[16:17:49]   cp_bg = 1 count
+[16:17:49]   co_calls = 0 count
+[16:17:49]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 0 times
+[16:17:49]   gc_fg = 30 count
+[16:17:49]   status = PASS -
+[16:17:49] === fg_ioctl_sync_gc: PASS ===
+[16:17:49] === fg_ioctl_gc_range [offload_off] ===
+files=90
+used_pct=85.62
+enospc=0
+elapsed_ms=781
+mb_s=922.2
+deleted=15
+remaining=75
+[16:18:50] Clearing UFS Ramlog buffer: fg_ioctl_gc_range
+LOG CLEAR
+[16:18:50] Starting UFS Ramlog capture in background
+[16:18:51]   range_ret = -1 rc
+[16:18:51]   range_errno = 22 errno
+[16:18:51]   range_elapsed_ms = 0.0 ms
+[16:18:51] Stopping UFS Ramlog capture
+[16:18:51] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/fg_ioctl_gc_range
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/fg_ioctl_gc_range.rl5 (len 462)
+[16:18:52] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/fg_ioctl_gc_range
+[16:18:52]   [Copy Offload Status] F2FS GC Copy Offload called 0 times during workload execution
+[16:18:52]   duration_ms = 62640 ms
+[16:18:52]   gc_calls = 0 count
+[16:18:52]   gc_bg = 0 count
+[16:18:52]   moved = 0 count
+[16:18:52]   moved_bg = 0 count
+[16:18:52]   cp_calls = 2 count
+[16:18:52]   cp_bg = 1 count
+[16:18:52]   co_calls = 0 count
+[16:18:52]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 0 times
+[16:18:52]   gc_fg = 0 count
+[16:18:52]   status = FAIL -
+[16:18:52] === fg_ioctl_gc_range: FAIL ===
+[16:18:52] === fg_enospc_recovery [offload_off] ===
+[16:18:53]   fill_files = 109 count
+[16:18:53]   fill_used_pct = 100.00 %
+[16:18:53]   fill_enospc = 1 flag
+[16:18:53]   fill_mb_s = 1005.9 MB/s
+[16:19:24] Clearing UFS Ramlog buffer: fg_enospc_recovery
+LOG CLEAR
+[16:19:24] Starting UFS Ramlog capture in background
+[16:19:25]   recover_mb_s = 1052.2 MB/s
+[16:19:25]   recover_elapsed_ms = 95 ms
+[16:19:25]   recover_enospc = 0 flag
+[16:19:25]   recover_write_p50_us = 62 us
+[16:19:25]   recover_write_p99_us = 153 us
+[16:19:25]   recover_write_p999_us = 190 us
+[16:19:25]   recover_write_max_us = 190 us
+[16:19:25] Stopping UFS Ramlog capture
+[16:19:25] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/fg_enospc_recovery
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/fg_enospc_recovery.rl5 (len 5828)
+[16:19:25] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/fg_enospc_recovery
+[16:19:25]   [Copy Offload Status] F2FS GC Copy Offload called 0 times during workload execution
+[16:19:25]   expected fg_gc_calls > 0 but got 0
+[16:19:25]   duration_ms = 32930 ms
+[16:19:25]   gc_calls = 0 count
+[16:19:25]   gc_bg = 0 count
+[16:19:26]   moved = 0 count
+[16:19:26]   moved_bg = 0 count
+[16:19:26]   cp_calls = 2 count
+[16:19:26]   cp_bg = 1 count
+[16:19:26]   co_calls = 0 count
+[16:19:26]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 0 times
+[16:19:26]   gc_fg = 0 count
+[16:19:26]   status = INCONCLUSIVE -
+[16:19:26] === fg_enospc_recovery: INCONCLUSIVE ===
+[16:19:26] copy offload 'off': wrote 0 to /sys/block/sdg/queue/copy_offload
+[16:19:26] === bg_fsync_workload [offload_off] ===
+files=102
+used_pct=95.03
+enospc=0
+elapsed_ms=787
+mb_s=1037.3
+deleted=16
+remaining=86
+[16:20:39]   base_iops = 7751 ops/s
+[16:20:39]   base_mb_s = 30.3 MB/s
+[16:20:40]   base_write_p50_us = 1 us
+[16:20:40]   base_write_p99_us = 5 us
+[16:20:40]   base_write_p999_us = 8 us
+[16:20:40]   base_write_max_us = 34 us
+[16:20:40]   base_fsync_p99_us = 169 us
+[16:20:40]   base_fsync_max_us = 3887 us
+[16:20:50]   bgon_iops = 8472 ops/s
+[16:20:50]   bgon_mb_s = 33.1 MB/s
+[16:20:50]   bgon_write_p50_us = 1 us
+[16:20:50]   bgon_write_p99_us = 5 us
+[16:20:50]   bgon_write_p999_us = 6 us
+[16:20:50]   bgon_write_max_us = 44 us
+[16:20:50]   bgon_fsync_p99_us = 165 us
+[16:20:50]   bgon_fsync_max_us = 3849 us
+[16:20:50]   iops_drop_pct = -9.3 %
+[16:20:50]   expected bg_gc_calls > 0 but got 0
+[16:20:50]   duration_ms = 83750 ms
+[16:20:50]   gc_calls = 0 count
+[16:20:50]   gc_bg = 0 count
+[16:20:50]   moved = 0 count
+[16:20:50]   moved_bg = 0 count
+[16:20:50]   cp_calls = 2 count
+[16:20:50]   cp_bg = 1 count
+[16:20:50]   co_calls = 0 count
+[16:20:50]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 0 times
+[16:20:50]   gc_fg = 0 count
+[16:20:50]   status = INCONCLUSIVE -
+[16:20:51] === bg_fsync_workload: INCONCLUSIVE ===
+[16:20:51] === bg_default_idle [offload_off] ===
+files=102
+used_pct=95.03
+enospc=0
+elapsed_ms=773
+mb_s=1056.1
+deleted=16
+remaining=86
+[16:21:54] Clearing UFS Ramlog buffer: bg_default_idle
+LOG CLEAR
+[16:21:54] Starting UFS Ramlog capture in background
+[16:26:55]   idle_elapsed_ms = 300130 ms
+[16:26:55]   idle_bg_gc_calls = 2 count
+[16:26:55]   idle_bg_blocks_moved = 354 blocks
+[16:26:55]   idle_copy_offload_calls = 0 count
+[16:26:55]   [Copy Offload Status] Background thread invoked Copy Offload 0 times
+[16:26:55]   idle_bg_moved_mb_s = 0.00 MB/s
+[16:26:55]   idle_gc_thread_cpu_ms = 0 ms
+[16:26:55] Stopping UFS Ramlog capture
+[16:26:55] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/bg_default_idle
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/bg_default_idle.rl5 (len 16110)
+[16:26:56] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/bg_default_idle
+[16:26:56]   duration_ms = 364920 ms
+[16:26:56]   gc_calls = 2 count
+[16:26:56]   gc_bg = 2 count
+[16:26:56]   moved = 354 count
+[16:26:56]   moved_bg = 354 count
+[16:26:56]   cp_calls = 5 count
+[16:26:56]   cp_bg = 4 count
+[16:26:56]   co_calls = 0 count
+[16:26:56]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 0 times
+[16:26:56]   gc_fg = 0 count
+[16:26:56]   status = PASS -
+[16:26:56] === bg_default_idle: PASS ===
+[16:26:56] === bg_urgent_high [offload_off] ===
+files=102
+used_pct=95.03
+enospc=0
+elapsed_ms=723
+mb_s=1128.5
+deleted=16
+remaining=86
+[16:28:00] Clearing UFS Ramlog buffer: bg_urgent_high
+LOG CLEAR
+[16:28:00] Starting UFS Ramlog capture in background
+[16:30:01]   urgent_high_elapsed_ms = 120130 ms
+[16:30:01]   urgent_high_bg_gc_calls = 31 count
+[16:30:01]   urgent_high_bg_blocks_moved = 7680 blocks
+[16:30:01]   urgent_high_copy_offload_calls = 0 count
+[16:30:01]   [Copy Offload Status] Background thread invoked Copy Offload 0 times
+[16:30:01]   urgent_high_bg_moved_mb_s = 0.25 MB/s
+[16:30:01]   urgent_high_gc_thread_cpu_ms = 0 ms
+[16:30:01] Stopping UFS Ramlog capture
+[16:30:01] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/bg_urgent_high
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/bg_urgent_high.rl5 (len 15164)
+[16:30:01] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/bg_urgent_high
+[16:30:01]   duration_ms = 184860 ms
+[16:30:01]   gc_calls = 32 count
+[16:30:01]   gc_bg = 32 count
+[16:30:01]   moved = 7821 count
+[16:30:01]   moved_bg = 7821 count
+[16:30:02]   cp_calls = 3 count
+[16:30:02]   cp_bg = 2 count
+[16:30:02]   co_calls = 0 count
+[16:30:02]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 0 times
+[16:30:02]   gc_fg = 0 count
+[16:30:02]   status = PASS -
+[16:30:02] === bg_urgent_high: PASS ===
+[16:30:02] === bg_urgent_low [offload_off] ===
+files=102
+used_pct=95.03
+enospc=0
+elapsed_ms=794
+mb_s=1027.1
+deleted=16
+remaining=86
+[16:31:05] Clearing UFS Ramlog buffer: bg_urgent_low
+LOG CLEAR
+[16:31:05] Starting UFS Ramlog capture in background
+[16:33:07]   urgent_low_elapsed_ms = 120120 ms
+[16:33:07]   urgent_low_bg_gc_calls = 0 count
+[16:33:07]   urgent_low_bg_blocks_moved = 0 blocks
+[16:33:07]   urgent_low_copy_offload_calls = 0 count
+[16:33:07]   [Copy Offload Status] Background thread invoked Copy Offload 0 times
+[16:33:07]   urgent_low_bg_moved_mb_s = 0.00 MB/s
+[16:33:07]   urgent_low_gc_thread_cpu_ms = 0 ms
+[16:33:07] Stopping UFS Ramlog capture
+[16:33:07] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/bg_urgent_low
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/bg_urgent_low.rl5 (len 7742)
+[16:33:07] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/bg_urgent_low
+[16:33:07]   expected bg_gc_calls > 0 but got 0
+[16:33:07]   duration_ms = 184930 ms
+[16:33:07]   gc_calls = 0 count
+[16:33:07]   gc_bg = 0 count
+[16:33:07]   moved = 0 count
+[16:33:07]   moved_bg = 0 count
+[16:33:07]   cp_calls = 2 count
+[16:33:07]   cp_bg = 1 count
+[16:33:07]   co_calls = 0 count
+[16:33:07]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 0 times
+[16:33:07]   gc_fg = 0 count
+[16:33:07]   status = INCONCLUSIVE -
+[16:33:08] === bg_urgent_low: INCONCLUSIVE ===
+[16:33:08] === bg_idle_cost_benefit [offload_off] ===
+files=102
+used_pct=95.03
+enospc=0
+elapsed_ms=833
+mb_s=979.0
+deleted=16
+remaining=86
+[16:34:11] Clearing UFS Ramlog buffer: bg_idle_cost_benefit
+LOG CLEAR
+[16:34:11] Starting UFS Ramlog capture in background
+[16:36:12]   costben_elapsed_ms = 120120 ms
+[16:36:13]   costben_bg_gc_calls = 0 count
+[16:36:13]   costben_bg_blocks_moved = 0 blocks
+[16:36:13]   costben_copy_offload_calls = 0 count
+[16:36:13]   [Copy Offload Status] Background thread invoked Copy Offload 0 times
+[16:36:13]   costben_bg_moved_mb_s = 0.00 MB/s
+[16:36:13]   costben_gc_thread_cpu_ms = 0 ms
+[16:36:13] Stopping UFS Ramlog capture
+[16:36:13] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/bg_idle_cost_benefit
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/bg_idle_cost_benefit.rl5 (len 10928)
+[16:36:13] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/bg_idle_cost_benefit
+[16:36:13]   expected bg_gc_calls > 0 but got 0
+[16:36:13]   duration_ms = 184960 ms
+[16:36:13]   gc_calls = 0 count
+[16:36:13]   gc_bg = 0 count
+[16:36:13]   moved = 0 count
+[16:36:13]   moved_bg = 0 count
+[16:36:13]   cp_calls = 2 count
+[16:36:13]   cp_bg = 1 count
+[16:36:13]   co_calls = 0 count
+[16:36:13]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 0 times
+[16:36:13]   gc_fg = 0 count
+[16:36:13]   status = INCONCLUSIVE -
+[16:36:13] === bg_idle_cost_benefit: INCONCLUSIVE ===
+[16:36:13] === bg_idle_greedy [offload_off] ===
+files=102
+used_pct=95.03
+enospc=0
+elapsed_ms=837
+mb_s=974.9
+deleted=16
+remaining=86
+[16:37:17] Clearing UFS Ramlog buffer: bg_idle_greedy
+LOG CLEAR
+[16:37:17] Starting UFS Ramlog capture in background
+[16:39:18]   greedy_elapsed_ms = 120120 ms
+[16:39:18]   greedy_bg_gc_calls = 90 count
+[16:39:18]   greedy_bg_blocks_moved = 7772 blocks
+[16:39:18]   greedy_copy_offload_calls = 0 count
+[16:39:18]   [Copy Offload Status] Background thread invoked Copy Offload 0 times
+[16:39:18]   greedy_bg_moved_mb_s = 0.25 MB/s
+[16:39:18]   greedy_gc_thread_cpu_ms = 0 ms
+[16:39:18] Stopping UFS Ramlog capture
+[16:39:18] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/bg_idle_greedy
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/bg_idle_greedy.rl5 (len 17568)
+[16:39:18] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/bg_idle_greedy
+[16:39:18]   duration_ms = 184930 ms
+[16:39:19]   gc_calls = 91 count
+[16:39:19]   gc_bg = 91 count
+[16:39:19]   moved = 7772 count
+[16:39:19]   moved_bg = 7772 count
+[16:39:19]   cp_calls = 4 count
+[16:39:19]   cp_bg = 3 count
+[16:39:19]   co_calls = 0 count
+[16:39:19]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 0 times
+[16:39:19]   gc_fg = 0 count
+[16:39:19]   status = PASS -
+[16:39:19] === bg_idle_greedy: PASS ===
+[16:39:19] === bg_with_foreground_io [offload_off] ===
+files=102
+used_pct=95.03
+enospc=0
+elapsed_ms=810
+mb_s=1007.2
+deleted=16
+remaining=86
+[16:41:23]   base_iops = 1012444 ops/s
+[16:41:23]   base_mb_s = 3954.9 MB/s
+[16:41:23]   base_write_p50_us = 0 us
+[16:41:23]   base_write_p99_us = 1 us
+[16:41:23]   base_write_p999_us = 4 us
+[16:41:23]   base_write_max_us = 13758 us
+[16:41:23] Clearing UFS Ramlog buffer: bg_with_foreground_io
+LOG CLEAR
+[16:41:23] Starting UFS Ramlog capture in background
+[16:42:24]   bgon_iops = 967788 ops/s
+[16:42:24]   bgon_mb_s = 3780.4 MB/s
+[16:42:24]   bgon_write_p50_us = 0 us
+[16:42:24]   bgon_write_p99_us = 1 us
+[16:42:24]   bgon_write_p999_us = 4 us
+[16:42:24]   bgon_write_max_us = 25706 us
+[16:42:24]   iops_drop_pct = 4.4 %
+[16:42:24] Stopping UFS Ramlog capture
+[16:42:24] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/bg_with_foreground_io
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/bg_with_foreground_io.rl5 (len 79278)
+[16:42:24] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/bg_with_foreground_io
+[16:42:24]   expected bg_gc_calls > 0 but got 0
+[16:42:25]   duration_ms = 185250 ms
+[16:42:25]   gc_calls = 0 count
+[16:42:25]   gc_bg = 0 count
+[16:42:25]   moved = 0 count
+[16:42:25]   moved_bg = 0 count
+[16:42:25]   cp_calls = 2 count
+[16:42:25]   cp_bg = 1 count
+[16:42:25]   co_calls = 0 count
+[16:42:25]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 0 times
+[16:42:25]   gc_fg = 0 count
+[16:42:25]   status = INCONCLUSIVE -
+[16:42:25] === bg_with_foreground_io: INCONCLUSIVE ===
+[16:42:25] === bg_reclaim_after_delete [offload_off] ===
+[16:42:57] Clearing UFS Ramlog buffer: bg_reclaim_after_delete
+LOG CLEAR
+[16:42:57] Starting UFS Ramlog capture in background
+[16:43:18]   time_to_stable_s = 20120 ms
+[16:43:18]   free_seg_gain = 0 segs
+[16:43:18]   bg_blocks_moved = 0 blocks
+[16:43:18] Stopping UFS Ramlog capture
+[16:43:18] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/bg_reclaim_after_delete
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/bg_reclaim_after_delete.rl5 (len 2722)
+[16:43:18] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/bg_reclaim_after_delete
+[16:43:18]   expected bg_gc_calls > 0 but got 0
+[16:43:18]   duration_ms = 52880 ms
+[16:43:18]   gc_calls = 0 count
+[16:43:18]   gc_bg = 0 count
+[16:43:18]   moved = 0 count
+[16:43:18]   moved_bg = 0 count
+[16:43:18]   cp_calls = 2 count
+[16:43:18]   cp_bg = 1 count
+[16:43:18]   co_calls = 0 count
+[16:43:19]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 0 times
+[16:43:19]   gc_fg = 0 count
+[16:43:19]   status = INCONCLUSIVE -
+[16:43:19] === bg_reclaim_after_delete: INCONCLUSIVE ===
+[16:43:19] === bg_waf_soak [offload_off] ===
+files=102
+used_pct=95.03
+enospc=0
+elapsed_ms=791
+mb_s=1031.7
+deleted=13
+remaining=89
+[16:43:20] Clearing UFS Ramlog buffer: bg_waf_soak
+LOG CLEAR
+[16:43:20] Starting UFS Ramlog capture in background
+
+[16:48:21]   soak_iops = 961871 ops/s
+[16:48:21]   soak_mb_s = 3757.3 MB/s
+[16:48:21]   soak_write_p50_us = 0 us
+[16:48:21]   soak_write_p99_us = 1 us
+[16:48:21]   soak_write_p999_us = 3 us
+[16:48:21]   soak_write_max_us = 22759 us
+[16:48:21]   gc_blocks_moved_total = 0 blocks
+[16:48:21]   gc_blocks_moved_bg = 0 blocks
+[16:48:21]   gc_waf = 1.000 ratio
+[16:48:21] Stopping UFS Ramlog capture
+[16:48:21] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/bg_waf_soak
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/bg_waf_soak.rl5 (len 331416)
+[16:48:21] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/bg_waf_soak
+[16:48:21]   expected bg_gc_calls > 0 but got 0
+[16:48:22]   duration_ms = 302570 ms
+[16:48:22]   gc_calls = 0 count
+[16:48:22]   gc_bg = 0 count
+[16:48:22]   moved = 0 count
+[16:48:22]   moved_bg = 0 count
+[16:48:22]   cp_calls = 2 count
+[16:48:22]   cp_bg = 1 count
+[16:48:22]   co_calls = 0 count
+[16:48:22]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 0 times
+[16:48:22]   gc_fg = 0 count
+[16:48:22]   status = INCONCLUSIVE -
+[16:48:22] === bg_waf_soak: INCONCLUSIVE ===
+[16:48:22] === bg_idle_maint [offload_off] ===
+files=102
+used_pct=95.03
+enospc=0
+elapsed_ms=847
+mb_s=963.3
+deleted=16
+remaining=86
+[16:49:26] Clearing UFS Ramlog buffer: bg_idle_maint
+LOG CLEAR
+[16:49:26] Starting UFS Ramlog capture in background
+[16:54:27]   maint_elapsed_ms = 300120 ms
+[16:54:27]   maint_bg_gc_calls = 4 count
+[16:54:27]   maint_bg_blocks_moved = 728 blocks
+[16:54:27]   maint_copy_offload_calls = 0 count
+[16:54:27]   [Copy Offload Status] Background thread invoked Copy Offload 0 times
+[16:54:27]   maint_bg_moved_mb_s = 0.01 MB/s
+[16:54:27]   maint_gc_thread_cpu_ms = 0 ms
+[16:54:27] Stopping UFS Ramlog capture
+[16:54:27] Saving UFS Ramlog: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/bg_idle_maint
+LOG SAVE
+/data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/bg_idle_maint.rl5 (len 15466)
+[16:54:27] UFS RAM-log saved: /data/local/tmp/f2fs_gc_suite/results/offload_off/ramlogs/bg_idle_maint
+[16:54:28]   duration_ms = 365360 ms
+[16:54:28]   gc_calls = 4 count
+[16:54:28]   gc_bg = 4 count
+[16:54:28]   moved = 728 count
+[16:54:28]   moved_bg = 728 count
+[16:54:28]   cp_calls = 7 count
+[16:54:28]   cp_bg = 6 count
+[16:54:28]   co_calls = 0 count
+[16:54:28]   [Copy Offload Metrics] f2fs_gc_try_copy_offload() was called 0 times
+[16:54:28]   gc_fg = 0 count
+[16:54:28]   status = PASS -
+[16:54:28] === bg_idle_maint: PASS ===
+done. results in /data/local/tmp/f2fs_gc_suite/results/
+>>> Pulling test logs from device...
+/data/local/tmp/f2fs_gc_suite/results/./: 50 files pulled. 22.8 MB/s (3707965 bytes in 0.155s)
+Results saved successfully to .\results\20261104_175612
+>>> Executing data comparison script via py launcher...
+| test | metric | off | on | change | verdict |
+|---|---|---:|---:|---:|---|
+| fg_append_full | append_mb_s | 774.5 | 712.1 | -8.1% | worse |
+|  | append_elapsed_ms | 148 | 161 | +8.8% | worse |
+|  | append_write_p50_us | 84 | 83 | -1.2% | ~same |
+|  | append_write_p99_us | 182 | 176 | -3.3% | ~same |
+|  | append_write_p999_us | 316 | 299 | -5.4% | better |
+|  | append_write_max_us | 316 | 299 | -5.4% | better |
+|  | duration_ms | 122,790 | 122,800 | +0.0% | ~same |
+|  | gc_bg | 0 | 0 |  |  |
+|  | gc_fg | 0 | 0 |  |  |
+| fg_random_overwrite | churn_iops | 938,321 | 969,466 | +3.3% | ~same |
+|  | churn_mb_s | 3,665.3 | 3,787 | +3.3% | ~same |
+|  | churn_write_p50_us | 0 | 0 |  |  |
+|  | churn_write_p99_us | 1 | 1 | +0.0% | ~same |
+|  | churn_write_p999_us | 4 | 4 | +0.0% | ~same |
+|  | churn_write_max_us | 31,702 | 19,531 | -38.4% | better |
+|  | duration_ms | 422,760 | 422,830 | +0.0% | ~same |
+|  | gc_bg | 0 | 0 |  |  |
+|  | gc_fg | 0 | 0 |  |  |
+| fg_fsync_pressure | fsyncappend_mb_s | 81.4 | 93.9 | +15.4% | better |
+|  | fsyncappend_elapsed_ms | 1,409 | 1,221 | -13.3% | better |
+|  | fsyncappend_write_p50_us | 4 | 3 | -25.0% | better |
+|  | fsyncappend_write_p99_us | 19 | 17 | -10.5% | better |
+|  | fsyncappend_write_p999_us | 58 | 31 | -46.6% | better |
+|  | fsyncappend_write_max_us | 153 | 73 | -52.3% | better |
+|  | duration_ms | 124,030 | 123,940 | -0.1% | ~same |
+|  | gc_bg | 0 | 0 |  |  |
+|  | gc_fg | 1 | 1 | +0.0% |  |
+| fg_parallel_writers | par_aggregate_mb_s | 1,847.5 | 1,645.3 | -10.9% | worse |
+|  | par_worst_write_p99_us | 946 | 798 | -15.6% | better |
+|  | par_worst_write_max_us | 1,212 | 1,070 | -11.7% | better |
+|  | duration_ms | 62,770 | 62,760 | -0.0% | ~same |
+|  | gc_bg | 0 | 0 |  |  |
+|  | gc_fg | 0 | 0 |  |  |
+| fg_ioctl_sync_gc | ioctl_elapsed_ms | 50 | 145 | +190.0% | worse |
+|  | ioctl_gc_call_p50_us | 2,029 | 5,329 | +162.6% | worse |
+|  | ioctl_gc_call_p99_us | 2,435 | 11,669 | +379.2% | worse |
+|  | ioctl_gc_call_max_us | 2,435 | 11,669 | +379.2% | worse |
+|  | duration_ms | 62,680 | 62,810 | +0.2% | ~same |
+|  | gc_bg | 0 | 0 |  |  |
+|  | gc_fg | 30 | 29 | -3.3% |  |
+| fg_ioctl_gc_range | range_elapsed_ms | 0 | 0 |  |  |
+|  | duration_ms | 62,640 | 62,660 | +0.0% | ~same |
+|  | gc_bg | 0 | 0 |  |  |
+|  | gc_fg | 0 | 0 |  |  |
+| fg_enospc_recovery | fill_mb_s | 1,005.9 | 892 | -11.3% | worse |
+|  | recover_mb_s | 1,052.2 | 851.1 | -19.1% | worse |
+|  | recover_elapsed_ms | 95 | 117 | +23.2% | worse |
+|  | recover_write_p50_us | 62 | 75 | +21.0% | worse |
+|  | recover_write_p99_us | 153 | 212 | +38.6% | worse |
+|  | recover_write_p999_us | 190 | 327 | +72.1% | worse |
+|  | recover_write_max_us | 190 | 327 | +72.1% | worse |
+|  | duration_ms | 32,930 | 33,050 | +0.4% | ~same |
+|  | gc_bg | 0 | 0 |  |  |
+|  | gc_fg | 0 | 0 |  |  |
+| bg_fsync_workload | base_iops | 7,751 | 8,436 | +8.8% | better |
+|  | base_mb_s | 30.3 | 33 | +8.9% | better |
+|  | base_write_p50_us | 1 | 1 | +0.0% | ~same |
+|  | base_write_p99_us | 5 | 5 | +0.0% | ~same |
+|  | base_write_p999_us | 8 | 7 | -12.5% | better |
+|  | base_write_max_us | 34 | 33 | -2.9% | ~same |
+|  | base_fsync_p99_us | 169 | 168 | -0.6% | ~same |
+|  | base_fsync_max_us | 3,887 | 3,859 | -0.7% | ~same |
+|  | bgon_iops | 8,472 | 8,557 | +1.0% | ~same |
+|  | bgon_mb_s | 33.1 | 33.4 | +0.9% | ~same |
+|  | bgon_write_p50_us | 1 | 1 | +0.0% | ~same |
+|  | bgon_write_p99_us | 5 | 5 | +0.0% | ~same |
+|  | bgon_write_p999_us | 6 | 6 | +0.0% | ~same |
+|  | bgon_write_max_us | 44 | 30 | -31.8% | better |
+|  | bgon_fsync_p99_us | 165 | 164 | -0.6% | ~same |
+|  | bgon_fsync_max_us | 3,849 | 4,065 | +5.6% | worse |
+|  | iops_drop_pct | -9.3 | -1.4 | +84.9% | worse |
+|  | duration_ms | 83,750 | 83,700 | -0.1% | ~same |
+|  | gc_bg | 0 | 0 |  |  |
+|  | gc_fg | 0 | 0 |  |  |
+| bg_default_idle | idle_elapsed_ms | 300,130 | 300,130 | +0.0% | ~same |
+|  | idle_bg_moved_mb_s | 0 | 0 |  |  |
+|  | idle_gc_thread_cpu_ms | 0 | 0 |  |  |
+|  | duration_ms | 364,920 | 365,000 | +0.0% | ~same |
+|  | gc_bg | 2 | 2 | +0.0% |  |
+|  | gc_fg | 0 | 0 |  |  |
+| bg_urgent_high | urgent_high_elapsed_ms | 120,130 | 120,130 | +0.0% | ~same |
+|  | urgent_high_bg_moved_mb_s | 0.25 | 0.12 | -52.0% | worse |
+|  | urgent_high_gc_thread_cpu_ms | 0 | 0 |  |  |
+|  | duration_ms | 184,860 | 184,900 | +0.0% | ~same |
+|  | gc_bg | 32 | 18 | -43.8% |  |
+|  | gc_fg | 0 | 0 |  |  |
+| bg_urgent_low | urgent_low_elapsed_ms | 120,120 | 120,130 | +0.0% | ~same |
+|  | urgent_low_bg_moved_mb_s | 0 | 0 |  |  |
+|  | urgent_low_gc_thread_cpu_ms | 0 | 0 |  |  |
+|  | duration_ms | 184,930 | 184,900 | -0.0% | ~same |
+|  | gc_bg | 0 | 0 |  |  |
+|  | gc_fg | 0 | 0 |  |  |
+| bg_idle_cost_benefit | costben_elapsed_ms | 120,120 | 120,120 | +0.0% | ~same |
+|  | costben_bg_moved_mb_s | 0 | 0 |  |  |
+|  | costben_gc_thread_cpu_ms | 0 | 0 |  |  |
+|  | duration_ms | 184,960 | 184,890 | -0.0% | ~same |
+|  | gc_bg | 0 | 0 |  |  |
+|  | gc_fg | 0 | 0 |  |  |
+| bg_idle_greedy | greedy_elapsed_ms | 120,120 | 120,110 | -0.0% | ~same |
+|  | greedy_bg_moved_mb_s | 0.25 | 0.26 | +4.0% | ~same |
+|  | greedy_gc_thread_cpu_ms | 0 | 0 |  |  |
+|  | duration_ms | 184,930 | 184,940 | +0.0% | ~same |
+|  | gc_bg | 91 | 92 | +1.1% |  |
+|  | gc_fg | 0 | 0 |  |  |
+| bg_with_foreground_io | base_iops | 1,012,444 | 1,022,768 | +1.0% | ~same |
+|  | base_mb_s | 3,954.9 | 3,995.2 | +1.0% | ~same |
+|  | base_write_p50_us | 0 | 0 |  |  |
+|  | base_write_p99_us | 1 | 1 | +0.0% | ~same |
+|  | base_write_p999_us | 4 | 4 | +0.0% | ~same |
+|  | base_write_max_us | 13,758 | 27,357 | +98.8% | worse |
+|  | bgon_iops | 967,788 | 1,017,598 | +5.1% | better |
+|  | bgon_mb_s | 3,780.4 | 3,975 | +5.1% | better |
+|  | bgon_write_p50_us | 0 | 0 |  |  |
+|  | bgon_write_p99_us | 1 | 1 | +0.0% | ~same |
+|  | bgon_write_p999_us | 4 | 4 | +0.0% | ~same |
+|  | bgon_write_max_us | 25,706 | 22,980 | -10.6% | better |
+|  | iops_drop_pct | 4.4 | 0.5 | -88.6% | better |
+|  | duration_ms | 185,250 | 185,120 | -0.1% | ~same |
+|  | gc_bg | 0 | 0 |  |  |
+|  | gc_fg | 0 | 0 |  |  |
+| bg_reclaim_after_delete | time_to_stable_s | 20,120 | 20,120 | +0.0% | ~same |
+|  | free_seg_gain | 0 | 0 |  |  |
+|  | duration_ms | 52,880 | 52,720 | -0.3% | ~same |
+|  | gc_bg | 0 | 0 |  |  |
+|  | gc_fg | 0 | 0 |  |  |
+| bg_waf_soak | soak_iops | 961,871 | 970,171 | +0.9% | ~same |
+|  | soak_mb_s | 3,757.3 | 3,789.7 | +0.9% | ~same |
+|  | soak_write_p50_us | 0 | 0 |  |  |
+|  | soak_write_p99_us | 1 | 1 | +0.0% | ~same |
+|  | soak_write_p999_us | 3 | 3 | +0.0% | ~same |
+|  | soak_write_max_us | 22,759 | 24,196 | +6.3% | worse |
+|  | gc_waf | 1 | 1 | +0.0% | ~same |
+|  | duration_ms | 302,570 | 302,490 | -0.0% | ~same |
+|  | gc_bg | 0 | 0 |  |  |
+|  | gc_fg | 0 | 0 |  |  |
+| bg_idle_maint | maint_elapsed_ms | 300,120 | 300,130 | +0.0% | ~same |
+|  | maint_bg_moved_mb_s | 0.01 | 0.01 | +0.0% | ~same |
+|  | maint_gc_thread_cpu_ms | 0 | 0 |  |  |
+|  | duration_ms | 365,360 | 365,370 | +0.0% | ~same |
+|  | gc_bg | 4 | 4 | +0.0% |  |
+|  | gc_fg | 0 | 0 |  |  |
+
+Scenario validity (GC type the test targets actually ran):
+
+| test | off | on |
+|---|---|---|
+| fg_append_full | INCONCLUSIVE | INCONCLUSIVE |
+| fg_random_overwrite | INCONCLUSIVE | INCONCLUSIVE |
+| fg_fsync_pressure | PASS | PASS |
+| fg_parallel_writers | INCONCLUSIVE | INCONCLUSIVE |
+| fg_ioctl_sync_gc | PASS | PASS |
+| fg_ioctl_gc_range | FAIL | FAIL |
+| fg_enospc_recovery | INCONCLUSIVE | INCONCLUSIVE |
+| bg_fsync_workload | INCONCLUSIVE | INCONCLUSIVE |
+| bg_default_idle | PASS | PASS |
+| bg_urgent_high | PASS | PASS |
+| bg_urgent_low | INCONCLUSIVE | INCONCLUSIVE |
+| bg_idle_cost_benefit | INCONCLUSIVE | INCONCLUSIVE |
+| bg_idle_greedy | PASS | PASS |
+| bg_with_foreground_io | INCONCLUSIVE | INCONCLUSIVE |
+| bg_reclaim_after_delete | INCONCLUSIVE | INCONCLUSIVE |
+| bg_waf_soak | INCONCLUSIVE | INCONCLUSIVE |
+| bg_idle_maint | PASS | PASS |
+
+Treat INCONCLUSIVE/UNVERIFIED rows as not comparable; a 'better'/'worse' tag needs >=5% change and is not a significance test (repeat runs and compare the spread).
+PS D:\anees\tasks\1634_f2fs_gc_test_suite\f2fs_gc_suite_v01>
