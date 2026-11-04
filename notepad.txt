@@ -1,22 +1,40 @@
-Column
-Details
-Sl.No.
-11
-Patch Title
-F2FS: Add test suite to validate GC copy-offload functionality
-Impact Layer
-F2FS / Block Layer / UFS
-Type – Bug Fix / New Feature / Support
-Validation / Test Support
-Performance Impact – Yes/No
-Yes – validates potential performance improvements
-Level of Impact
-Major
-Problem Statement
-F2FS garbage collection migrates valid data blocks from victim segments to new locations using conventional read-and-write operations. This can increase CPU utilization, memory traffic, and UFS I/O overhead. A test framework is required to validate whether copy-offload is triggered during GC and to compare GC behaviour with copy-offload enabled and disabled.
-Solution
-Introduces an automated F2FS GC test suite with foreground and background GC workloads. Supports enabling/disabling copy-offload through a sysfs control node. Adds copy-offload call counters and GC statistics to track GC activity, migrated blocks, and offload invocation counts. Includes workloads such as sequential writes, random overwrites, fsync pressure, parallel writers, idle GC, urgent GC, and ENOSPC recovery. Provides automated execution and result comparison between both configurations.
-Impact on UFS / F2FS
-Enables systematic validation of copy-offload integration during F2FS garbage collection. Helps identify workloads where offload is actually triggered and distinguishes conventional GC migration from offloaded data copying. Provides visibility into GC activity and copy-offload invocation frequency. Establishes a test baseline for evaluating potential reductions in CPU overhead, host-side data movement, and UFS command traffic.
-AI Report PDF
-f2fs_gc_copy_offload_test_report.pdf (to be generated)
+F2FS garbage collection with device copy offload
+Flow for one victim segment: valid blocks are moved by the UFS device instead of being read and rewritten by the CPU.
+BEFORE: ONE BLOCK AT A TIME
+Allocate 1 block Copy command for 1 block → Update file pointer
+Ċ repeated for every valid block → many small commands
+NOW: BATCHED PER VICTIM SEGMENT
+1 Collect
+Scan the victim segment and
+keep only the valid blocks:
+source block address, owning
+file and offset. Wait until each
+source block is fully written to
+flash. Up to 128 blocks per
+batch (configurable).
+2 Allocate
+For each collected block, take
+the next free block in the cold-
+data log. Destinations come
+out consecutive, so they can
+be copied as ranges.
+3 Copy
+Merge consecutive blocks into
+ranges and send a few device
+copy commands (source
+ranges → destination ranges).
+Each command completes
+before moving on.
+4 Commit
+ALSO REQUIRED
+Point each file block to its new
+address, mark the old block
+invalid, drop caches of the old
+copy and release the locks.
+A If a copy fails
+Undo the allocation for those
+blocks and move them with the
+normal CPU copy path.
+Nothing is lost.
+Safety: the per-file GC locks are held from step 1 to the end, and the checkpoint lock during steps 2 to 4, so no file update or checkpoint can change these
+blocks halfway. Node blocks are not offloaded and keep using the normal path.
