@@ -1,72 +1,108 @@
-I’ve added batched copy offload to gc.c, but I haven’t compiled or run any of it. I only had your six files, not the kernel tree or a device. Please build it and run it against your UFS target before trusting it.
-
-The files are gc_batch_offload.patch, the full patched gc.c, and blk-copy-fixes.patch. Apply the blk-copy.c fixes first, because the batch path depends on them (see below).
-
-Design
-
-A batch is a run of valid blocks in one victim segment that sit at consecutive offsets. They must belong to the same inode and the same node block, with ofs_in_node increasing by one each time.
-
-That gives three properties:
-
-One source segment. Consecutive offsets mean contiguous source addresses.
-One node-page lookup and lock. Same inode and same nid for the whole run.
-Ascending-index folio locking. This is the same lock order f2fs_write_cache_pages uses.
-
-Destination blocks come from the unchanged f2fs_allocate_data_block(), called once per block. SIT, summary and curseg accounting stay as they were. The destination addresses are then coalesced into out_segs. In LFS mode that is normally one run. If another writer interleaves on the cold log, you just get more out_segs.
-
-move_data_blocks_batch() is hooked into phase 4 of gc_data_segment(). It returns the number of blocks moved, and the loop skips past them. If it returns 0, nothing was changed and the old per-block path handles that block.
-
-On any failure before the copy completes, the new blocks are rolled back with the same f2fs_do_replace_block() call your single-block error path already uses. Offload errors are never passed up to GC.
-
-Which inodes use the batch path:
-
-Default: only inodes where f2fs_meta_inode_gc_required() is true. These already move blocks directly through the meta mapping.
-Optional: gc_copy_batch_all=1 also batches regular inodes during FG_GC. Without it they stay on move_data_page(), which writes lazily through the page cache.
-
-The patch also changes phase 3 of gc_data_segment(). When a batch is likely, it skips ra_data_block() and the data-folio readahead. Otherwise the host would still read every source block, which defeats the offload.
-
-A batch is skipped, and the block falls back to the per-block path, when:
-
-the inode is COW or atomic;
-ATGC or SSR is in play, because those allocate non-sequentially;
-fragment-block mode is on;
-the device reports zero for max_copy_sectors or either segment limit;
-the batch would reach the last block of the destination segment. I clip it there so a segment switch never has to be rolled back.
-
-Runtime switches under /sys/module/f2fs/parameters/ (assuming F2FS is built in or loaded as a module named f2fs):
-
-gc_copy_batch turns batching on or off, for A/B runs.
-gc_copy_batch_blks sets the maximum batch size (default 32, capped at 64 and at the device maximum).
-gc_copy_batch_all is described above.
-gc_copy_batch_trace controls logging.
-
-After 4 consecutive device failures, batching switches itself off.
-
-New log lines you can grep:
-
-COPY_OFFLOAD_BATCH_ATTEMPT
-COPY_OFFLOAD_BATCH_SUCCESS (with NR, SRC_RUNS and DST_RUNS)
-COPY_OFFLOAD_BATCH_FAILED
-
-DST_RUNS per batch also feeds your sequential-versus-random LBA question.
-
-Bugs in blk-copy.c
-Sync errors are lost. blkdev_end_copy_sync() never copies params->status into ctx->status. A failed device copy therefore returns 0, and F2FS would commit the new mapping over missing data.
-Possible hang with several source bios. atomic_inc(&params->copy_ctx_count) runs once per source bio but is dropped once per context. My batches use one source segment, so they shouldn’t hit it. Any future multi-segment source would hang. The patch moves the increment to once per context.
-Edge cases.
-Zero max_copy_*_segments produces a 0-byte chunk and an endless loop. The patch returns -EOPNOTSUPP instead.
-A negative return from blkdev_copy_chunk() makes offset go backwards. The patch breaks out of the loop and records the error.
-The %lu print of params->len is a format mismatch. I fixed it with %llu.
-Assumptions to check at build time
-The code uses dn.node_page and ADDRS_PER_PAGE(dn.node_page, inode), matching your f2fs.h and data.c. If your tree has moved to node_folio, rename those.
-The rollback uses f2fs_do_replace_block(..., true, true, true) exactly as your existing recover_block path does. I haven’t exercised it across a segment switch, which is why batches are clipped before one.
-A successful sync copy only means the command completed, the same as a normal write. Durability still depends on the checkpoint preflush.
-What I did not change
-segment.c and data.c are untouched.
-Your old single-block path in move_data_block() stays as the fallback.
-BG_GC blocks that go through the lazy writeback path in segment.c are still copied one at a time. Batching those would mean hooking f2fs_write_cache_pages, which is a separate piece of work.
-Suggested test order
-Run with gc_copy_batch=0 as a baseline.
-Turn it on and run a forced FG_GC on a sequentially written file, then fsck.f2fs and a checksum compare.
-Run again with gc_copy_batch_all=1.
-Compare the batch NR and DST_RUNS values against your earlier GC logs.
+#
+Test
+Status (on / off)
+GC calls (on / off)
+Blocks moved (on / off)
+Offload commands (on / off)
+1
+fg_append_full
+INCONCLUSIVE / INCONCLUSIVE
+0 / 0
+0 / 0
+0 / 0
+2
+fg_random_overwrite
+INCONCLUSIVE / INCONCLUSIVE
+0 / 0
+0 / 0
+0 / 0
+3
+fg_fsync_pressure
+PASS / PASS
+1 / 2
+1 / 2
+0 / 0
+4
+fg_parallel_writers
+INCONCLUSIVE / INCONCLUSIVE
+0 / 0
+0 / 0
+0 / 0
+5
+fg_ioctl_sync_gc
+PASS / PASS
+29 / 30
+7128 / 7606
+72 / 0
+6
+fg_ioctl_gc_range
+FAIL / FAIL
+0 / 0
+0 / 0
+0 / 0
+7
+fg_enospc_recovery
+INCONCLUSIVE / INCONCLUSIVE
+0 / 0
+0 / 0
+0 / 0
+8
+bg_fsync_workload
+INCONCLUSIVE / INCONCLUSIVE
+0 / 0
+0 / 0
+0 / 0
+9
+bg_default_idle
+PASS / PASS
+2 / 2
+364 / 354
+5 / 0
+10
+bg_urgent_high
+PASS / PASS
+18 / 32
+3866 / 7821
+52 / 0
+11
+bg_urgent_low
+INCONCLUSIVE / INCONCLUSIVE
+0 / 0
+0 / 0
+0 / 0
+12
+bg_idle_cost_benefit
+INCONCLUSIVE / INCONCLUSIVE
+0 / 0
+0 / 0
+0 / 0
+13
+bg_idle_greedy
+PASS / PASS
+95 / 95
+7852 / 7772
+81 / 0
+14
+bg_with_foreground_io
+INCONCLUSIVE / INCONCLUSIVE
+0 / 0
+0 / 0
+0 / 0
+15
+bg_reclaim_after_delete
+INCONCLUSIVE / INCONCLUSIVE
+0 / 0
+0 / 0
+0 / 0
+16
+bg_waf_soak
+INCONCLUSIVE / INCONCLUSIVE
+0 / 0
+0 / 0
+0 / 0
+17
+bg_idle_maint
+PASS / PASS
+4 / 4
+607 / 554
+7 / 0
