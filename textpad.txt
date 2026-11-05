@@ -1,108 +1,13 @@
-#
-Test
-Status (on / off)
-GC calls (on / off)
-Blocks moved (on / off)
-Offload commands (on / off)
-1
-fg_append_full
-INCONCLUSIVE / INCONCLUSIVE
-0 / 0
-0 / 0
-0 / 0
-2
-fg_random_overwrite
-INCONCLUSIVE / INCONCLUSIVE
-0 / 0
-0 / 0
-0 / 0
-3
-fg_fsync_pressure
-PASS / PASS
-1 / 2
-1 / 2
-0 / 0
-4
-fg_parallel_writers
-INCONCLUSIVE / INCONCLUSIVE
-0 / 0
-0 / 0
-0 / 0
-5
-fg_ioctl_sync_gc
-PASS / PASS
-29 / 30
-7128 / 7606
-72 / 0
-6
-fg_ioctl_gc_range
-FAIL / FAIL
-0 / 0
-0 / 0
-0 / 0
-7
-fg_enospc_recovery
-INCONCLUSIVE / INCONCLUSIVE
-0 / 0
-0 / 0
-0 / 0
-8
-bg_fsync_workload
-INCONCLUSIVE / INCONCLUSIVE
-0 / 0
-0 / 0
-0 / 0
-9
-bg_default_idle
-PASS / PASS
-2 / 2
-364 / 354
-5 / 0
-10
-bg_urgent_high
-PASS / PASS
-18 / 32
-3866 / 7821
-52 / 0
-11
-bg_urgent_low
-INCONCLUSIVE / INCONCLUSIVE
-0 / 0
-0 / 0
-0 / 0
-12
-bg_idle_cost_benefit
-INCONCLUSIVE / INCONCLUSIVE
-0 / 0
-0 / 0
-0 / 0
-13
-bg_idle_greedy
-PASS / PASS
-95 / 95
-7852 / 7772
-81 / 0
-14
-bg_with_foreground_io
-INCONCLUSIVE / INCONCLUSIVE
-0 / 0
-0 / 0
-0 / 0
-15
-bg_reclaim_after_delete
-INCONCLUSIVE / INCONCLUSIVE
-0 / 0
-0 / 0
-0 / 0
-16
-bg_waf_soak
-INCONCLUSIVE / INCONCLUSIVE
-0 / 0
-0 / 0
-0 / 0
-17
-bg_idle_maint
-PASS / PASS
-4 / 4
-607 / 554
-7 / 0
+--- a/block/blk-copy.c
++++ b/block/blk-copy.c
+@@ -136,6 +136,10 @@
+ 				ctx->status = bio->bi_status;
+ 		break;
+ 	case BLKDEV_COPY:
++		/* Do not lose an error reported by the device for this bio. */
++		scoped_guard(spinlock_irqsave, &ctx->lock)
++			if (!ctx->status)
++				ctx->status = bio->bi_status;
+ 		status = ctx->status;
+ 		ctx->phase = BLKDEV_COPY_DONE;
+ 		blkdev_end_bios(ctx);
