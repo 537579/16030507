@@ -1,69 +1,3 @@
-PS D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation> .\Run_gcbench.ps1
-
-=== Checking local files ===
-
-=== Connecting to device ===
-
-=== Pushing files ===
-
-=== Preflight checks ===
-[ ok ] copy_offload toggle: /sys/block/sdg/queue/copy_offload
-[warn] max_copy_sectors: cat: /sys/block/sdg/queue/max_copy_sectors: No such file or directory
-[ ok ] mkfs tool: /system/bin/make_f2fs
-[ ok ] device node: /dev/block/sdg
-[ ok ] printk/drop_caches: /proc/sys/vm/drop_caches
-copy_offload now: 1
-f2fs counters (only exist while /dev/block/sdg is mounted as f2fs):  /sys/fs/f2fs/sdg/copy_offload_calls , /sys/fs/f2fs/sdg/moved_blocks_foreground
-If those two are missing after mount, gcbench falls back to 0 for them; override with -Cnode / -Moved.
-
-=== Running: smoke ===
-Started in background on device; log: /data/local/tmp/gcbench_smoke.log
-[11:54:48] done: /data/local/tmp/gcbench_results/results_20260924_164520.csv
-Pulled: D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results\smoke_results_20260924_164520.csv
-
---- Summary (D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results\smoke_results_20260924_164520.md) ---
-| pattern | valid/seg | mode | n | MB/s moved | wall ms | GC thread CPU us/blk | system CPU us/blk | blks/cmd | FG p99 us | integrity bad |
-|---|---|---|---|---|---|---|---|---|---|---|
-dmesg 'I/O error' lines during this session: 0  (should be 0, or equal to failed copy commands)
-
-=== Finished ===
-Results in: D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results
-PS D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation>
-PS D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation>
-PS D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation>
-PS D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation>
-PS D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation> .\Run_gcbench.ps1 -Phase Smoke
-
-=== Checking local files ===
-
-=== Connecting to device ===
-
-=== Pushing files ===
-
-=== Preflight checks ===
-[ ok ] copy_offload toggle: /sys/block/sdg/queue/copy_offload
-[warn] max_copy_sectors: cat: /sys/block/sdg/queue/max_copy_sectors: No such file or directory
-[ ok ] mkfs tool: /system/bin/make_f2fs
-[ ok ] device node: /dev/block/sdg
-[ ok ] printk/drop_caches: /proc/sys/vm/drop_caches
-copy_offload now: 0
-f2fs counters (only exist while /dev/block/sdg is mounted as f2fs):  /sys/fs/f2fs/sdg/copy_offload_calls , /sys/fs/f2fs/sdg/moved_blocks_foreground
-If those two are missing after mount, gcbench falls back to 0 for them; override with -Cnode / -Moved.
-
-=== Running: smoke ===
-Started in background on device; log: /data/local/tmp/gcbench_smoke.log
-[11:58:10] done: /data/local/tmp/gcbench_results/results_20260924_164842.csv
-Pulled: D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results\smoke_results_20260924_164842.csv
-
---- Summary (D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results\smoke_results_20260924_164842.md) ---
-| pattern | valid/seg | mode | n | MB/s moved | wall ms | GC thread CPU us/blk | system CPU us/blk | blks/cmd | FG p99 us | integrity bad |
-|---|---|---|---|---|---|---|---|---|---|---|
-dmesg 'I/O error' lines during this session: 0  (should be 0, or equal to failed copy commands)
-
-=== Finished ===
-Results in: D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results
-PS D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation>
-PS D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation>
 PS D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation> .\Run_gcbench.ps1 -Phase Main
 
 === Checking local files ===
@@ -73,30 +7,48 @@ PS D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_r
 === Pushing files ===
 
 === Preflight checks ===
+NOTE: /mnt/test is not an f2fs mount right now. That is fine only if gcbench should mkfs+mount /dev/block/sdg itself.
+Mode: REFORMAT /dev/block/sdg before every run. Press Ctrl+C within 5 s to abort.
 [ ok ] copy_offload toggle: /sys/block/sdg/queue/copy_offload
-[warn] max_copy_sectors: cat: /sys/block/sdg/queue/max_copy_sectors: No such file or directory
+[ ok ] copy_max_hw_bytes: 536870912
 [ ok ] mkfs tool: /system/bin/make_f2fs
 [ ok ] device node: /dev/block/sdg
 [ ok ] printk/drop_caches: /proc/sys/vm/drop_caches
-copy_offload now: 0
+copy_offload now: 1
 f2fs counters (only exist while /dev/block/sdg is mounted as f2fs):  /sys/fs/f2fs/sdg/copy_offload_calls , /sys/fs/f2fs/sdg/moved_blocks_foreground
 If those two are missing after mount, gcbench falls back to 0 for them; override with -Cnode / -Moved.
 
 === Running: main ===
 Started in background on device; log: /data/local/tmp/gcbench_main.log
-[11:59:25] done: /data/local/tmp/gcbench_results/results_20260924_164957.csv
-Pulled: D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results\main_results_20260924_164957.csv
+[16:39:51] prep: prep_ok kept_files=16384 kept_blocks=1048576
+[16:40:21] --- run: off keep=4 pat=contig rep=1
+[16:40:51] --- run: off keep=4 pat=contig rep=2
+[16:41:21] --- run: on keep=4 pat=contig rep=2
+[16:41:52] run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=16235.01 thread_cpu_ms=1548.63 sys_cpu_ms=1800 moved_blks=1048576 call_p50_us=3952 call_p99_us=4141
+[16:42:22] prep: prep_ok kept_files=16384 kept_blocks=1048576
+[16:42:52] --- run: off keep=4 pat=contig rep=3
+[16:43:22] --- run: off keep=4 pat=contig rep=4
+[16:43:52] run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=4788.04 thread_cpu_ms=2146.17 sys_cpu_ms=2460 moved_blks=1048576 call_p50_us=1125 call_p99_us=1562 c
+[16:44:23] prep: prep_ok kept_files=16384 kept_blocks=1048576
+[16:44:53] --- run: on keep=4 pat=contig rep=5
+[16:45:23] run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=16213.29 thread_cpu_ms=1557.36 sys_cpu_ms=2010 moved_blks=1048576 call_p50_us=3953 call_p99_us=4137
+[16:45:53] run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=4794.77 thread_cpu_ms=2149.13 sys_cpu_ms=2480 moved_blks=1048576 call_p50_us=1128 call_p99_us=1473 c
+[16:46:23] done: /data/local/tmp/gcbench_results/results_20260924_150037.csv
+Pulled: D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results\main_results_20260924_150037.csv
+Result rows: 10
 
---- Summary (D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results\main_results_20260924_164957.md) ---
+--- Summary (D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results\main_results_20260924_150037.md) ---
 | pattern | valid/seg | mode | n | MB/s moved | wall ms | GC thread CPU us/blk | system CPU us/blk | blks/cmd | FG p99 us | integrity bad |
-|---|---|---|---|---|---|---|---|---|---|---|
+|---------|-----------|------|---|------------|---------|----------------------|-------------------|----------|-----------|---------------|
+| contig  |     4     | off  | 5 |    855.5   |  4788   |          2.05        |       2.37        |   n/a    |     n/a    |       0      |
+| contig  |     4     | on  | 5 |    252.3   |  16235   |          1.48        |       1.72        |   260    |     n/a    |       0      |
+| |**Offload On vs Offload off** |    -70.5%  | +239.1% |         -27.9%       |      -27.4%       |           |     n/a    |              |
 dmesg 'I/O error' lines during this session: 0  (should be 0, or equal to failed copy commands)
 
 === Finished ===
 Results in: D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results
 PS D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation>
-PS D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation>
-PS D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation> .\Run_gcbench.ps1 -Phase Sweep
+PS D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation> .\Run_gcbench.ps1 -Phase FgImpact
 
 === Checking local files ===
 
@@ -105,136 +57,44 @@ PS D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_r
 === Pushing files ===
 
 === Preflight checks ===
+NOTE: /mnt/test is not an f2fs mount right now. That is fine only if gcbench should mkfs+mount /dev/block/sdg itself.
+Mode: REFORMAT /dev/block/sdg before every run. Press Ctrl+C within 5 s to abort.
 [ ok ] copy_offload toggle: /sys/block/sdg/queue/copy_offload
-[warn] max_copy_sectors: cat: /sys/block/sdg/queue/max_copy_sectors: No such file or directory
+[ ok ] copy_max_hw_bytes: 536870912
 [ ok ] mkfs tool: /system/bin/make_f2fs
 [ ok ] device node: /dev/block/sdg
 [ ok ] printk/drop_caches: /proc/sys/vm/drop_caches
-copy_offload now: 0
+copy_offload now: 1
 f2fs counters (only exist while /dev/block/sdg is mounted as f2fs):  /sys/fs/f2fs/sdg/copy_offload_calls , /sys/fs/f2fs/sdg/moved_blocks_foreground
 If those two are missing after mount, gcbench falls back to 0 for them; override with -Cnode / -Moved.
-
-=== Running: sweep ===
-Started in background on device; log: /data/local/tmp/gcbench_sweep.log
-[12:00:19] done: /data/local/tmp/gcbench_results/results_20260924_165051.csv
-Pulled: D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results\sweep_results_20260924_165051.csv
-
---- Summary (D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results\sweep_results_20260924_165051.md) ---
-| pattern | valid/seg | mode | n | MB/s moved | wall ms | GC thread CPU us/blk | system CPU us/blk | blks/cmd | FG p99 us | integrity bad |
-|---|---|---|---|---|---|---|---|---|---|---|
-dmesg 'I/O error' lines during this session: 0  (should be 0, or equal to failed copy commands)
-
-=== Finished ===
-Results in: D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results
-PS D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation>
-PS D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation> .\Run_gcbench.ps1 -Phase All
-
-=== Checking local files ===
-
-=== Connecting to device ===
-
-=== Pushing files ===
-
-=== Preflight checks ===
-[ ok ] copy_offload toggle: /sys/block/sdg/queue/copy_offload
-[warn] max_copy_sectors: cat: /sys/block/sdg/queue/max_copy_sectors: No such file or directory
-[ ok ] mkfs tool: /system/bin/make_f2fs
-[ ok ] device node: /dev/block/sdg
-[ ok ] printk/drop_caches: /proc/sys/vm/drop_caches
-copy_offload now: 0
-f2fs counters (only exist while /dev/block/sdg is mounted as f2fs):  /sys/fs/f2fs/sdg/copy_offload_calls , /sys/fs/f2fs/sdg/moved_blocks_foreground
-If those two are missing after mount, gcbench falls back to 0 for them; override with -Cnode / -Moved.
-
-=== Running: smoke ===
-Started in background on device; log: /data/local/tmp/gcbench_smoke.log
-[12:03:17] done: /data/local/tmp/gcbench_results/results_20260924_165349.csv
-Pulled: D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results\smoke_results_20260924_165349.csv
-
---- Summary (D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results\smoke_results_20260924_165349.md) ---
-| pattern | valid/seg | mode | n | MB/s moved | wall ms | GC thread CPU us/blk | system CPU us/blk | blks/cmd | FG p99 us | integrity bad |
-|---|---|---|---|---|---|---|---|---|---|---|
-dmesg 'I/O error' lines during this session: 0  (should be 0, or equal to failed copy commands)
-
-=== Running: main ===
-Started in background on device; log: /data/local/tmp/gcbench_main.log
-[12:03:49] done: /data/local/tmp/gcbench_results/results_20260924_165421.csv
-Pulled: D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results\main_results_20260924_165421.csv
-
---- Summary (D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results\main_results_20260924_165421.md) ---
-| pattern | valid/seg | mode | n | MB/s moved | wall ms | GC thread CPU us/blk | system CPU us/blk | blks/cmd | FG p99 us | integrity bad |
-|---|---|---|---|---|---|---|---|---|---|---|
-dmesg 'I/O error' lines during this session: 0  (should be 0, or equal to failed copy commands)
-
-=== Running: sweep ===
-Started in background on device; log: /data/local/tmp/gcbench_sweep.log
-[12:04:20] done: /data/local/tmp/gcbench_results/results_20260924_165452.csv
-Pulled: D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results\sweep_results_20260924_165452.csv
-
---- Summary (D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results\sweep_results_20260924_165452.md) ---
-| pattern | valid/seg | mode | n | MB/s moved | wall ms | GC thread CPU us/blk | system CPU us/blk | blks/cmd | FG p99 us | integrity bad |
-|---|---|---|---|---|---|---|---|---|---|---|
-dmesg 'I/O error' lines during this session: 0  (should be 0, or equal to failed copy commands)
 
 === Running: fgimpact ===
 Started in background on device; log: /data/local/tmp/gcbench_fgimpact.log
-[12:04:52] done: /data/local/tmp/gcbench_results/results_20260924_165524.csv
-Pulled: D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results\fgimpact_results_20260924_165524.csv
+[16:47:32] prep: prep_ok kept_files=16384 kept_blocks=1048576
+[16:48:03] --- run: off keep=4 pat=contig rep=1
+[16:48:33] --- run: off keep=4 pat=contig rep=2
+[16:49:03] --- run: on keep=4 pat=contig rep=2
+[16:49:33] prep: prep_ok kept_files=16384 kept_blocks=1048576
+[16:50:04] prep: prep_ok kept_files=16384 kept_blocks=1048576
+[16:50:34] --- run: off keep=4 pat=contig rep=3
+[16:51:04] run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=4855.66 thread_cpu_ms=2130.08 sys_cpu_ms=4650 moved_blks=1041941 call_p50_us=1145 call_p99_us=1604 c
+[16:51:34] run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=4895.70 thread_cpu_ms=2165.64 sys_cpu_ms=4910 moved_blks=1041167 call_p50_us=1156 call_p99_us=1614 c
+[16:52:04] prep: prep_ok kept_files=16384 kept_blocks=1048576
+[16:52:35] --- run: on keep=4 pat=contig rep=5
+[16:53:05] run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=16714.53 thread_cpu_ms=1526.58 sys_cpu_ms=3500 moved_blks=1042917 call_p50_us=4095 call_p99_us=4298
+[16:53:35] prep: prep_ok kept_files=16384 kept_blocks=1048576
+[16:54:05] done: /data/local/tmp/gcbench_results/results_20260924_150819.csv
+Pulled: D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results\fgimpact_results_20260924_150819.csv
+Result rows: 10
 
---- Summary (D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results\fgimpact_results_20260924_165524.md) ---
+--- Summary (D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results\fgimpact_results_20260924_150819.md) ---
 | pattern | valid/seg | mode | n | MB/s moved | wall ms | GC thread CPU us/blk | system CPU us/blk | blks/cmd | FG p99 us | integrity bad |
-|---|---|---|---|---|---|---|---|---|---|---|
+|---------|-----------|------|---|------------|---------|----------------------|-------------------|----------|-----------|---------------|
+| contig  |     4     | off  | 5 |    838.6   |  4854   |          2.05        |       4.46        |   n/a    |     1294    |       0      |
+| contig  |     4     | on  | 5 |    244.6   |  16659   |          1.47        |       3.32        |   260    |     4213    |       0      |
+| |**Offload On vs Offload off** |    -70.8%  | +243.2% |         -28.6%       |      -25.7%       |           |     +225.6%    |              |
 dmesg 'I/O error' lines during this session: 0  (should be 0, or equal to failed copy commands)
 
 === Finished ===
 Results in: D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results
-PS D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation> adb shell "ls /sys/block/sdg/queue"
-add_random
-atomic_write_boundary_bytes
-atomic_write_max_bytes
-atomic_write_unit_max_bytes
-atomic_write_unit_min_bytes
-chunk_sectors
-copy_max_bytes
-copy_max_hw_bytes
-copy_offload
-crypto
-dax
-discard_granularity
-discard_max_bytes
-discard_max_hw_bytes
-discard_zeroes_data
-dma_alignment
-fua
-hw_sector_size
-io_poll
-io_poll_delay
-io_timeout
-iosched
-iostats
-logical_block_size
-max_discard_segments
-max_hw_sectors_kb
-max_integrity_segments
-max_sectors_kb
-max_segment_size
-max_segments
-minimum_io_size
-nomerges
-nr_requests
-nr_zones
-optimal_io_size
-physical_block_size
-read_ahead_kb
-rotational
-rq_affinity
-scheduler
-stable_writes
-virt_boundary_mask
-wbt_lat_usec
-write_cache
-write_same_max_bytes
-write_zeroes_max_bytes
-zone_append_max_bytes
-zone_write_granularity
-zoned
 PS D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation>
