@@ -1,1 +1,43 @@
-
+config: DEV=/dev/block/sdg MNT=/mnt/test NO_MKFS=0 MKFS='make_f2fs -f'
+config: MOUNT_OPTS=background_gc=off NSEG=4096 UNIT_KB=256 KEEPS='4' PATTERNS='contig' REPS=5 FGIO=1
+--- run: on keep=4 pat=contig rep=1
+prep: prep_ok kept_files=16384 kept_blocks=1048576
+run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=16646.50 thread_cpu_ms=1528.43 sys_cpu_ms=3460 moved_blks=1044718 call_p50_us=4091 call_p99_us=4279 call_max_us=13513 fg_ops=7331 fg_p50_us=3745 fg_p99_us=4204 fg_max_us=13638
+verify: verify=OK checked=16384 bad=0
+--- run: off keep=4 pat=contig rep=1
+prep: prep_ok kept_files=16384 kept_blocks=1048576
+run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=4853.66 thread_cpu_ms=2127.58 sys_cpu_ms=4660 moved_blks=1041941 call_p50_us=1144 call_p99_us=1741 call_max_us=6210 fg_ops=8486 fg_p50_us=544 fg_p99_us=1234 fg_max_us=5992
+verify: verify=OK checked=16384 bad=0
+--- run: off keep=4 pat=contig rep=2
+prep: prep_ok kept_files=16384 kept_blocks=1048576
+run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=4834.70 thread_cpu_ms=2139.23 sys_cpu_ms=4510 moved_blks=1041940 call_p50_us=1141 call_p99_us=1641 call_max_us=6387 fg_ops=8406 fg_p50_us=546 fg_p99_us=1299 fg_max_us=6247
+verify: verify=OK checked=16384 bad=0
+--- run: on keep=4 pat=contig rep=2
+prep: prep_ok kept_files=16384 kept_blocks=1048576
+run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=16658.76 thread_cpu_ms=1531.54 sys_cpu_ms=3330 moved_blks=1042936 call_p50_us=4095 call_p99_us=4262 call_max_us=13512 fg_ops=7434 fg_p50_us=3739 fg_p99_us=4221 fg_max_us=13515
+verify: verify=OK checked=16384 bad=0
+--- run: on keep=4 pat=contig rep=3
+prep: prep_ok kept_files=16384 kept_blocks=1048576
+run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=16668.41 thread_cpu_ms=1528.89 sys_cpu_ms=3390 moved_blks=1042940 call_p50_us=4091 call_p99_us=4274 call_max_us=13548 fg_ops=7394 fg_p50_us=3743 fg_p99_us=4213 fg_max_us=13394
+verify: verify=OK checked=16384 bad=0
+--- run: off keep=4 pat=contig rep=3
+prep: prep_ok kept_files=16384 kept_blocks=1048576
+run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=4855.66 thread_cpu_ms=2130.08 sys_cpu_ms=4650 moved_blks=1041941 call_p50_us=1145 call_p99_us=1604 call_max_us=6348 fg_ops=8371 fg_p50_us=553 fg_p99_us=1294 fg_max_us=6193
+verify: verify=OK checked=16384 bad=0
+--- run: off keep=4 pat=contig rep=4
+prep: prep_ok kept_files=16384 kept_blocks=1048576
+run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=4895.70 thread_cpu_ms=2165.64 sys_cpu_ms=4910 moved_blks=1041167 call_p50_us=1156 call_p99_us=1614 call_max_us=6135 fg_ops=9182 fg_p50_us=523 fg_p99_us=1285 fg_max_us=6437
+verify: verify=OK checked=16384 bad=0
+--- run: on keep=4 pat=contig rep=4
+prep: prep_ok kept_files=16384 kept_blocks=1048576
+run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=16638.53 thread_cpu_ms=1527.52 sys_cpu_ms=3520 moved_blks=1042940 call_p50_us=4090 call_p99_us=4254 call_max_us=13438 fg_ops=7377 fg_p50_us=3737 fg_p99_us=4200 fg_max_us=13439
+verify: verify=OK checked=16384 bad=0
+--- run: on keep=4 pat=contig rep=5
+prep: prep_ok kept_files=16384 kept_blocks=1048576
+run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=16714.53 thread_cpu_ms=1526.58 sys_cpu_ms=3500 moved_blks=1042917 call_p50_us=4095 call_p99_us=4298 call_max_us=13584 fg_ops=7312 fg_p50_us=3754 fg_p99_us=4218 fg_max_us=13586
+verify: verify=OK checked=16384 bad=0
+--- run: off keep=4 pat=contig rep=5
+prep: prep_ok kept_files=16384 kept_blocks=1048576
+run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=4848.14 thread_cpu_ms=2143.07 sys_cpu_ms=4600 moved_blks=1041943 call_p50_us=1145 call_p99_us=1681 call_max_us=6490 fg_ops=8336 fg_p50_us=548 fg_p99_us=1299 fg_max_us=6356
+verify: verify=OK checked=16384 bad=0
+done: /data/local/tmp/gcbench_results/results_20260924_150819.csv
