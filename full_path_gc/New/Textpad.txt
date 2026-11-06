@@ -1,1 +1,130 @@
-.
+How to present the GC copy offload results
+What the test does
+Run two kinds of test, and present them separately. Your existing 17-test suite checks functional correctness: does GC run, and does offload engage? gcbench checks performance: how much does offload cost or save when GC moves the same data?
+Every gcbench run does the same steps, once with offload off and once with it on:
+Fresh filesystem. Format the partition and mount it with background GC off, so only the test's own GC runs.
+Fixed data layout.
+Write NSEG × 2 MiB of deterministic files (256 KB each, 8 per segment).
+Delete some of them so every victim segment has an exact valid fraction. keep=4 means 50% valid.
+contig keeps the surviving files adjacent, giving one source range per segment.
+alt spreads them out, giving scattered sources.
+Cold start. Sync, remount and drop caches. Without this, the CPU path would find data in RAM and skip real reads, which would flatter it.
+GC. Run the foreground-GC ioctl in a loop, one call per victim segment. Only this phase is timed.
+Integrity check. Re-read every surviving file and compare it with the expected pattern.
+Runs alternate which mode goes first and repeat at least 5 times. This is so thermal and flash-state drift doesn't favor one mode.
+What each metric means
+Metric
+How it is measured
+What it tells you
+Better is
+MB/s moved
+Blocks moved × 4 KB ÷ GC wall time
+Speed at which GC reclaims data
+Higher
+wall ms
+Clock time of the whole GC loop
+Total time to finish the same work
+Lower
+GC thread CPU µs/blk
+CPU time of the thread that issued the GC ioctl (foreground GC runs in that thread), ÷ blocks moved. Time the thread sleeps waiting on the device is not counted.
+The headline number. The CPU cost of copying one block.
+Lower
+system CPU µs/blk
+Busy time of all CPUs from /proc/stat (10 ms ticks), ÷ blocks moved
+Whole-system cost, including interrupts and I/O completion. Noisy and coarse.
+Lower
+blks/cmd
+Blocks moved ÷ device copy commands issued (n/a with offload off)
+How well batching works.
+Higher
+FG p99 µs
+99th-percentile latency of a 4 KB write plus sync from a concurrent writer, only in the FgImpact phase
+Whether foreground I/O suffers while GC runs. Offload holds the checkpoint lock during the device copy.
+Lower
+integrity bad
+Files that don't match the expected pattern after GC
+Data correctness.
+Must be 0
+Supporting columns in the CSV:
+gc_calls, call_p50/p99/max_us: per-ioctl latency. One call is roughly one segment. It is secondary, for the reasons we discussed.
+offload_cmds: commands actually sent to the device, from the copy_offload_calls delta.
+prep: the number of blocks that should move, from the data setup.
+gc_busy: how many calls hit EBUSY and were retried.
+last_errno: 0 means the loop completed. 61 (ENODATA) means GC ran out of victims early.
+The report's "on vs off" row shows the change of on relative to off. For CPU and wall time, a negative percentage is an improvement. For MB/s, a positive one is.
+How to read and present the results
+Lead with CPU cost per block. Device-side copy takes the data movement off the CPU, so I'd expect GC thread CPU µs/blk to drop clearly. Wall time and MB/s may be flat or slightly worse, because the thread waits on the device and each command has a fixed cost. Your earlier runs already showed longer per-call latency with offload. Say this openly. The claim is "less CPU for the same GC work", not "faster GC".
+Always show the sweep. Gain should grow with valid blocks per segment, because larger batches amortize the per-command cost. At low valid fractions or with alt scattered sources (MULTISEG off means one command per source range), the gain may shrink or disappear. Showing that is more credible than one flattering case.
+Show foreground impact separately. The FgImpact phase is where offload's risk is. If FG p99 rises, report it alongside the CPU saving.
+State integrity per run. Every run shows bad = 0, or the results don't count.
+What the results don't prove
+Power and energy. I don't measure either. CPU time is a proxy, not energy.
+Real workloads. The data layout is synthetic, and it uses foreground GC only. Background GC behavior, and real aged filesystems, are not covered.
+MULTISEG off. Scattered source ranges produce many small commands, so the alt pattern shows the penalty of that choice.
+Single device and image. Results are for one UFS part, with max_copy limits as they are now.
+Suggested slide flow
+What changed: GC copy offload through the block layer, batching, safe CPU fallback. Include the diagram from earlier.
+Method: the five steps above and the controls (fresh format, cold cache, alternating order, five or more repetitions).
+Headline: GC thread CPU per block, on vs off, with the integrity result.
+Sweep: gain vs valid fraction and layout.
+Foreground impact: FG p99 with and without offload.
+Limitations and next steps: MULTISEG, background GC, power measurement.
+
+######################
+
+
+I've built a 12-slide deck with the verdict, method, results, root-cause findings, conclusion and next steps, with raw medians in the appendix. I haven't opened or rendered the deck, so check the layout once you open it. The deck is private until you share it from the page's Share menu.
+Verdict
+Offload is correct and saves CPU, but it makes GC slower on this device and stalls foreground writes.
+Metric (median of 5 runs)
+Offload off
+Offload on
+Change
+Time to move 1,048,576 blocks
+4.79 s
+16.24 s
++239%, worse
+GC throughput
+855 MB/s
+252 MB/s
+−70.5%, worse
+GC thread CPU per block
+2.05 µs
+1.48 µs
+−27.9%, better
+GC call latency (p50)
+1.13 ms
+3.95 ms
++251%, worse
+Foreground write p50
+546 µs
+3,743 µs
+6.9×, worse
+Foreground write p99
+1,294 µs
+4,213 µs
+3.3×, worse
+Foreground writes per second
+1,732
+443
+−74%, worse
+Corrupt files
+0
+0
+none
+What the numbers tell us
+The results are solid. Run-to-run spread is about 1% or less, and all 20 runs verified with zero mismatches and no kernel I/O errors. About 98% of GC calls used a device copy.
+The device copy is the bottleneck.
+Each ~260-block command takes about 4 ms. That is roughly 250 MB/s end to end, against about 850 MB/s when the host does the copy.
+A correction: I earlier estimated a large fixed cost per command. This data doesn't support that. Cost looks proportional to size, so bigger batches won't help much.
+The CPU saving is small because copying is a small part of the CPU cost. It is about 0.6 µs of the roughly 2 µs per block. Inode, node and lock work (about 1.5 µs) stays on the CPU.
+Foreground writers wait about one device command. Their median wait (3.7 ms) matches the GC call latency (4.1 ms). That is consistent with the copy running while the checkpoint lock is held. It's an inference from the design and the matching numbers, not confirmed with lock tracing.
+Recommendation
+Keep offload off for foreground GC.
+Consider it only for background or idle GC, where CPU and power matter more than latency.
+Ask the UFS vendor for the internal copy throughput and whether copies can overlap.
+What isn't covered
+Only one layout was tested (50% valid, contiguous). The batch-size and valid-fraction sweeps were not run.
+Background GC wasn't measured, and neither was energy, so the deck makes no power claim.
+Multi-segment copy stays disabled.
+The next-steps slide lists five experiments. The batch-size sweep (32 to 512 blocks) needs no code change and is the cheapest to run.
