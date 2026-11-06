@@ -1,1 +1,44 @@
 
+config: DEV=/dev/block/sdg MNT=/mnt/test NO_MKFS=0 MKFS='make_f2fs -f'
+config: MOUNT_OPTS=background_gc=off NSEG=4096 UNIT_KB=256 KEEPS='4' PATTERNS='contig' REPS=5 FGIO=0
+--- run: on keep=4 pat=contig rep=1
+prep: prep_ok kept_files=16384 kept_blocks=1048576
+run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=16655.67 thread_cpu_ms=1541.21 sys_cpu_ms=1580 moved_blks=1048576 call_p50_us=4061 call_p99_us=4235 call_max_us=12877
+verify: verify=OK checked=16384 bad=0
+--- run: off keep=4 pat=contig rep=1
+prep: prep_ok kept_files=16384 kept_blocks=1048576
+run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=4776.97 thread_cpu_ms=2155.81 sys_cpu_ms=2500 moved_blks=1048576 call_p50_us=1126 call_p99_us=1439 call_max_us=4971
+verify: verify=OK checked=16384 bad=0
+--- run: off keep=4 pat=contig rep=2
+prep: prep_ok kept_files=16384 kept_blocks=1048576
+run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=4782.12 thread_cpu_ms=2142.76 sys_cpu_ms=2590 moved_blks=1048576 call_p50_us=1124 call_p99_us=1439 call_max_us=4962
+verify: verify=OK checked=16384 bad=0
+--- run: on keep=4 pat=contig rep=2
+prep: prep_ok kept_files=16384 kept_blocks=1048576
+run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=16235.01 thread_cpu_ms=1548.63 sys_cpu_ms=1800 moved_blks=1048576 call_p50_us=3952 call_p99_us=4141 call_max_us=12599
+verify: verify=OK checked=16384 bad=0
+--- run: on keep=4 pat=contig rep=3
+prep: prep_ok kept_files=16384 kept_blocks=1048576
+run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=16247.36 thread_cpu_ms=1548.15 sys_cpu_ms=2260 moved_blks=1048576 call_p50_us=3946 call_p99_us=4128 call_max_us=24136
+verify: verify=OK checked=16384 bad=0
+--- run: off keep=4 pat=contig rep=3
+prep: prep_ok kept_files=16384 kept_blocks=1048576
+run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=4801.63 thread_cpu_ms=2142.96 sys_cpu_ms=2390 moved_blks=1048576 call_p50_us=1119 call_p99_us=1438 call_max_us=4959
+verify: verify=OK checked=16384 bad=0
+--- run: off keep=4 pat=contig rep=4
+prep: prep_ok kept_files=16384 kept_blocks=1048576
+run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=4788.04 thread_cpu_ms=2146.17 sys_cpu_ms=2460 moved_blks=1048576 call_p50_us=1125 call_p99_us=1562 call_max_us=5064
+verify: verify=OK checked=16384 bad=0
+--- run: on keep=4 pat=contig rep=4
+prep: prep_ok kept_files=16384 kept_blocks=1048576
+run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=16192.14 thread_cpu_ms=1543.32 sys_cpu_ms=1690 moved_blks=1048576 call_p50_us=3945 call_p99_us=4130 call_max_us=12621
+verify: verify=OK checked=16384 bad=0
+--- run: on keep=4 pat=contig rep=5
+prep: prep_ok kept_files=16384 kept_blocks=1048576
+run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=16213.29 thread_cpu_ms=1557.36 sys_cpu_ms=2010 moved_blks=1048576 call_p50_us=3953 call_p99_us=4137 call_max_us=12717
+verify: verify=OK checked=16384 bad=0
+--- run: off keep=4 pat=contig rep=5
+prep: prep_ok kept_files=16384 kept_blocks=1048576
+run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=4794.77 thread_cpu_ms=2149.13 sys_cpu_ms=2480 moved_blks=1048576 call_p50_us=1128 call_p99_us=1473 call_max_us=4948
+verify: verify=OK checked=16384 bad=0
+done: /data/local/tmp/gcbench_results/results_20260924_150037.csv
