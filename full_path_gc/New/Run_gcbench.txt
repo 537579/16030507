@@ -23,9 +23,10 @@ param(
     [string]$Serial     = '',                       # adb -s <serial>, if several devices
     [string]$Dev        = '/dev/block/sdg',
     [string]$Blk        = 'sdg',
-    [string]$Mnt        = '/mnt/gcbench',
+    [string]$Mnt        = '/mnt/test',            # same mount the existing suite uses
     [string]$Mkfs       = 'make_f2fs -f',           # match common.sh
-    [string]$MountOpts  = 'background_gc=off',      # keep BG GC off
+    [string]$MountOpts  = '',                       # empty = reuse current mount options with background_gc=off
+    [switch]$NoMkfs,                                # do NOT mkfs/mount; reuse the existing mount (less controlled)
     [string]$Qnode      = '',                       # default /sys/block/<Blk>/queue/copy_offload
     [string]$Cnode      = '',                       # default /sys/fs/f2fs/<Blk>/copy_offload_calls
     [string]$Moved      = '',                       # default /sys/fs/f2fs/<Blk>/moved_blocks_foreground
@@ -89,13 +90,17 @@ AdbShell "chmod 755 $RemoteDir/gcbench $RemoteDir/gcbench.sh" | Out-Null
 # ---------- preflight ----------
 Step 'Preflight checks'
 $ok = $true
-$mounted = AdbShell "mount | grep -E '$Blk|$Mnt'"
-if ($mounted.Trim()) {
-    Write-Host "Currently mounted (unmount it if it is NOT the test partition):`n$mounted" -ForegroundColor Yellow
+$mounted = AdbShell "grep f2fs /proc/mounts"
+Write-Host "f2fs mounts on device:`n$mounted"
+if ($mounted -notmatch [regex]::Escape($Mnt)) {
+    Write-Host "NOTE: $Mnt is not an f2fs mount right now. That is fine only if gcbench should mkfs+mount $Dev itself." -ForegroundColor Yellow
+    if ($NoMkfs) { Fail "-NoMkfs needs $Mnt mounted as f2fs." }
 }
+if ($NoMkfs) { Write-Host 'Mode: -NoMkfs (existing mount reused, nothing is reformatted).' -ForegroundColor Yellow }
+else         { Write-Host "Mode: REFORMAT $Dev before every run. Press Ctrl+C within 10 s to abort." -ForegroundColor Yellow; Start-Sleep -Seconds 10 }
 $checks = @(
     @{ Name = 'copy_offload toggle'; Cmd = "ls $Qnode";                         Required = $true  },
-    @{ Name = 'max_copy_sectors';    Cmd = "cat /sys/block/$Blk/queue/max_copy_sectors"; Required = $false },
+    @{ Name = 'copy_max_hw_bytes';   Cmd = "cat /sys/block/$Blk/queue/copy_max_hw_bytes"; Required = $false },
     @{ Name = 'mkfs tool';           Cmd = "which $($Mkfs.Split(' ')[0])";        Required = $true  },
     @{ Name = 'device node';         Cmd = "ls $Dev";                              Required = $true  },
     @{ Name = 'printk/drop_caches';  Cmd = 'ls /proc/sys/vm/drop_caches';          Required = $true  }
@@ -119,9 +124,10 @@ function Invoke-Bench {
 
     Step "Running: $Label"
     $vars = [ordered]@{
-        DEV = $Dev; BLK = $Blk; MNT = $Mnt; MKFS = $Mkfs; MOUNT_OPTS = $MountOpts
-        QNODE = $Qnode; CNODE = $Cnode; MOVED = $Moved; GOV = $Gov
+        DEV = $Dev; BLK = $Blk; MNT = $Mnt; MKFS = $Mkfs; GOV = $Gov
+        QNODE = $Qnode; CNODE = $Cnode; MOVED = $Moved; NO_MKFS = $(if ($NoMkfs) { 1 } else { 0 })
     }
+    if ($MountOpts) { $vars['MOUNT_OPTS'] = $MountOpts }
     foreach ($k in $Knobs.Keys) { $vars[$k] = $Knobs[$k] }
     $assign = ($vars.GetEnumerator() | ForEach-Object { "{0}='{1}'" -f $_.Key, $_.Value }) -join ' '
 
@@ -138,8 +144,12 @@ function Invoke-Bench {
         try { $tail = AdbShell "tail -n 4 $log" } catch { Write-Host 'adb hiccup, retrying...' -ForegroundColor Yellow; continue }
         $last = ($tail -split "`n" | Where-Object { $_.Trim() } | Select-Object -Last 1)
         if ($last) { Write-Host ("[{0}] {1}" -f (Get-Date -Format HH:mm:ss), $last.Substring(0, [Math]::Min(150, $last.Length))) }
+        if ($tail -match 'ABORT:') {
+            Write-Host "`n--- device log tail ($log) ---" -ForegroundColor Red
+            Write-Host (AdbShell "tail -n 25 $log") -ForegroundColor Red
+            Fail "Run '$Label' aborted on the device (see ABORT line above)."
+        }
         if ($tail -match 'done: (\S+\.csv)') { $csvRemote = $Matches[1]; break }
-        if ($tail -match 'failed|missing /') { Write-Host $tail -ForegroundColor Red; Fail "Run '$Label' reported an error. Full log: adb shell cat $log" }
         if ($tail -ne $prevTail) { $prevTail = $tail; $lastChange = Get-Date }
         elseif (((Get-Date) - $lastChange).TotalMinutes -gt $StallMinutes) {
             Fail "No log progress for $StallMinutes min - run looks hung. Check: adb shell cat $log ; adb shell dmesg | tail -50"
@@ -150,6 +160,14 @@ function Invoke-Bench {
     Adb pull $csvRemote $localCsv | Out-Null
     Adb pull $log (Join-Path $OutDir "$Label.log") | Out-Null
     Write-Host "Pulled: $localCsv" -ForegroundColor Green
+
+    # a header-only CSV means nothing ran: never report that as success
+    $rows = @(Import-Csv $localCsv)
+    if ($rows.Count -eq 0) {
+        Write-Host (AdbShell "tail -n 40 $log") -ForegroundColor Red
+        Fail "CSV has no result rows - no test actually ran. See the device log above."
+    }
+    Write-Host "Result rows: $($rows.Count)"
 
     # integrity gate
     $bad = Import-Csv $localCsv | Where-Object { $_.verify -ne 'OK' -or [int]$_.bad -ne 0 }
