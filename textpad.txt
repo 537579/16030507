@@ -1,13 +1,56 @@
---- a/block/blk-copy.c
-+++ b/block/blk-copy.c
-@@ -136,6 +136,10 @@
- 				ctx->status = bio->bi_status;
- 		break;
- 	case BLKDEV_COPY:
-+		/* Do not lose an error reported by the device for this bio. */
-+		scoped_guard(spinlock_irqsave, &ctx->lock)
-+			if (!ctx->status)
-+				ctx->status = bio->bi_status;
- 		status = ctx->status;
- 		ctx->phase = BLKDEV_COPY_DONE;
- 		blkdev_end_bios(ctx);
+The gated policy works: with gc_cpoff_policy=1, foreground GC returns to the offload-off numbers. The logs also contradict what I told you last time, so I'm correcting that first.
+Correction to my last message
+I said the foreground stall was the device copy under the checkpoint lock, and that moving the copy outside the lock was justified. The new stats do not support that.
+Lock wait is essentially zero. Across 19,968 flushes (about five offload-on runs with the concurrent writer) the total was 713 µs, so about 0.04 µs per flush. In the clean 2,048-flush sample it was 73 µs total. GC never waited for the lock.
+The lock is the wrong mechanism. f2fs_lock_op() takes cp_rwsem for read, and normal writers also take it for read. Holding it for 3.7 ms does not block them. It would only hurt if a checkpoint were waiting for the write side, because new readers then queue behind that checkpoint.
+Time per flush is the same as before. Lock hold averaged 3,769 µs, of which 3,661 µs (97.1%) was the device copy. Allocation took 49 µs and commit took 60 µs.
+I don't have a direct measurement of why the writer stalls, so the next two sections are inference.
+What the logs show
+Check
+Ungated log
+Gated log
+Offload flushes in the run
+2,147 flushes, all 256 blocks, 1 command, no revert or fallback
+0 after the first mount
+GC call latency (p50 / p99)
+4,130 / 4,275 µs
+1,152 / 1,735 µs
+Command shape
+256 blocks, SRC_SEGS=1 DST_SEGS=1 on every command
+none issued
+I/O errors
+0
+0
+The ungated log covers only about the first half of one offload-on run, so treat the percentiles as a sample.
+The gated log shows 159 flushes at 624 s. They come before the first mount at 633 s, so they are the tail of the previous ungated run. After the first mount there are 0 flush or attempt lines across 8,576 GC calls.
+The gated GC calls average 1.19 ms, matching the offload-off baseline of about 1.15 ms.
+From your execution logs:
+FgImpact result
+Offload on vs off (first, ungated run)
+Offload on vs off (gated run)
+MB/s moved
+−70.6%
+−0.4%
+Wall time
++241%
++0.3%
+GC thread CPU per block
+−28.0%
++1.4%
+Writer p99
+1,249 → 4,207 µs (+236.8%)
+1,266 vs 1,251 µs (about −1%)
+Gating does what it should. Foreground GC takes the host path and there is no regression. The same result also means foreground GC gets no offload benefit, since "on" is now identical to "off".
+Why the writer stalls
+The writer's p50 under offload was 3,743 µs (from the earlier results, 546 µs with offload off). A copy command takes about 3,660 µs. That is probably not a coincidence.
+The likely cause is device head-of-line blocking. The writer's data write or flush sits behind a 3.6 ms vendor copy command in the UFS, so the writer waits about one full copy. This is a hypothesis, not a measurement.
+If it is right, reducing lock hold time won't help. These checks would settle it:
+Checkpoint count. Compare /sys/fs/f2fs/sdg/cp_foreground_calls before and after an offload-on run. If it barely moves, the lock-queueing path isn't involved.
+Writer without fsync. Run the writer with buffered writes and no fdatasync. If its latency stays low, the stall is on the device. If it stalls anyway, it is a lock.
+Overlap trace. Enable scsi:scsi_dispatch_cmd_start and scsi_dispatch_cmd_done, plus block:block_rq_issue and block_rq_complete. Check whether writer writes complete only after the 0xC0 command finishes.
+What I'd do next
+Command-size sweep. Build with F2FS_GC_CPOFF_MAX_CMD_BLKS at 32, 64 and 128. If the writer's p99 shrinks in proportion to command size, that confirms device blocking and gives you a tunable trade-off: shorter stalls for more commands. Wall time should not change much, since cost per block is linear. I can make this a runtime parameter so you don't need a rebuild per value.
+A background GC phase in gcbench. The 28% CPU saving only matters where latency doesn't, and none of the runs so far measured background GC. Policy 1 is meant to enable offload there.
+Ship default. For now, make gc_cpoff_policy=1 the code default so foreground GC never regresses.
+Drop the copy-outside-lock work unless the checkpoint-count check shows checkpoints are interfering.
+The gated count isn't visible in the logs, because the stats line only prints when a flush happens. I can make gating print its own counter if you want it for the report.
