@@ -1,40 +1,18 @@
-F2FS garbage collection with device copy offload
-Flow for one victim segment: valid blocks are moved by the UFS device instead of being read and rewritten by the CPU.
-BEFORE: ONE BLOCK AT A TIME
-Allocate 1 block Copy command for 1 block → Update file pointer
-Ċ repeated for every valid block → many small commands
-NOW: BATCHED PER VICTIM SEGMENT
-1 Collect
-Scan the victim segment and
-keep only the valid blocks:
-source block address, owning
-file and offset. Wait until each
-source block is fully written to
-flash. Up to 128 blocks per
-batch (configurable).
-2 Allocate
-For each collected block, take
-the next free block in the cold-
-data log. Destinations come
-out consecutive, so they can
-be copied as ranges.
-3 Copy
-Merge consecutive blocks into
-ranges and send a few device
-copy commands (source
-ranges → destination ranges).
-Each command completes
-before moving on.
-4 Commit
-ALSO REQUIRED
-Point each file block to its new
-address, mark the old block
-invalid, drop caches of the old
-copy and release the locks.
-A If a copy fails
-Undo the allocation for those
-blocks and move them with the
-normal CPU copy path.
-Nothing is lost.
-Safety: the per-file GC locks are held from step 1 to the end, and the checkpoint lock during steps 2 to 4, so no file update or checkpoint can change these
-blocks halfway. Node blocks are not offloaded and keep using the normal path.
+PSB the summary of the patch (f2fs: allocate HOT_DATA for IPU writes), in the same format:
+Issue in current segment-type selection:
+Data written during fdatasync or a small fsync is marked with the FI_NEED_IPU flag.
+__get_segment_type_6() treats that data like ordinary file data, so it is classified WARM unless the file is hot or COW.
+For IPU writes, f2fs_inplace_write_data() still calls __get_segment_type() to set fio->temp, the write hint. So IPU writes go out with a WARM hint.
+This data is rewritten often, so mixing it with warm data lowers segment invalidity and makes GC costlier.
+Solution proposed by patch:
+Adds one condition in __get_segment_type_6() (fs/f2fs/segment.c): if is_inode_flag_set(inode, FI_NEED_IPU), return CURSEG_HOT_DATA.
+No new lock, struct, CONFIG option or on-disk change.
+Cold files, GC-moved pages and aligned writes keep their type, because their checks run earlier.
+It only takes effect with active_logs=6, the default.
+Side effect: the check is on the fsync flag, not the real IPU decision. Out-of-place writes in the same fsync window, such as appends or any write in mode=lfs, also go to the HOT log.
+Impact on UFS:
+The IPU write LBA does not change. Only the hint on the bio changes, WARM to HOT, and the CPU cost is one bit test per page.
+UFS sees a difference only if your vendor UFS or block code uses bi_write_hint.
+The read path is not touched.
+GC is where a gain is expected, since hot segments free up faster. The HOT section may rotate slightly faster under fsync-heavy loads.
+The patch is not in 6.12.38 (it appears in v6.18.x), so it needs a backport.
