@@ -1,0 +1,32 @@
+130|canoe:/ # dmesg -w | grep sd
+[19756.011921] F2FS-fs (sda11): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000019600000000] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0xb7c00 FIRST_DST_PBA=0xb96d0 BLKS=223 LEN=913408 SRC_SEGS=2 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[19756.012293] sd 0:0:0:0: [sda] tag#57 UNKNOWN(0x2003) Result: hostbyte=0x00 driverbyte=DRIVER_OK cmd_age=0s
+[19756.012305] sd 0:0:0:0: [sda] tag#57 Sense Key : 0x5 [current]
+[19756.012311] sd 0:0:0:0: [sda] tag#57 ASC=0x20 ASCQ=0x0
+[19756.012316] sd 0:0:0:0: [sda] tag#57 CDB: opcode=0xc0 (vendor) c0 00 00 00 00 00 19 e6 78 00 00 d9 00 00 10 00
+[19756.012321] critical target error, dev sda, sector 13524288 op 0x14:(COPY_SRC) flags 0x0 phys_seg 1 prio class 0
+[19756.023505] F2FS-fs (sda11): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000019600000000] COPY_OFFLOAD_FAILED FIRST_SRC_PBA=0xb7c00 FIRST_DST_PBA=0xb96d0 BLKS=223 ERR=-121 DUR_US=11565 FALLBACK=CPU_COPY
+[19756.025127] F2FS-fs (sda11): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000019600000000] COPY_OFFLOAD_FLUSH GC_TYPE=BG QUEUED=223 ALLOCATED=223 COPIED=0 COMMITTED=0 REVERTED=223 HOST_FALLBACK=223 CMDS=1 CMDS_FAILED=1 DUR_US=13471 TOTAL_DEVICE_BLKS=0 TOTAL_FALLBACK_BLKS=64075 COPY_OFFLOAD_CALLS=253
+[19756.025162] F2FS-fs (sda11): GC_TIMING: duration_us=14441
+[19815.885604] type=1400 audit(1790281714.943:1455): avc:  denied  { getattr } for  comm="df" name="/" dev="sde32" ino=1 scontext=u:r:su:s0 tcontext=u:object_r:vendor_soccp_file:s0 tclass=filesystem permissive=1
+[19819.472963] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000001f0000000e] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x520e FIRST_DST_PBA=0x3625 BLKS=1 LEN=4096 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[19819.474690] sd 0:0:0:6: [sdg] tag#26 UNKNOWN(0x2003) Result: hostbyte=0x00 driverbyte=DRIVER_OK cmd_age=0s
+[19819.474701] sd 0:0:0:6: [sdg] tag#26 Sense Key : 0x5 [current]
+[19819.474706] sd 0:0:0:6: [sdg] tag#26 ASC=0x20 ASCQ=0x0
+[19819.474712] sd 0:0:0:6: [sdg] tag#26 CDB: opcode=0xc0 (vendor) c0 00 00 00 00 00 00 36 25 00 00 01 00 00 10 00
+[19819.474716] critical target error, dev sdg, sector 168048 op 0x14:(COPY_SRC) flags 0x0 phys_seg 1 prio class 0
+[19819.485727] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000001f0000000e] COPY_OFFLOAD_FAILED FIRST_SRC_PBA=0x520e FIRST_DST_PBA=0x3625 BLKS=1 ERR=-121 DUR_US=12745 FALLBACK=CPU_COPY
+[19819.485771] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000001f0000000e] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=1 ALLOCATED=1 COPIED=0 COMMITTED=0 REVERTED=1 HOST_FALLBACK=1 CMDS=1 CMDS_FAILED=1 DUR_US=12810 TOTAL_DEVICE_BLKS=0 TOTAL_FALLBACK_BLKS=64076 COPY_OFFLOAD_CALLS=9
+[19819.485812] F2FS-fs (sdg): GC_TIMING: duration_us=13348
+[19878.887229] F2FS-fs (sda11): GC_TIMING: duration_us=550
+[19885.865712] type=1400 audit(1790281784.923:1456): avc:  denied  { getattr } for  comm="df" name="/" dev="sde6" ino=1 scontext=u:r:su:s0 tcontext=u:object_r:firmware_file:s0 tclass=filesystem permissive=1
+[19885.865799] type=1400 audit(1790281784.923:1457): avc:  denied  { getattr } for  comm="df" name="/" dev="sde7" ino=1 scontext=u:r:su:s0 tcontext=u:object_r:bt_firmware_file:s0 tclass=filesystem permissive=1
+[19890.018712] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000002100000011] COPY_OFFLOAD_ATTEMPT FIRST_SRC_PBA=0x5611 FIRST_DST_PBA=0x3628 BLKS=1 LEN=4096 SRC_SEGS=1 DST_SEGS=1 SRC_MAX_COPY=1048576 DST_MAX_COPY=1048576
+[19890.020695] sd 0:0:0:6: [sdg] tag#8 UNKNOWN(0x2003) Result: hostbyte=0x00 driverbyte=DRIVER_OK cmd_age=0s
+[19890.020708] sd 0:0:0:6: [sdg] tag#8 Sense Key : 0x5 [current]
+[19890.020713] sd 0:0:0:6: [sdg] tag#8 ASC=0x20 ASCQ=0x0
+[19890.020719] sd 0:0:0:6: [sdg] tag#8 CDB: opcode=0xc0 (vendor) c0 00 00 00 00 00 00 36 28 00 00 01 00 00 10 00
+[19890.020723] critical target error, dev sdg, sector 176264 op 0x14:(COPY_SRC) flags 0x0 phys_seg 1 prio class 0
+[19890.031740] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_try_copy_offload][FLOW=0000002100000011] COPY_OFFLOAD_FAILED FIRST_SRC_PBA=0x5611 FIRST_DST_PBA=0x3628 BLKS=1 ERR=-121 DUR_US=13010 FALLBACK=CPU_COPY
+[19890.031796] F2FS-fs (sdg): [F2FS_GC:f2fs_gc_cpoff_flush][FLOW=0000002100000011] COPY_OFFLOAD_FLUSH GC_TYPE=FG QUEUED=1 ALLOCATED=1 COPIED=0 COMMITTED=0 REVERTED=1 HOST_FALLBACK=1 CMDS=1 CMDS_FAILED=1 DUR_US=13088 TOTAL_DEVICE_BLKS=0 TOTAL_FALLBACK_BLKS=64077 COPY_OFFLOAD_CALLS=10
+[19890.031841] F2FS-fs (sdg): GC_TIMING: duration_us=13386
