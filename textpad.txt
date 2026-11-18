@@ -1,56 +1,200 @@
-The gated policy works: with gc_cpoff_policy=1, foreground GC returns to the offload-off numbers. The logs also contradict what I told you last time, so I'm correcting that first.
-Correction to my last message
-I said the foreground stall was the device copy under the checkpoint lock, and that moving the copy outside the lock was justified. The new stats do not support that.
-Lock wait is essentially zero. Across 19,968 flushes (about five offload-on runs with the concurrent writer) the total was 713 µs, so about 0.04 µs per flush. In the clean 2,048-flush sample it was 73 µs total. GC never waited for the lock.
-The lock is the wrong mechanism. f2fs_lock_op() takes cp_rwsem for read, and normal writers also take it for read. Holding it for 3.7 ms does not block them. It would only hurt if a checkpoint were waiting for the write side, because new readers then queue behind that checkpoint.
-Time per flush is the same as before. Lock hold averaged 3,769 µs, of which 3,661 µs (97.1%) was the device copy. Allocation took 49 µs and commit took 60 µs.
-I don't have a direct measurement of why the writer stalls, so the next two sections are inference.
-What the logs show
-Check
-Ungated log
-Gated log
-Offload flushes in the run
-2,147 flushes, all 256 blocks, 1 command, no revert or fallback
-0 after the first mount
-GC call latency (p50 / p99)
-4,130 / 4,275 µs
-1,152 / 1,735 µs
-Command shape
-256 blocks, SRC_SEGS=1 DST_SEGS=1 on every command
-none issued
-I/O errors
-0
-0
-The ungated log covers only about the first half of one offload-on run, so treat the percentiles as a sample.
-The gated log shows 159 flushes at 624 s. They come before the first mount at 633 s, so they are the tail of the previous ungated run. After the first mount there are 0 flush or attempt lines across 8,576 GC calls.
-The gated GC calls average 1.19 ms, matching the offload-off baseline of about 1.15 ms.
-From your execution logs:
-FgImpact result
-Offload on vs off (first, ungated run)
-Offload on vs off (gated run)
-MB/s moved
-−70.6%
-−0.4%
-Wall time
-+241%
-+0.3%
-GC thread CPU per block
-−28.0%
-+1.4%
-Writer p99
-1,249 → 4,207 µs (+236.8%)
-1,266 vs 1,251 µs (about −1%)
-Gating does what it should. Foreground GC takes the host path and there is no regression. The same result also means foreground GC gets no offload benefit, since "on" is now identical to "off".
-Why the writer stalls
-The writer's p50 under offload was 3,743 µs (from the earlier results, 546 µs with offload off). A copy command takes about 3,660 µs. That is probably not a coincidence.
-The likely cause is device head-of-line blocking. The writer's data write or flush sits behind a 3.6 ms vendor copy command in the UFS, so the writer waits about one full copy. This is a hypothesis, not a measurement.
-If it is right, reducing lock hold time won't help. These checks would settle it:
-Checkpoint count. Compare /sys/fs/f2fs/sdg/cp_foreground_calls before and after an offload-on run. If it barely moves, the lock-queueing path isn't involved.
-Writer without fsync. Run the writer with buffered writes and no fdatasync. If its latency stays low, the stall is on the device. If it stalls anyway, it is a lock.
-Overlap trace. Enable scsi:scsi_dispatch_cmd_start and scsi_dispatch_cmd_done, plus block:block_rq_issue and block_rq_complete. Check whether writer writes complete only after the 0xC0 command finishes.
-What I'd do next
-Command-size sweep. Build with F2FS_GC_CPOFF_MAX_CMD_BLKS at 32, 64 and 128. If the writer's p99 shrinks in proportion to command size, that confirms device blocking and gives you a tunable trade-off: shorter stalls for more commands. Wall time should not change much, since cost per block is linear. I can make this a runtime parameter so you don't need a rebuild per value.
-A background GC phase in gcbench. The 28% CPU saving only matters where latency doesn't, and none of the runs so far measured background GC. Policy 1 is meant to enable offload there.
-Ship default. For now, make gc_cpoff_policy=1 the code default so foreground GC never regresses.
-Drop the copy-outside-lock work unless the checkpoint-count check shows checkpoints are interfering.
-The gated count isn't visible in the logs, because the stats line only prints when a flush happens. I can make gating print its own counter if you want it for the report.
+PS D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation> .\Run_gcbench.ps1 -Phase Sweep
+
+=== Checking local files ===
+
+=== Connecting to device ===
+
+=== Pushing files ===
+
+=== Preflight checks ===
+NOTE: /mnt/test is not an f2fs mount right now. That is fine only if gcbench should mkfs+mount /dev/block/sdg itself.
+Mode: REFORMAT /dev/block/sdg before every run. Press Ctrl+C within 5 s to abort.
+[ ok ] copy_offload toggle: /sys/block/sdg/queue/copy_offload
+[ ok ] copy_max_hw_bytes: 536870912
+[ ok ] mkfs tool: /system/bin/make_f2fs
+[ ok ] device node: /dev/block/sdg
+[ ok ] printk/drop_caches: /proc/sys/vm/drop_caches
+copy_offload now: 1
+f2fs counters (only exist while /dev/block/sdg is mounted as f2fs):  /sys/fs/f2fs/sdg/copy_offload_calls , /sys/fs/f2fs/sdg/moved_blocks_foreground
+If those two are missing after mount, gcbench falls back to 0 for them; override with -Cnode / -Moved.
+
+=== Running: sweep ===
+Started in background on device; log: /data/local/tmp/gcbench_sweep.log
+[17:42:42] prep: prep_ok kept_files=8192 kept_blocks=524288
+[17:43:12] prep: prep_ok kept_files=8192 kept_blocks=524288
+[17:43:42] run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=3435.01 thread_cpu_ms=1248.07 sys_cpu_ms=1450 moved_blks=524288 call_p50_us=847 call_p99_us=1006 cal
+[17:44:13] prep: prep_ok kept_files=8192 kept_blocks=524288
+[17:44:43] prep: prep_ok kept_files=8192 kept_blocks=524288
+[17:45:13] prep: prep_ok kept_files=8192 kept_blocks=524288
+[17:45:43] prep: prep_ok kept_files=8192 kept_blocks=524288
+[17:46:14] prep: prep_ok kept_files=8192 kept_blocks=524288
+[17:46:44] --- run: on keep=2 pat=contig rep=5
+[17:47:14] --- run: off keep=2 pat=contig rep=5
+[17:47:44] --- run: on keep=4 pat=contig rep=1
+[17:48:14] run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=16231.31 thread_cpu_ms=1564.50 sys_cpu_ms=1980 moved_blks=1048576 call_p50_us=3962 call_p99_us=4140
+[17:48:45] prep: prep_ok kept_files=16384 kept_blocks=1048576
+[17:49:15] prep: prep_ok kept_files=16384 kept_blocks=1048576
+[17:49:45] prep: prep_ok kept_files=16384 kept_blocks=1048576
+[17:50:15] --- run: on keep=4 pat=contig rep=3
+[17:50:46] prep: prep_ok kept_files=16384 kept_blocks=1048576
+[17:51:16] prep: prep_ok kept_files=16384 kept_blocks=1048576
+[17:51:46] --- run: off keep=4 pat=contig rep=4
+[17:52:16] --- run: on keep=4 pat=contig rep=4
+[17:52:46] run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=16275.81 thread_cpu_ms=1564.82 sys_cpu_ms=1880 moved_blks=1048576 call_p50_us=3972 call_p99_us=4142
+[17:53:17] prep: prep_ok kept_files=16384 kept_blocks=1048576
+[17:53:47] --- run: off keep=4 pat=contig rep=5
+[17:54:17] --- run: on keep=6 pat=contig rep=1
+[17:54:47] prep: prep_ok kept_files=24576 kept_blocks=1572864
+[17:55:18] --- run: off keep=6 pat=contig rep=1
+[17:55:48] --- run: off keep=6 pat=contig rep=2
+[17:56:18] run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=5870.58 thread_cpu_ms=3079.06 sys_cpu_ms=3630 moved_blks=1572864 call_p50_us=1398 call_p99_us=1966 c
+[17:56:48] prep: prep_ok kept_files=24576 kept_blocks=1572864
+[17:57:19] --- run: on keep=6 pat=contig rep=3
+[17:57:49] prep: prep_ok kept_files=24576 kept_blocks=1572864
+[17:58:19] --- run: off keep=6 pat=contig rep=3
+[17:58:49] --- run: off keep=6 pat=contig rep=4
+[17:59:20] run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=5842.00 thread_cpu_ms=3043.81 sys_cpu_ms=3650 moved_blks=1572864 call_p50_us=1389 call_p99_us=1936 c
+[17:59:50] prep: prep_ok kept_files=24576 kept_blocks=1572864
+[18:00:20] --- run: on keep=6 pat=contig rep=5
+[18:00:50] prep: prep_ok kept_files=24576 kept_blocks=1572864
+[18:01:21] --- run: off keep=6 pat=contig rep=5
+[18:01:51] --- run: on keep=2 pat=alt rep=1
+[18:02:21] --- run: off keep=2 pat=alt rep=1
+[18:02:51] --- run: off keep=2 pat=alt rep=2
+[18:03:22] --- run: on keep=2 pat=alt rep=2
+[18:03:52] run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=8889.45 thread_cpu_ms=972.75 sys_cpu_ms=1300 moved_blks=524288 call_p50_us=2182 call_p99_us=2283 cal
+[18:04:22] prep: prep_ok kept_files=8192 kept_blocks=524288
+[18:04:52] prep: prep_ok kept_files=8192 kept_blocks=524288
+[18:05:22] run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=3201.25 thread_cpu_ms=1275.89 sys_cpu_ms=1500 moved_blks=524288 call_p50_us=793 call_p99_us=1023 cal
+[18:05:53] prep: prep_ok kept_files=8192 kept_blocks=524288
+[18:06:23] prep: prep_ok kept_files=8192 kept_blocks=524288
+[18:06:53] prep: prep_ok kept_files=8192 kept_blocks=524288
+[18:07:23] prep: prep_ok kept_files=16384 kept_blocks=1048576
+[18:07:54] --- run: off keep=4 pat=alt rep=1
+[18:08:24] --- run: off keep=4 pat=alt rep=2
+[18:08:54] --- run: on keep=4 pat=alt rep=2
+[18:09:24] run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=9518.77 thread_cpu_ms=1586.36 sys_cpu_ms=1890 moved_blks=1048576 call_p50_us=2321 call_p99_us=2432 c
+[18:09:54] prep: prep_ok kept_files=16384 kept_blocks=1048576
+[18:10:25] prep: prep_ok kept_files=16384 kept_blocks=1048576
+[18:10:55] --- run: off keep=4 pat=alt rep=4
+[18:11:25] --- run: on keep=4 pat=alt rep=4
+[18:11:55] --- run: on keep=4 pat=alt rep=5
+[18:12:26] prep: prep_ok kept_files=16384 kept_blocks=1048576
+[18:12:56] prep: prep_ok kept_files=16384 kept_blocks=1048576
+[18:13:26] prep: prep_ok kept_files=24576 kept_blocks=1572864
+[18:13:56] --- run: off keep=6 pat=alt rep=1
+[18:14:27] run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=5663.67 thread_cpu_ms=3039.77 sys_cpu_ms=3610 moved_blks=1572864 call_p50_us=1335 call_p99_us=2130 c
+[18:14:57] prep: prep_ok kept_files=24576 kept_blocks=1572864
+[18:15:27] prep: prep_ok kept_files=24576 kept_blocks=1572864
+[18:15:57] --- run: on keep=6 pat=alt rep=3
+[18:16:28] prep: prep_ok kept_files=24576 kept_blocks=1572864
+[18:16:58] prep: prep_ok kept_files=24576 kept_blocks=1572864
+[18:17:28] --- run: off keep=6 pat=alt rep=4
+[18:17:58] --- run: on keep=6 pat=alt rep=4
+[18:18:29] prep: prep_ok kept_files=24576 kept_blocks=1572864
+[18:18:59] --- run: on keep=6 pat=alt rep=5
+[18:19:29] --- run: off keep=6 pat=alt rep=5
+[18:19:59] run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=5656.69 thread_cpu_ms=3047.07 sys_cpu_ms=4070 moved_blks=1572864 call_p50_us=1341 call_p99_us=2126 c
+[18:20:30] done: /data/local/tmp/gcbench_results/results_20260924_150019.csv
+Pulled: D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results\sweep_results_20260924_150019.csv
+Result rows: 60
+DATA INTEGRITY FAILURE in these runs:
+
+mode keep pattern rep verify bad
+---- ---- ------- --- ------ ---
+on   2    alt     1   FAIL   4032
+on   2    alt     2   FAIL   4032
+on   2    alt     3   FAIL   4032
+on   2    alt     4   FAIL   4032
+on   2    alt     5   FAIL   4032
+on   4    alt     1   FAIL   12096
+on   4    alt     2   FAIL   12096
+on   4    alt     3   FAIL   12096
+on   4    alt     4   FAIL   12096
+on   4    alt     5   FAIL   12096
+on   6    alt     1   FAIL   12096
+on   6    alt     2   FAIL   12096
+on   6    alt     3   FAIL   12096
+on   6    alt     4   FAIL   12096
+on   6    alt     5   FAIL   12096
+
+
+Stop and send me this CSV plus dmesg (adb shell dmesg > dmesg.txt).
+
+--- Summary (D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results\sweep_results_20260924_150019.md) ---
+| pattern | valid/seg | mode | n | MB/s moved | wall ms | GC thread CPU us/blk | system CPU us/blk | blks/cmd | FG p99 us | integrity bad |
+|---------|-----------|------|---|------------|---------|----------------------|-------------------|----------|-----------|---------------|
+| alt  |     2     | off  | 5 |    636.2   |  3219   |          2.44        |       2.86        |   n/a    |     n/a    |       0      |
+| alt  |     2     | on  | 5 |    230.0   |  8904   |          1.86        |       2.46        |   130    |     n/a    |       20165      |
+| |**Offload On vs Offload off** |    -63.8%  | +176.6% |         -24.0%       |      -14.0%       |           |     n/a    |              |
+| alt  |     4     | off  | 5 |    1033.4   |  3964   |          2.09        |       2.55        |   n/a    |     n/a    |       0      |
+| alt  |     4     | on  | 5 |    430.3   |  9519   |          1.51        |       1.77        |   260    |     n/a    |       60485      |
+| |**Offload On vs Offload off** |    -58.4%  | +140.1% |         -27.4%       |      -30.3%       |           |     n/a    |              |
+| alt  |     6     | off  | 5 |    1082.6   |  5675   |          1.95        |       2.39        |   n/a    |     n/a    |       0      |
+| alt  |     6     | on  | 5 |    507.2   |  12113   |          1.38        |       1.59        |   390    |     n/a    |       60485      |
+| |**Offload On vs Offload off** |    -53.1%  | +113.4% |         -29.0%       |      -33.5%       |           |     n/a    |              |
+| contig  |     2     | off  | 5 |    596.2   |  3435   |          2.38        |       2.84        |   n/a    |     n/a    |       0      |
+| contig  |     2     | on  | 5 |    218.2   |  9387   |          1.84        |       2.38        |   130    |     n/a    |       0      |
+| |**Offload On vs Offload off** |    -63.4%  | +173.3% |         -22.8%       |      -16.1%       |           |     n/a    |              |
+| contig  |     4     | off  | 5 |    846.2   |  4841   |          2.05        |       2.51        |   n/a    |     n/a    |       0      |
+| contig  |     4     | on  | 5 |    251.7   |  16276   |          1.49        |       1.89        |   260    |     n/a    |       0      |
+| |**Offload On vs Offload off** |    -70.3%  | +236.2% |         -27.3%       |      -24.7%       |           |     n/a    |              |
+| contig  |     6     | off  | 5 |    1049.2   |  5856   |          1.94        |       2.31        |   n/a    |     n/a    |       0      |
+| contig  |     6     | on  | 5 |    327.9   |  18738   |          1.38        |       1.56        |   390    |     n/a    |       0      |
+| |**Offload On vs Offload off** |    -68.8%  | +220.0% |         -29.0%       |      -32.7%       |           |     n/a    |              |
+dmesg 'I/O error' lines during this session: 0  (should be 0, or equal to failed copy commands)
+
+=== Finished ===
+Results in: D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results
+PS D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation>
+PS D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation> .\Run_gcbench.ps1 -Phase FgImpact
+
+=== Checking local files ===
+
+=== Connecting to device ===
+
+=== Pushing files ===
+
+=== Preflight checks ===
+NOTE: /mnt/test is not an f2fs mount right now. That is fine only if gcbench should mkfs+mount /dev/block/sdg itself.
+Mode: REFORMAT /dev/block/sdg before every run. Press Ctrl+C within 5 s to abort.
+[ ok ] copy_offload toggle: /sys/block/sdg/queue/copy_offload
+[ ok ] copy_max_hw_bytes: 536870912
+[ ok ] mkfs tool: /system/bin/make_f2fs
+[ ok ] device node: /dev/block/sdg
+[ ok ] printk/drop_caches: /proc/sys/vm/drop_caches
+copy_offload now: 1
+f2fs counters (only exist while /dev/block/sdg is mounted as f2fs):  /sys/fs/f2fs/sdg/copy_offload_calls , /sys/fs/f2fs/sdg/moved_blocks_foreground
+If those two are missing after mount, gcbench falls back to 0 for them; override with -Cnode / -Moved.
+
+=== Running: fgimpact ===
+Started in background on device; log: /data/local/tmp/gcbench_fgimpact.log
+[18:45:05] prep: prep_ok kept_files=16384 kept_blocks=1048576
+
+[18:45:35] --- run: off keep=4 pat=contig rep=1
+[18:46:06] --- run: off keep=4 pat=contig rep=2
+[18:46:36] --- run: on keep=4 pat=contig rep=2
+[18:47:06] prep: prep_ok kept_files=16384 kept_blocks=1048576
+[18:47:36] prep: prep_ok kept_files=16384 kept_blocks=1048576
+[18:48:07] --- run: off keep=4 pat=contig rep=3
+[18:48:37] run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=4902.42 thread_cpu_ms=2174.90 sys_cpu_ms=4570 moved_blks=1042233 call_p50_us=1161 call_p99_us=1648 c
+[18:49:07] run: gc_calls=4096 gc_busy=0 last_errno=0 wall_ms=4940.66 thread_cpu_ms=2188.81 sys_cpu_ms=4960 moved_blks=1040941 call_p50_us=1166 call_p99_us=1771 c
+[18:49:37] prep: prep_ok kept_files=16384 kept_blocks=1048576
+[18:50:07] --- run: on keep=4 pat=contig rep=5
+[18:50:38] prep: prep_ok kept_files=16384 kept_blocks=1048576
+[18:51:08] prep: prep_ok kept_files=16384 kept_blocks=1048576
+[18:51:38] done: /data/local/tmp/gcbench_results/results_20260924_160242.csv
+Pulled: D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results\fgimpact_results_20260924_160242.csv
+Result rows: 10
+
+--- Summary (D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results\fgimpact_results_20260924_160242.md) ---
+| pattern | valid/seg | mode | n | MB/s moved | wall ms | GC thread CPU us/blk | system CPU us/blk | blks/cmd | FG p99 us | integrity bad |
+|---------|-----------|------|---|------------|---------|----------------------|-------------------|----------|-----------|---------------|
+| contig  |     4     | off  | 5 |    830.2   |  4902   |          2.07        |       4.71        |   n/a    |     1265    |       0      |
+| contig  |     4     | on  | 5 |    244.0   |  16697   |          1.49        |       3.34        |   260    |     4216    |       0      |
+| |**Offload On vs Offload off** |    -70.6%  | +240.6% |         -28.0%       |      -29.2%       |           |     +233.3%    |              |
+dmesg 'I/O error' lines during this session: -2  (should be 0, or equal to failed copy commands)
+
+=== Finished ===
+Results in: D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation\results
+PS D:\anees\tasks\1433_f2fs_gc_copy_offloading\f2fs_gc_copy_offload_experiment_result\validation>
