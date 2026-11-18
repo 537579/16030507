@@ -1,48 +1,27 @@
-The logs you already have answer all five items. The OPPO command is never dispatched in that scenario. I haven't run anything new for this.
-Short answer for the manager
-The failure is in the SCSI layer, before dispatch. The block layer builds 1 source bio but 2 or 3 destination bios, and sd_setup_oppo_copy_offload() rejects any request where the two counts differ.
-The five items
-1. How many source and destination bios are created?
-blkdev_copy_chunk() creates one source bio per source segment in the chunk and one destination bio per destination piece. Your earlier multi-segment log (Multi_seg_dmesg_log.txt) records both counts for every attempt (SRC_SEGS, DST_SEGS):
-Shape
-Attempts
-Outcome
-1 source → 1 destination
-54
-all fine
-1 source → 2 destinations
-20
-I/O error on COPY_SRC
-1 source → 3 destinations
-4
-I/O error on COPY_SRC
-There are exactly 24 mismatched attempts and exactly 24 I/O error ... op 0x14:(COPY_SRC) lines, all on op 0x14.
-2. Are source and destination bio lengths the same?
-Per bio, no. A source bio is min(remaining, bytes left in that source segment), and a destination bio is min(remaining, bytes left in that destination segment). One 146-block source bio can face two destination bios split at the destination segment boundary. Per chunk, the totals are equal.
-3. Are the source and destination data lengths from blk_copy_params the same?
-Yes. blkdev_copy_check_params() returns -EINVAL if the summed source length differs from the summed destination length. Your GC code also builds both lists block by block, so they match by construction, and LEN in the log is one value. The failure is a count mismatch, not a length mismatch.
-4. Did the failure happen during execution or before dispatch?
-Before dispatch. Two pieces of evidence:
-Timing. The I/O error is logged 23 µs after COPY_OFFLOAD_ATTEMPT (1775.810655 → .810678). A real 146-block copy takes about 2.0 ms (DUR_US≈2005 on the 1→1 attempts).
-Code path. sd_init_command calls sd_setup_oppo_copy_offload() (sd.c lines 1564–1566). It hits if (nr_src_bios != nr_dst_bios) return BLK_STS_IOERR. In scsi_queue_rq, the failed scsi_prepare_cmd jumps to out_dec_host_busy (scsi_lib.c ~1856–1858). That is before blk_mq_start_request and before scsi_dispatch_cmd, which is where trace_scsi_dispatch_cmd_start fires (line 1628).
-5. Where does control return?
-The order is sd.c check → sd_init_command → scsi_prepare_cmd → scsi_queue_rq. The default: case sets DID_ERROR, returns BLK_STS_IOERR, and the request is ended with that error. The bio then reaches blkdev_req_op_copy_done().
-What the trace should show
-To confirm on the device, use a multi-segment build (F2FS_GC_CPOFF_MULTISEG 1):
-cd /sys/kernel/tracing; echo 0 > tracing_on; echo > trace
-for e in scsi/scsi_dispatch_cmd_start scsi/scsi_dispatch_cmd_done scsi/scsi_dispatch_cmd_error \
-         block/block_rq_issue block/block_rq_complete; do echo 1 > events/$e/enable; done
-echo 1 > tracing_on     # run the multi-segment test, then:
-grep -i "c0" trace      # the exact opcode format depends on your trace output
-For a failing 1→2 attempt I expect a block_rq_complete with error −5 and no scsi_dispatch_cmd_start for opcode 0xc0. The count of 0xc0 dispatches should equal the number of attempts with SRC_SEGS == DST_SEGS.
-For items 1–3 directly, I'd add pr_info lines at three points:
-blkdev_copy_offload(), after blkdev_copy_check_params: in_nseg, out_nseg, in_len, out_len.
-blkdev_copy_chunk(), per bio: its role, sector and size.
-sd_setup_oppo_copy_offload(), after the counts: nr_src_bios, nr_dst_bios, dst_lba, nr_blocks.
-Two points that matter beyond the manager's list
-1. The old logs show silent success. In the same log, the failing attempts still print COPY_OFFLOAD_SUCCESS, and the flush reports COPIED=146 COMMITTED=146. The error was swallowed, so F2FS pointed its mapping at destination blocks that were never written. That is the status-propagation bug the blk-copy.c.status.patch fixes. Those 24 commits could mean real data corruption. I haven't checked whether that suite's integrity verification caught it.
-2. Equal counts are not enough. The OPPO command carries one destination LBA, and sd.c uses only the first destination bio's LBA. If a request has 2 source and 2 destination bios, the count check passes. But if the two destinations are not physically contiguous, the second one is lost and the data lands at the wrong place.
-The safe fix in sd.c is to require exactly one destination bio and at most 256 source descriptors. A command shaped like the failing ones (1 source, 2 or 3 destinations) would still fail, and the status patch makes that visible. GC avoids this today only because MULTISEG=0 ends the command at a destination break.
-Draft reply
-Confirmed. In the multi-segment run, the OPPO copy command is never dispatched when one source maps to more than one destination. The block layer creates one source bio and two or three destination bios (20 cases with 2, 4 with 3). sd_setup_oppo_copy_offload() returns BLK_STS_IOERR because nr_src_bios != nr_dst_bios, which happens in sd_init_command before scsi_dispatch_cmd. The error is logged 23 µs after the attempt, where a real copy takes about 2 ms. Total source and destination lengths are equal. The mismatch is in bio count, and the command can only carry one destination LBA. Multi-segment copy is therefore disabled, and each GC command uses one source and one destination run.
-I can write the sd.c patch (one destination bio, at most 256 sources) and the three debug-print patches if you want to run the trace.
+A short copy is a copy command that moves only part of the data the caller asked for, yet completes with GOOD status.
+In sd_setup_oppo_copy_offload(), only the first source bio sits on the request (rq->bio). The remaining bios of the same copy sit on ctx->bios. The old code counted and walked sources with blk_copy_bio_count() and blk_next_copy_bio(), which follow bi_next from rq->bio and never reach the context list. So it sees one source, and it takes the block count from blk_rq_sectors(rq), which covers the first bio only.
+The command that goes to the device therefore has:
+one descriptor, for the first source run only;
+a block count equal to the first run's length.
+The device copies exactly that and reports success. The caller was told the whole range was copied, so nothing reports an error.
+Which callers are affected
+This is not specific to F2FS GC. It affects any caller of blkdev_copy_offload() that gives one destination range and more than one source range, where the queue limit max_copy_src_segments is above 1. It has to be that way round:
+Several sources into one destination: the code sees 1 source and 1 destination, so the count check passes. Data is silently short-copied.
+Several sources and several destinations: the code sees 1 source and N destinations, so the count check fails. The request is rejected with an I/O error, which is safe.
+One source and several destinations: also rejected with an error, which is safe.
+One source and one destination: correct. This is all callers that pass a single segment each.
+I only know of F2FS GC. I haven't seen the other callers, so ask the developers to grep for blkdev_copy_offload and check whether any passes more than one source segment.
+Evidence to include
+Trace against dmesg: F2FS GC attempts with SRC_SEGS of 2, 3 and 12 had BLKS of 416, 314 and 427. The SCSI trace for the same commands shows CDB block counts of 207, 111 and 27, each with a 16-byte parameter list. Every attempt with SRC_SEGS=1 matched exactly.
+Benchmark: gcbench with offload on and alternating source blocks failed integrity in all 15 runs, with identical bad counts per setting. The single-run contig pattern had 0 bad. dmesg showed no I/O errors, and F2FS committed the result.
+What the patch does
+Walks all copy bios, the request's own bio first and then ctx->bios.
+Validates before it allocates anything: exactly one destination bio, 1–256 sources, source blocks equal to destination blocks, at most 131072 blocks, and sizes aligned to the logical block size. Anything else fails with BLK_STS_IOERR.
+Takes the total block count from the sum of all sources.
+Sizes the parameter buffer to the 16 × N descriptor bytes instead of the copy size.
+Removes the dead param_len < 0 check.
+Caveats to state
+I have not compiled it. It uses struct bio_copy_offload_ctx fields directly, so the definition must be visible in sd.c.
+The parameter buffer length changes, from up to 1 MiB on a 4 KiB page to the descriptor bytes. That should be right, but it is new behaviour on the hardware.
+The firmware's handling of more than one descriptor is unconfirmed. The trace so far shows only single-descriptor commands.
+The cleaner long-term fix is in blk-copy.c, so the iteration helpers cross from the request's bio to the context list. Setting max_copy_dst_segments to 1 where the queue limits are set would also prevent the multi-destination rejections.
