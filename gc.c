@@ -42,7 +42,6 @@ static struct kmem_cache *victim_entry_slab;
  * format as the rest of this file.
  *   level 1: one line per device copy command and one summary per flush
  *   level 2: additionally one line per block / skip reason
- * Build with -DF2FS_GC_CPOFF_DEBUG=0 to silence, =2 for per-block lines.
  */
 #ifndef F2FS_GC_CPOFF_DEBUG
 #define F2FS_GC_CPOFF_DEBUG	1
@@ -1865,12 +1864,11 @@ out:
  * Batched GC copy offload.
  *
  * Every data-GC path (BG GC thread, FG GC, F2FS_IOC_GARBAGE_COLLECT[_RANGE])
- * goes through gc_data_segment(), so the hook lives there and not in the
- * write path.  Valid blocks of one victim segment are queued, then moved with
+ * goes through gc_data_segment() 
+ * Valid blocks of one victim segment are queued, then moved with
  * as few device copy commands as possible: one command can gather many
  * scattered source runs into contiguous destination runs (multi-segment
- * blk_copy_params).  Node blocks are deliberately not offloaded: their footer
- * (cp_ver / next_blkaddr) is regenerated at write time.
+ * blk_copy_params).
  *
  * Offload is used only while the block queue's copy_offload_enabled node is
  * set (checked when the batch is created and again for every command in
@@ -1879,7 +1877,100 @@ out:
  * summary line.
  * ---------------------------------------------------------------------------
  */
-#define F2FS_GC_CPOFF_BATCH	128
+#define F2FS_GC_CPOFF_BATCH	512
+
+/*
+ * Bring-up knobs.
+ *  F2FS_GC_CPOFF_MULTISEG   0: one source + one destination segment per device
+ *                              command (contiguous blocks only).  Keep 0 until
+ *                              blk-copy.c copy_ctx_count fix is in your image.
+ *  F2FS_GC_CPOFF_MAX_CMD_BLKS  cap on blocks per command, 0 = device limit.
+ *                              Use 1 for the very first boot (same command
+ *                              shape as the old per-block implementation).
+ */
+#ifndef F2FS_GC_CPOFF_MULTISEG
+#define F2FS_GC_CPOFF_MULTISEG		0
+#endif
+#ifndef F2FS_GC_CPOFF_MAX_CMD_BLKS
+#define F2FS_GC_CPOFF_MAX_CMD_BLKS	0
+#endif
+
+/*
+ * Runtime policy, no rebuild needed (/sys/module/f2fs/parameters/):
+ *  gc_cpoff_policy    0: offload whenever copy_offload is enabled (default,
+ *                        same behaviour as before this patch)
+ *                     1: background GC only; foreground GC uses the host path
+ *                     2: offload only while the filesystem is idle
+ *  gc_cpoff_min_blks  victim segments with fewer valid blocks than this use
+ *                     the host path (0 = no limit)
+ * Both are checked once per victim segment, before the batch is created.
+ */
+static int f2fs_gc_cpoff_policy;
+module_param_named(gc_cpoff_policy, f2fs_gc_cpoff_policy, int, 0644);
+MODULE_PARM_DESC(gc_cpoff_policy,
+		 "GC copy offload policy: 0 always, 1 BG GC only, 2 idle only");
+static unsigned int f2fs_gc_cpoff_min_blks;
+module_param_named(gc_cpoff_min_blks, f2fs_gc_cpoff_min_blks, uint, 0644);
+MODULE_PARM_DESC(gc_cpoff_min_blks,
+		 "skip copy offload for victim segments with fewer valid blocks");
+
+/*
+ * Cumulative flush timing, printed every F2FS_GC_CPOFF_STATS_EVERY flushes
+ * (0 = never).  Independent of F2FS_GC_CPOFF_DEBUG so it can stay on during
+ * performance runs: one printk per 256 flushes does not disturb timing.
+ * All *_US values are running totals; subtract two lines to get an interval.
+ *   LOCK_WAIT  waiting to get f2fs_lock_op()
+ *   LOCK_HOLD  from lock acquired to f2fs_unlock_op() (what blocks writers)
+ *   ALLOC / COPY / COMMIT   parts of LOCK_HOLD
+ *   HOST_FB    host-path fallback after unlock
+ */
+#ifndef F2FS_GC_CPOFF_STATS_EVERY
+#define F2FS_GC_CPOFF_STATS_EVERY	256
+#endif
+
+static atomic64_t cpoff_st_flushes = ATOMIC64_INIT(0);
+static atomic64_t cpoff_st_blks = ATOMIC64_INIT(0);
+static atomic64_t cpoff_st_wait_ns = ATOMIC64_INIT(0);
+static atomic64_t cpoff_st_hold_ns = ATOMIC64_INIT(0);
+static atomic64_t cpoff_st_alloc_ns = ATOMIC64_INIT(0);
+static atomic64_t cpoff_st_copy_ns = ATOMIC64_INIT(0);
+static atomic64_t cpoff_st_commit_ns = ATOMIC64_INIT(0);
+static atomic64_t cpoff_st_host_ns = ATOMIC64_INIT(0);
+static atomic64_t cpoff_st_gated_policy = ATOMIC64_INIT(0);
+static atomic64_t cpoff_st_gated_small = ATOMIC64_INIT(0);
+
+static void f2fs_gc_cpoff_stat_add(struct f2fs_sb_info *sbi, u64 blks,
+				   u64 wait, u64 alloc, u64 copy, u64 commit,
+				   u64 hold, u64 host)
+{
+	s64 n;
+
+	if (!F2FS_GC_CPOFF_STATS_EVERY)
+		return;
+	atomic64_add(blks, &cpoff_st_blks);
+	atomic64_add(wait, &cpoff_st_wait_ns);
+	atomic64_add(alloc, &cpoff_st_alloc_ns);
+	atomic64_add(copy, &cpoff_st_copy_ns);
+	atomic64_add(commit, &cpoff_st_commit_ns);
+	atomic64_add(hold, &cpoff_st_hold_ns);
+	atomic64_add(host, &cpoff_st_host_ns);
+	n = atomic64_inc_return(&cpoff_st_flushes);
+	if (n % F2FS_GC_CPOFF_STATS_EVERY)
+		return;
+	f2fs_info(sbi, "[F2FS_GC][CPOFF_STATS] FLUSHES=%lld BLKS=%lld "
+		  "LOCK_WAIT_US=%lld LOCK_HOLD_US=%lld ALLOC_US=%lld "
+		  "COPY_US=%lld COMMIT_US=%lld HOST_FB_US=%lld "
+		  "GATED_POLICY=%lld GATED_SMALL=%lld", (long long)n,
+		  (long long)atomic64_read(&cpoff_st_blks),
+		  (long long)(atomic64_read(&cpoff_st_wait_ns) / 1000),
+		  (long long)(atomic64_read(&cpoff_st_hold_ns) / 1000),
+		  (long long)(atomic64_read(&cpoff_st_alloc_ns) / 1000),
+		  (long long)(atomic64_read(&cpoff_st_copy_ns) / 1000),
+		  (long long)(atomic64_read(&cpoff_st_commit_ns) / 1000),
+		  (long long)(atomic64_read(&cpoff_st_host_ns) / 1000),
+		  (long long)atomic64_read(&cpoff_st_gated_policy),
+		  (long long)atomic64_read(&cpoff_st_gated_small));
+}
 
 static atomic64_t f2fs_gc_cpoff_blocks = ATOMIC64_INIT(0);	/* by device copy */
 static atomic64_t f2fs_gc_cpoff_fallback = ATOMIC64_INIT(0);	/* by host copy */
@@ -1924,7 +2015,8 @@ struct f2fs_gc_cpoff_batch {
 };
 
 static struct f2fs_gc_cpoff_batch *f2fs_gc_cpoff_alloc(struct f2fs_sb_info *sbi,
-						       int gc_type)
+						       int gc_type,
+						       unsigned int segno)
 {
 	struct f2fs_gc_cpoff_batch *b;
 	struct request_queue *q;
@@ -1941,6 +2033,18 @@ static struct f2fs_gc_cpoff_batch *f2fs_gc_cpoff_alloc(struct f2fs_sb_info *sbi,
 	q = bdev_get_queue(bdev);
 	if (!q || !q->copy_offload_enabled || !bdev_max_copy_sectors(bdev))
 		return NULL;
+
+	/* policy gate: a NULL batch means this segment takes the host path */
+	if ((f2fs_gc_cpoff_policy == 1 && gc_type == FG_GC) ||
+	    (f2fs_gc_cpoff_policy == 2 && !is_idle(sbi, GC_TIME))) {
+		atomic64_inc(&cpoff_st_gated_policy);
+		return NULL;
+	}
+	if (f2fs_gc_cpoff_min_blks &&
+	    get_valid_blocks(sbi, segno, false) < f2fs_gc_cpoff_min_blks) {
+		atomic64_inc(&cpoff_st_gated_small);
+		return NULL;
+	}
 
 	b = kvzalloc(sizeof(*b), GFP_NOFS);
 	if (b) {
@@ -2012,6 +2116,12 @@ static void f2fs_gc_cpoff_run(struct f2fs_gc_cpoff_batch *b)
 						(F2FS_BLKSIZE_BITS - SECTOR_SHIFT);
 				max_src = sbdev->bd_queue->limits.max_copy_src_segments;
 				max_dst = dbdev->bd_queue->limits.max_copy_dst_segments;
+				if (!F2FS_GC_CPOFF_MULTISEG) {
+					max_src = min(max_src, 1U);
+					max_dst = min(max_dst, 1U);
+				}
+				if (F2FS_GC_CPOFF_MAX_CMD_BLKS && max_blks > F2FS_GC_CPOFF_MAX_CMD_BLKS)
+					max_blks = F2FS_GC_CPOFF_MAX_CMD_BLKS;
 				if (!max_blks || !max_src || !max_dst) {
 					cpoff_dbg(sbi,
 						"[F2FS_GC:%s][FLOW=%016llx] "
@@ -2096,6 +2206,7 @@ static void f2fs_gc_cpoff_flush(struct f2fs_gc_cpoff_batch *b)
 	unsigned int i, queued = b->nr, allocated = 0, copied = 0;
 	unsigned int committed = 0, reverted = 0, fallback = 0;
 	u64 flow_id = 0, t0 = 0;
+	u64 t_req, t_lock, t_alloc, t_copy, t_unlock, t_end;
 
 	if (!b->nr)
 		goto unlock;
@@ -2105,7 +2216,9 @@ static void f2fs_gc_cpoff_flush(struct f2fs_gc_cpoff_batch *b)
 	b->cmds = 0;
 	b->cmds_failed = 0;
 
+	t_req = ktime_get_ns();
 	f2fs_lock_op(sbi);
+	t_lock = ktime_get_ns();
 
 	for (i = 0; i < b->nr; i++) {
 		struct f2fs_gc_cpoff_ent *e = &b->e[i];
@@ -2138,7 +2251,9 @@ static void f2fs_gc_cpoff_flush(struct f2fs_gc_cpoff_batch *b)
 		f2fs_put_dnode(&dn);
 	}
 
+	t_alloc = ktime_get_ns();
 	f2fs_gc_cpoff_run(b);
+	t_copy = ktime_get_ns();
 
 	for (i = 0; i < b->nr; i++) {
 		struct f2fs_gc_cpoff_ent *e = &b->e[i];
@@ -2188,6 +2303,7 @@ static void f2fs_gc_cpoff_flush(struct f2fs_gc_cpoff_batch *b)
 			(unsigned long long)e->dst);
 	}
 
+	t_unlock = ktime_get_ns();
 	f2fs_unlock_op(sbi);
 
 	/* Host copy for the rest; inode locks are still held as legacy expects. */
@@ -2209,6 +2325,12 @@ static void f2fs_gc_cpoff_flush(struct f2fs_gc_cpoff_batch *b)
 			     f2fs_meta_inode_gc_required(e->inode)))
 			b->submitted++;
 	}
+
+	t_end = ktime_get_ns();
+	f2fs_gc_cpoff_stat_add(sbi, committed, t_lock - t_req,
+			       t_alloc - t_lock, t_copy - t_alloc,
+			       t_unlock - t_copy, t_unlock - t_lock,
+			       t_end - t_unlock);
 
 	cpoff_dbg(sbi,
 		"[F2FS_GC:%s][FLOW=%016llx] "
@@ -2578,7 +2700,7 @@ static int gc_data_segment(struct f2fs_sb_info *sbi, struct f2fs_summary *sum,
 		struct gc_inode_list *gc_list, unsigned int segno, int gc_type,
 		bool force_migrate)
 {
-	struct f2fs_gc_cpoff_batch *cpb = f2fs_gc_cpoff_alloc(sbi, gc_type);
+	struct f2fs_gc_cpoff_batch *cpb = f2fs_gc_cpoff_alloc(sbi, gc_type, segno);
 	int submitted;
 
 	submitted = __gc_data_segment(sbi, sum, gc_list, segno, gc_type,
