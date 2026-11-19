@@ -1,1 +1,21 @@
 
+ERROR: /home/tsip/work/environments/r25/sm885_fresh_env/non_HLOS/LA.VENDOR.16.2.0/LINUX/android/kernel_platform/common/BUILD.bazel:243:14: Building kernel (trim;zstd_dwarf_compression_d_aarch64) /bin/bash -c ... (remaining 1 argument skipped)
+
+Use --sandbox_debug to see verbose messages from the sandbox and retain the sandbox build root for debugging
+/home/tsip/work/environments/r25/sm885_fresh_env/non_HLOS/LA.VENDOR.16.2.0/LINUX/android/bazel-cache/ff109850c94193bda56b1eb883148a95/sandbox/processwrapper-sandbox/4/execroot/_main/com
+   28 |                         bio = prev_bio->bi_copy_ctx->bios;
+      |                               ~~~~~~~~~~~~~~~~~~~~~^ ~~~~
+1 error generated.
+make[4]: *** [/home/tsip/work/environments/r25/sm885_fresh_env/non_HLOS/LA.VENDOR.16.2.0/LINUX/android/bazel-cache/ff109850c94193bda56b1eb883148a95/sandbox/processwrapper-sandbox/4/exec
+make[3]: *** [/home/tsip/work/environments/r25/sm885_fresh_env/non_HLOS/LA.VENDOR.16.2.0/LINUX/android/bazel-cache/ff109850c94193bda56b1eb883148a95/sandbox/processwrapper-sandbox/4/exec
+make[3]: *** Waiting for unfinished jobs....
+make[2]: *** [/home/tsip/work/environments/r25/sm885_fresh_env/non_HLOS/LA.VENDOR.16.2.0/LINUX/android/bazel-cache/ff109850c94193bda56b1eb883148a95/sandbox/processwrapper-sandbox/4/exec
+make[1]: *** [/home/tsip/work/environments/r25/sm885_fresh_env/non_HLOS/LA.VENDOR.16.2.0/LINUX/android/bazel-cache/ff109850c94193bda56b1eb883148a95/sandbox/processwrapper-sandbox/4/exec
+make: *** [Makefile:242: __sub-make] Error 2
+ERROR: /home/tsip/work/environments/r25/sm885_fresh_env/non_HLOS/LA.VENDOR.16.2.0/LINUX/android/kernel_platform/soc-repo/BUILD.bazel:302:13 Middleman _middlemen/soc-repo_Scanoe_Uperf_Ual_aarch64) /bin/bash -c ... (remaining 1 argument skipped)
+
+Use --sandbox_debug to see verbose messages from the sandbox and retain the sandbox build root for debugging
+INFO: Elapsed time: 247.377s, Critical Path: 219.20s
+INFO: 7 processes: 5023 action cache hit, 2 internal, 5 processwrapper-sandbox.
+ERROR: Build did NOT complete successfully
+Error: Failed to prepare vendor. Exiting.
