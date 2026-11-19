@@ -1,0 +1,26 @@
+--- a/block/blk-copy.c	2026-11-18 16:48:33.240946770 +0000
++++ b/block/blk-copy.c	2026-11-19 11:59:46.711174777 +0000
+@@ -14,6 +14,23 @@
+ 
+ 	if (prev_bio) {
+ 		bio = prev_bio->bi_next;
++		/*
++		 * The request's own bio is detached from ctx->bios by
++		 * blkdev_translation_complete(), so its bi_next is NULL even
++		 * though more source bios are queued in the copy context.
++		 * blkdev_copy_chunk() submits every source bio before every
++		 * destination bio, so the list always ends with a destination
++		 * bio: a source bio without a successor can only be that
++		 * detached head bio.  Continue with the queued bios.
++		 */
++		if (!bio && bio_op(prev_bio) == REQ_OP_COPY_SRC) {
++			/* bi_copy_ctx is a void *: use a typed local. */
++			struct bio_copy_offload_ctx *copy_ctx =
++				prev_bio->bi_copy_ctx;
++
++			if (copy_ctx)
++				bio = copy_ctx->bios;
++		}
+ 	} else {
+ 		struct bio_copy_offload_ctx *copy_ctx = rq->bio->bi_copy_ctx;
+ 
