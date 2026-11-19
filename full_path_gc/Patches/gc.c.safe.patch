@@ -1,0 +1,76 @@
+--- a/gc.c	2026-11-18 14:21:05.412189827 +0000
++++ b/gc.c	2026-11-18 14:21:28.541280021 +0000
+@@ -1939,6 +1939,16 @@
+ static atomic64_t cpoff_st_gated_policy = ATOMIC64_INIT(0);
+ static atomic64_t cpoff_st_gated_small = ATOMIC64_INIT(0);
+ 
++/*
++ * A copy command the device or the block layer rejects costs 12-16 ms before
++ * the host fallback even starts.  After CPOFF_FAIL_LIMIT failed commands in a
++ * row, stop offloading for CPOFF_BACKOFF_MS and use the host path.
++ */
++#define F2FS_GC_CPOFF_FAIL_LIMIT	4
++#define F2FS_GC_CPOFF_BACKOFF_MS	60000
++static atomic_t cpoff_fail_streak = ATOMIC_INIT(0);
++static atomic_long_t cpoff_off_until = ATOMIC_LONG_INIT(0);
++
+ static void f2fs_gc_cpoff_stat_add(struct f2fs_sb_info *sbi, u64 blks,
+ 				   u64 wait, u64 alloc, u64 copy, u64 commit,
+ 				   u64 hold, u64 host)
+@@ -2034,6 +2044,12 @@
+ 	if (!q || !q->copy_offload_enabled || !bdev_max_copy_sectors(bdev))
+ 		return NULL;
+ 
++	/* circuit breaker: recent copy commands kept failing */
++	if (time_before(jiffies, (unsigned long)atomic_long_read(&cpoff_off_until))) {
++		atomic64_inc(&cpoff_st_gated_policy);
++		return NULL;
++	}
++
+ 	/* policy gate: a NULL batch means this segment takes the host path */
+ 	if ((f2fs_gc_cpoff_policy == 1 && gc_type == FG_GC) ||
+ 	    (f2fs_gc_cpoff_policy == 2 && !is_idle(sbi, GC_TIME))) {
+@@ -2116,10 +2132,19 @@
+ 						(F2FS_BLKSIZE_BITS - SECTOR_SHIFT);
+ 				max_src = sbdev->bd_queue->limits.max_copy_src_segments;
+ 				max_dst = dbdev->bd_queue->limits.max_copy_dst_segments;
+-				if (!F2FS_GC_CPOFF_MULTISEG) {
++				/*
++				 * The vendor copy command has one destination
++				 * LBA, so a command never spans two destination
++				 * runs, whatever the queue reports.  Several
++				 * source runs per command (up to the 256
++				 * descriptors) are used only when MULTISEG is
++				 * set and sd.c builds the full descriptor list.
++				 */
++				max_dst = min(max_dst, 1U);
++				if (!F2FS_GC_CPOFF_MULTISEG)
+ 					max_src = min(max_src, 1U);
+-					max_dst = min(max_dst, 1U);
+-				}
++				else
++					max_src = min(max_src, 256U);
+ 				if (F2FS_GC_CPOFF_MAX_CMD_BLKS && max_blks > F2FS_GC_CPOFF_MAX_CMD_BLKS)
+ 					max_blks = F2FS_GC_CPOFF_MAX_CMD_BLKS;
+ 				if (!max_blks || !max_src || !max_dst) {
+@@ -2174,9 +2199,20 @@
+ 					       first_src, first_dst, flow_id);
+ 		if (err) {
+ 			b->cmds_failed++;
++			if (atomic_inc_return(&cpoff_fail_streak) >=
++			    F2FS_GC_CPOFF_FAIL_LIMIT) {
++				atomic_set(&cpoff_fail_streak, 0);
++				atomic_long_set(&cpoff_off_until, jiffies +
++					msecs_to_jiffies(F2FS_GC_CPOFF_BACKOFF_MS));
++				f2fs_warn(sbi, "GC copy offload: %d consecutive failures, using host copy for %d s",
++					  F2FS_GC_CPOFF_FAIL_LIMIT,
++					  F2FS_GC_CPOFF_BACKOFF_MS / 1000);
++				return;
++			}
+ 			if (err == -EOPNOTSUPP)
+ 				return;		/* disabled/unsupported: stop trying */
+ 		} else {
++			atomic_set(&cpoff_fail_streak, 0);
+ 			atomic64_add(cnt, &f2fs_gc_cpoff_blocks);
+ 			for (k = i; k < j; k++)
+ 				if (b->e[k].state == CPOFF_ALLOCATED)
