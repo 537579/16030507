@@ -1328,83 +1328,89 @@ static blk_status_t sd_setup_oppo_copy_cmd(struct scsi_cmnd *cmd, unsigned int n
 }
 
 
-/* Translate REQ_OP_COPY_SRC and REQ_OP_COPY_DST bios into an Oppo Copy command */
+/*
+ * Limits of the vendor (OPPO) copy command: one destination LBA, a parameter
+ * list of 16-byte source descriptors (max 256) and at most 131072 blocks.
+ */
+#define SD_OPPO_COPY_MAX_DESC		256U
+#define SD_OPPO_COPY_MAX_BLOCKS		131072ULL
+
+/*
+ * Translate REQ_OP_COPY_SRC and REQ_OP_COPY_DST bios into an Oppo Copy command.
+ *
+ * Needs blk_next_copy_bio() to walk past the request's own bio into the copy
+ * context (blk-copy.c fix).  Everything is validated before any resource is
+ * taken: a request the command cannot express exactly is failed here rather
+ * than sent as a shorter command, which the device would complete with GOOD.
+ */
 static blk_status_t sd_setup_oppo_copy_offload(struct scsi_cmnd *cmd)
 {
 	struct request *rq = scsi_cmd_to_rq(cmd);
 	struct scsi_device *sdp = cmd->device;
-	struct bio *src_bio = NULL;
-	struct bio *dst_bio = NULL;
-	unsigned int nr_blocks = 0;
-
-	unsigned int nr_src_bios = 0;
-	unsigned int nr_dst_bios = 0;
-	
-	sector_t dst_lba, src_lba, cbd_lbas;
-	int i = 0;
-	unsigned int param_len;
-	uint8_t *pbuf = NULL;
-
-	if (!cmd) {
-		return BLK_STS_RESOURCE;
-	}
+	struct bio *bio, *dst_bio;
+	unsigned int nr_src = 0, nr_dst = 0, param_len, i = 0;
+	u64 src_blocks = 0, dst_blocks = 0;
+	sector_t dst_lba;
+	u8 *pbuf;
 
 	dst_bio = blk_first_copy_bio(rq, REQ_OP_COPY_DST);
-	if (WARN_ON_ONCE(!dst_bio)) {
+	if (WARN_ON_ONCE(!dst_bio))
 		return BLK_STS_IOERR;
+
+	/* Pass 1: validate and count. */
+	for (bio = blk_first_copy_bio(rq, REQ_OP_COPY_SRC); bio;
+	     bio = blk_next_copy_bio(bio)) {
+		if (!bio->bi_iter.bi_size ||
+		    !IS_ALIGNED(bio->bi_iter.bi_size, sdp->sector_size))
+			return BLK_STS_IOERR;
+		nr_src++;
+		src_blocks += bytes_to_logical(sdp, bio->bi_iter.bi_size);
 	}
-	
+	for (bio = dst_bio; bio; bio = blk_next_copy_bio(bio)) {
+		if (!bio->bi_iter.bi_size ||
+		    !IS_ALIGNED(bio->bi_iter.bi_size, sdp->sector_size))
+			return BLK_STS_IOERR;
+		nr_dst++;
+		dst_blocks += bytes_to_logical(sdp, bio->bi_iter.bi_size);
+	}
+
+	/* One destination LBA per command. */
+	if (nr_dst != 1)
+		return BLK_STS_IOERR;
+	if (!nr_src || nr_src > SD_OPPO_COPY_MAX_DESC)
+		return BLK_STS_IOERR;
+	if (!src_blocks || src_blocks != dst_blocks ||
+	    src_blocks > SD_OPPO_COPY_MAX_BLOCKS)
+		return BLK_STS_IOERR;
+
+	param_len = nr_src * OPPO_COPY_PER_COPY_BLOCKS_DESC_SIZE;
+	if (param_len > PAGE_SIZE)
+		return BLK_STS_IOERR;
+
 	dst_lba = sectors_to_logical(sdp, dst_bio->bi_iter.bi_sector);
 
-				
-	nr_src_bios = blk_copy_bio_count(rq, REQ_OP_COPY_SRC);	
-	nr_dst_bios = blk_copy_bio_count(rq, REQ_OP_COPY_DST);
-
-	
-	if (nr_src_bios != nr_dst_bios) {
-		return BLK_STS_IOERR;
-	}
-	
-	param_len = nr_src_bios * OPPO_COPY_PER_COPY_BLOCKS_DESC_SIZE;
-	if (param_len < 0) {
-		return BLK_STS_NOTSUPP;
-	}
-	
-	nr_blocks = sectors_to_logical(sdp, blk_rq_sectors(rq));
-	
-	pbuf = sd_set_special_bvec(rq, rq->__data_len);
-	if (!pbuf) {
+	/* Parameter buffer is exactly the descriptor list. */
+	pbuf = sd_set_special_bvec(rq, param_len);
+	if (!pbuf)
 		return BLK_STS_RESOURCE;
-	}
-	
-	sd_setup_oppo_copy_cmd(cmd, nr_blocks, (nr_src_bios * OPPO_COPY_PER_COPY_BLOCKS_DESC_SIZE), dst_lba);
-	//print_hex_dump(KERN_INFO, "TSIP: CMD_CDB:", DUMP_PREFIX_OFFSET, 16, 1, cmd->cmnd, cmd->cmd_len, false);
-	
-	for (i=0; i < nr_src_bios; i++) {
-		if (!src_bio) {
-			src_bio = blk_first_copy_bio(rq, REQ_OP_COPY_SRC);
-			
-		} else {
-			src_bio = blk_next_copy_bio(src_bio);
-		}
 
-		if (WARN_ON_ONCE(!src_bio)) {
-			return BLK_STS_IOERR;
-		}
-											
-		src_lba = sectors_to_logical(sdp, src_bio->bi_iter.bi_sector);
-		cbd_lbas = bytes_to_logical(sdp, src_bio->bi_iter.bi_size);
+	/* Pass 2: one 16-byte descriptor per source bio, in submission order. */
+	for (bio = blk_first_copy_bio(rq, REQ_OP_COPY_SRC); bio;
+	     bio = blk_next_copy_bio(bio)) {
+		u8 *d = pbuf + i * OPPO_COPY_PER_COPY_BLOCKS_DESC_SIZE;
 
-				
-		put_unaligned_be64(src_lba , pbuf + (i* 16));
-		put_unaligned_be32(cbd_lbas, pbuf + (8 + (i * 16)));
-		put_unaligned_be32(0, pbuf + (12 + (i * 16)));
-		
-		//print_hex_dump(KERN_INFO, "TSIP: Param_list:", DUMP_PREFIX_OFFSET, 16, 1, pbuf, 16, false);
+		put_unaligned_be64(sectors_to_logical(sdp, bio->bi_iter.bi_sector), d);
+		put_unaligned_be32(bytes_to_logical(sdp, bio->bi_iter.bi_size), d + 8);
+		put_unaligned_be32(0, d + 12);
+		i++;
 	}
-	
-	cmd->transfersize = (nr_src_bios * OPPO_COPY_PER_COPY_BLOCKS_DESC_SIZE);
-	//cmd->transfersize = rq->__data_len;
+	if (WARN_ON_ONCE(i != nr_src))
+		return BLK_STS_IOERR;
+
+	/* Total block count is the sum over all sources, not the first bio. */
+	sd_setup_oppo_copy_cmd(cmd, src_blocks, param_len, dst_lba);
+
+	cmd->transfersize = param_len;
 	rq->timeout = SD_TIMEOUT;
 	return scsi_alloc_sgtables(cmd);
 }
