@@ -1,27 +1,47 @@
-A short copy is a copy command that moves only part of the data the caller asked for, yet completes with GOOD status.
-In sd_setup_oppo_copy_offload(), only the first source bio sits on the request (rq->bio). The remaining bios of the same copy sit on ctx->bios. The old code counted and walked sources with blk_copy_bio_count() and blk_next_copy_bio(), which follow bi_next from rq->bio and never reach the context list. So it sees one source, and it takes the block count from blk_rq_sectors(rq), which covers the first bio only.
-The command that goes to the device therefore has:
-one descriptor, for the first source run only;
-a block count equal to the first run's length.
-The device copies exactly that and reports success. The caller was told the whole range was copied, so nothing reports an error.
-Which callers are affected
-This is not specific to F2FS GC. It affects any caller of blkdev_copy_offload() that gives one destination range and more than one source range, where the queue limit max_copy_src_segments is above 1. It has to be that way round:
-Several sources into one destination: the code sees 1 source and 1 destination, so the count check passes. Data is silently short-copied.
-Several sources and several destinations: the code sees 1 source and N destinations, so the count check fails. The request is rejected with an I/O error, which is safe.
-One source and several destinations: also rejected with an error, which is safe.
-One source and one destination: correct. This is all callers that pass a single segment each.
-I only know of F2FS GC. I haven't seen the other callers, so ask the developers to grep for blkdev_copy_offload and check whether any passes more than one source segment.
-Evidence to include
-Trace against dmesg: F2FS GC attempts with SRC_SEGS of 2, 3 and 12 had BLKS of 416, 314 and 427. The SCSI trace for the same commands shows CDB block counts of 207, 111 and 27, each with a 16-byte parameter list. Every attempt with SRC_SEGS=1 matched exactly.
-Benchmark: gcbench with offload on and alternating source blocks failed integrity in all 15 runs, with identical bad counts per setting. The single-run contig pattern had 0 bad. dmesg showed no I/O errors, and F2FS committed the result.
-What the patch does
-Walks all copy bios, the request's own bio first and then ctx->bios.
-Validates before it allocates anything: exactly one destination bio, 1–256 sources, source blocks equal to destination blocks, at most 131072 blocks, and sizes aligned to the logical block size. Anything else fails with BLK_STS_IOERR.
-Takes the total block count from the sum of all sources.
-Sizes the parameter buffer to the 16 × N descriptor bytes instead of the copy size.
-Removes the dead param_len < 0 check.
-Caveats to state
-I have not compiled it. It uses struct bio_copy_offload_ctx fields directly, so the definition must be visible in sd.c.
-The parameter buffer length changes, from up to 1 MiB on a 4 KiB page to the descriptor bytes. That should be right, but it is new behaviour on the hardware.
-The firmware's handling of more than one descriptor is unconfirmed. The trace so far shows only single-descriptor commands.
-The cleaner long-term fix is in blk-copy.c, so the iteration helpers cross from the request's bio to the context list. Setting max_copy_dst_segments to 1 where the queue limits are set would also prevent the multi-destination rejections.
+The bug is in the block layer's iteration helpers, not just in sd.c. blk_next_copy_bio() and blk_copy_bio_count() can't get past the request's own bio into the copy context list. Any driver that uses them gets a wrong answer, so the fix belongs in blk-copy.c.
+blk-copy.c.iter.patch: the helper now continues into ctx->bios after the request's own bio.
+This relies on blkdev_copy_chunk() submitting all source bios before all destination bios. The list therefore always ends with a destination bio, and a source bio with no successor can only be the detached head bio.
+It needs no header change.
+sd.c.safe.v2.patch: the same validation and command building as my first sd.c patch, but it uses only the fixed helpers. It no longer touches ctx->bios directly, so it doesn't depend on the context struct being visible. It replaces sd.c.safe.patch once the blk-copy.c patch is in.
+Queue limit: where max_copy_dst_segments is set, it should be 1. This is not in a patch because I don't have that file. Your destination-crossing failures show the limit is currently above 1, so please send me that file and I'll write it.
+Both patches dry-run clean on your uploaded files. I haven't compiled them. The gc.c patch stays as it is, with MULTISEG at 0 until the trace checks below pass.
+2. Verifying multi-source commands from the trace
+What the trace shows: only the 16-byte CDB, not the parameter list payload, so you can't read the descriptors themselves. Instead you check four values in the CDB against dmesg.
+c0 | 00 00 00 00 00 14 62 4b | 00 00 cf | 00 | 00 10 | 00
+op | bytes 1-8: dst LBA     | 9-11: total blocks | | 13-14: param length |
+Descriptor count. Divide the parameter length (bytes 13–14) by 16. It must equal SRC_SEGS in dmesg.
+Total blocks. Bytes 9–11 must equal BLKS in dmesg.
+Destination LBA. Bytes 1–8 equal FIRST_DST_PBA plus a fixed partition offset.
+For sda11 the offset is 0xE4FA8. I checked it on four commands.
+For sdg the offset is 0.
+Pairing. Match each attempt to its command by timestamp. The ATTEMPT line is about 2 ms before the trace dispatch, so pair them by the destination LBA, not the time alone.
+Healthy single-source example, sda11, 1385.45 s:
+dmesg: FIRST_DST_PBA=0x611b9 BLKS=234 SRC_SEGS=1.
+Trace: ... 14 61 61 | 00 00 ea | 00 | 00 10.
+Destination LBA is 0x611b9 + 0xE4FA8 = 0x146161, which matches.
+Blocks are 0xea = 234, which matches.
+Parameter length is 0x10 = 16 bytes = 1 descriptor, which matches SRC_SEGS=1.
+Broken multi-source example, sda11, 1508.33 s:
+dmesg: FIRST_SRC_PBA=0x5e800 FIRST_DST_PBA=0x612a3 BLKS=416 SRC_SEGS=2.
+Trace: c0 00 00 00 00 00 14 62 4b 00 00 cf 00 00 10 00.
+The destination LBA 0x14624b matches (0x612a3 + 0xE4FA8).
+The block count is 0xcf = 207, not 416.
+The parameter length is 0x10, so 1 descriptor, not 2.
+So only the first source run was copied, and 209 blocks were not.
+Two more from the same trace:
+1631.21 s: BLKS=314, SRC_SEGS=3. The trace has 111 blocks and 1 descriptor.
+1999.85 s: BLKS=427, SRC_SEGS=12. The trace has 27 blocks and 1 descriptor.
+What a fixed run should show. For the 1508.33 s example, after the patches:
+field
+now
+after fix
+blocks (bytes 9–11)
+00 00 cf (207)
+00 01 a0 (416)
+param length (bytes 13–14)
+00 10 (16)
+00 20 (32)
+The 12-source case should show blocks 00 01 ab and a parameter length of 0xc0 (192).
+First source LBA, for reference. The first descriptor's source LBA would be FIRST_SRC_PBA + 0xE4FA8. For 1508.33 s that is 0x5e800 + 0xE4FA8 = 0x1437a8. The trace can't confirm it, because the descriptor payload isn't traced. If you want to check descriptor contents, a debug print of the buffer in sd.c would show them.
+On sdg the multi-segment attempts in your dmesg are a different failure. All five have SRC_SEGS=1 DST_SEGS=2, and none appears in the trace. They are rejected before dispatch, which is the safe outcome. For comparison, a healthy sdg command at 480.23 s has FIRST_DST_PBA=0x10c04 and BLKS=34. The trace shows 01 0c 04, 00 00 22 (34 blocks) and 00 10.
+The pass rule for any run: for every command, block count equals BLKS and parameter length equals 16 times SRC_SEGS. Any mismatch means a short copy, and the integrity check should then also fail.
